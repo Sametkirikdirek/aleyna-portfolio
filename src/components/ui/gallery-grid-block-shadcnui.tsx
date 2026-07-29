@@ -101,7 +101,7 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
             Tuval üzerine seçkiler
           </h2>
           <p className="mx-auto max-w-2xl text-muted-foreground">
-            Görsele dokun, eserin hikâyesini ve teknik detaylarını gör.
+            Görsele dokun, eserin hikâyesini ve teknik detaylarını gör. · Otomatik deploy testi
           </p>
         </motion.div>
 
