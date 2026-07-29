@@ -90,9 +90,8 @@ export const paintings = [
   },
 ];
 
-// Medium yazıları — canlı RSS beslemesi /api/medium üzerinden çekilir.
-// Ağ hatası olursa bu statik liste yedek olarak kullanılır.
-export const writings = [
+// Medium yazıları — otomatik RSS ile çekilir; ağ hatasında yedek liste.
+export const mediumWritingsFallback = [
   {
     id: "w1",
     title:
@@ -175,6 +174,47 @@ export const writings = [
     readTime: "7 dk",
     tag: "Bilgisayarlı Görü",
     url: "https://medium.com/@aleynaaltunsu/y%C3%BCz-tan%C4%B1ma-ve-yoklama-alma-sistemleri-projesi-%C3%BCzerine-rapor-9f4f9fa712f0",
+  },
+];
+
+// Kişisel yazılar — Medium dışında, doğrudan burada yönetilir.
+// url alanı boş bırakılırsa yazı sitede listelenir (harici link yok).
+export const personalWritings = [
+  {
+    id: "p1",
+    title: "Atölye Günlüğü: Bitmemiş Tablolar Üzerine",
+    excerpt:
+      "Bazı tabloları neden bitirmiyoruz? Belki de bitmemiş olmaları, üzerinde hâlâ düşünüyor olduğumuzun kanıtı. Tuvalde bırakılan boşluklar bazen en dürüst cümlelerdir.",
+    date: "Haz 2026",
+    readTime: "4 dk",
+    tag: "Atölye",
+  },
+  {
+    id: "p2",
+    title: "Rengin Matematiği: Palet Seçerken Ne Hesaplıyoruz?",
+    excerpt:
+      "Tamamlayıcı renkler sadece göze hoş gelmiyor; aralarında ölçülebilir bir gerilim var. Fırçayı elime almadan önce zihnimde dönen o denklemleri anlatıyorum.",
+    date: "Mar 2026",
+    readTime: "5 dk",
+    tag: "Sanat",
+  },
+  {
+    id: "p3",
+    title: "Bir Ressamın Not Defteri: Kompozisyon ve Kod",
+    excerpt:
+      "Tuvaldeki altın oran ile ekrandaki grid sistemi arasında garip bir akrabalık var. İki disiplinin aynı soruya farklı dillerde cevap verdiğini düşünüyorum.",
+    date: "Ock 2026",
+    readTime: "6 dk",
+    tag: "Düşünce",
+  },
+  {
+    id: "p4",
+    title: "Gece Vardiyasından Sabah Işığına",
+    excerpt:
+      "Kod yazarken geçen gecelerin rengi ile tuvalde yakaladığım sabah ışığı birbirine benziyor mu? Atölye ile masam arasındaki o ince çizgide yürürken tuttuğum notlar.",
+    date: "Kas 2025",
+    readTime: "3 dk",
+    tag: "Atölye",
   },
 ];
 
