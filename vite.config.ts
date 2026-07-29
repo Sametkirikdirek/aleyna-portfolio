@@ -11,7 +11,7 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use("/api/medium", async (_req, res) => {
           try {
-            const posts = await fetchMediumPosts(8);
+            const posts = await fetchMediumPosts();
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ posts, source: "medium" }));
           } catch (error) {

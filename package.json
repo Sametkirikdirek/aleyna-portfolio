@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "sync:medium": "node scripts/sync-medium.js",
+    "prebuild": "npm run sync:medium",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"

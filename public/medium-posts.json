@@ -1,0 +1,97 @@
+{
+  "posts": [
+    {
+      "id": "vision-transformer-mimarilerinde-dikkat-sava%C5%9Flar%C4%B1-vit-swin-deformable-attention-q-former-ve-c6091a3c9a2f",
+      "title": "Vision Transformer Mimarilerinde Dikkat Savaşları: ViT, Swin, Deformable Attention, Q-Former ve…",
+      "excerpt": "Vision Transformer Mimarilerinde Dikkat Savaşları: ViT, Swin, Deformable Attention, Q-Former ve SegFormer Hepsi “attention” kullanıyor. Ama hiçbiri aynı sorunu çözmüyor. 2017'de “Attention is All You Need” yayınlandığınd…",
+      "date": "Nis 2026",
+      "readTime": "13 dk",
+      "tag": "Yapay Zeka",
+      "url": "https://medium.com/@aleynaaltunsu/vision-transformer-mimarilerinde-dikkat-sava%C5%9Flar%C4%B1-vit-swin-deformable-attention-q-former-ve-c6091a3c9a2f"
+    },
+    {
+      "id": "model-de%C4%9Fil-sistem-i%CC%87n%C5%9Fa-ediyoruz-fastapi-llm-ve-production-ger%C3%A7ekleriyle-yapay-zek%C3%A2-servisleri-30b5896b202b",
+      "title": "Model Değil, Sistem İnşa Ediyoruz: FastAPI, LLM ve Production Gerçekleriyle Yapay Zekâ Servisleri",
+      "excerpt": "Yapay zekâ projelerinin büyük bir kısmı etkileyici notebook’larla başlar: Yüksek doğruluk (accuracy), düşük kayıp (loss) ve göz alıcı grafikler… Ancak bu projelerin önemli bir kısmı gerçek dünya senaryolarına adım attığı…",
+      "date": "Mar 2026",
+      "readTime": "5 dk",
+      "tag": "Yapay Zeka",
+      "url": "https://medium.com/@aleynaaltunsu/model-de%C4%9Fil-sistem-i%CC%87n%C5%9Fa-ediyoruz-fastapi-llm-ve-production-ger%C3%A7ekleriyle-yapay-zek%C3%A2-servisleri-30b5896b202b"
+    },
+    {
+      "id": "neurips-2025in-anatomisi-yapay-zekada-yeni-bir-%C3%A7a%C4%9F%C4%B1n-d%C3%B6rt-s%C3%BCtunu-ve-mimari-devrim-fbcebb55be87",
+      "title": "NeurIPS 2025’in Anatomisi: Yapay Zekada Yeni Bir Çağın Dört Sütunu ve Mimari Devrim",
+      "excerpt": "Okuyucuya Not: Bu yazı, “prompt yazmayı AI mühendisliği sananlar” için değil; model mimarisi, gradyan akışı ve genelleme teorileriyle yaşayan profesyoneller için kaleme alınmıştır 😊 Giriş: Ölçekleme Kanunlarından Mimari…",
+      "date": "Ock 2026",
+      "readTime": "4 dk",
+      "tag": "Yapay Zeka",
+      "url": "https://medium.com/@aleynaaltunsu/neurips-2025in-anatomisi-yapay-zekada-yeni-bir-%C3%A7a%C4%9F%C4%B1n-d%C3%B6rt-s%C3%BCtunu-ve-mimari-devrim-fbcebb55be87"
+    },
+    {
+      "id": "kurumsal-yapay-zek%C3%A2-sistemlerinde-yeni-%C3%A7a%C4%9F-e58881c52058",
+      "title": "Kurumsal Yapay Zekâ Sistemlerinde Yeni Çağ",
+      "excerpt": "RAG, GPU Optimizasyonu ve Agentic Mimari ile Ölçeklenebilir LLM Platformları Tasarlamak Büyük Dil Modelleri (LLM’ler) son beş yıl içinde sadece üretken metin motorları olmaktan çıkıp kurumsal bilgi sistemlerinin, karar d…",
+      "date": "Ara 2025",
+      "readTime": "6 dk",
+      "tag": "Yapay Zeka",
+      "url": "https://medium.com/@aleynaaltunsu/kurumsal-yapay-zek%C3%A2-sistemlerinde-yeni-%C3%A7a%C4%9F-e58881c52058"
+    },
+    {
+      "id": "derin-%C3%B6%C4%9Frenmede-%C3%B6n-e%C4%9Fitim-pretraining-ve-i%CC%87nne-ayar-fine-tuning-6417e2914075",
+      "title": "Derin Öğrenmede Ön Eğitim (Pretraining) ve İnce Ayar (Fine-Tuning",
+      "excerpt": "GitHub - AleynaAltunsu/finetuning-llm GitHub - AleynaAltunsu/pre-training-for-llm İçindekiler Giriş Ön Eğitim (Pretraining) Tanım ve Temel Kavramlar Ön Eğitim Sürecinin Yapı Taşları Ön Eğitim Yöntemleri Kullanım Alanları…",
+      "date": "Kas 2024",
+      "readTime": "5 dk",
+      "tag": "Yapay Zeka",
+      "url": "https://medium.com/kurumsal-gelisim/derin-%C3%B6%C4%9Frenmede-%C3%B6n-e%C4%9Fitim-pretraining-ve-i%CC%87nne-ayar-fine-tuning-6417e2914075"
+    },
+    {
+      "id": "nlpde-vekt%C3%B6r-embedding-ve-encoder-k%C4%B1yaslamal%C4%B1-bir-k%C4%B1lavuz-ec09b30d6619",
+      "title": "NLP’de Vektör, Embedding ve Encoder: Kıyaslamalı Bir Kılavuz",
+      "excerpt": "(BoW, TF-IDF, FastText, Word2Vec, GloVe, One Hot Encoding) (BoW, TF-IDF, FastText, Word2Vec, GloVe, One Hot Encoding) Doğal Dil İşleme (NLP) alanında, metin verilerini makine öğrenimi modellerine beslemek için çeşitli te…",
+      "date": "Eki 2024",
+      "readTime": "11 dk",
+      "tag": "NLP",
+      "url": "https://medium.com/kurumsal-gelisim/nlpde-vekt%C3%B6r-embedding-ve-encoder-k%C4%B1yaslamal%C4%B1-bir-k%C4%B1lavuz-ec09b30d6619"
+    },
+    {
+      "id": "do%C4%9Fal-dil-i%CC%87%C5%9Fleme-nlp-tarih%C3%A7esi-ve-k%C4%B1yaslamas%C4%B1-475f2c971400",
+      "title": "Doğal Dil İşleme (NLP) Tarihçesi ve Kıyaslaması",
+      "excerpt": "Doğal Dil İşleme (Natural Language Processing, NLP), insan dilini bilgisayarlar tarafından anlamlandırma ve işleme teknolojisi olarak tanımlanır. Bu alandaki çalışmalar, bilgisayar bilimi ve dilbilim disiplinlerinin bir…",
+      "date": "Eyl 2024",
+      "readTime": "9 dk",
+      "tag": "NLP",
+      "url": "https://medium.com/kurumsal-gelisim/do%C4%9Fal-dil-i%CC%87%C5%9Fleme-nlp-tarih%C3%A7esi-ve-k%C4%B1yaslamas%C4%B1-475f2c971400"
+    },
+    {
+      "id": "y%C3%BCz-tan%C4%B1ma-ve-yoklama-alma-sistemleri-projesi-%C3%BCzerine-rapor-9f4f9fa712f0",
+      "title": "Yüz Tanıma ve Yoklama Alma Sistemleri Projesi Üzerine Rapor",
+      "excerpt": "1. Giriş Günümüzde yüz tanıma teknolojisi, birçok sektörde yaygın olarak kullanılmakta ve işletmelerin çeşitli ihtiyaçlarını karşılamaktadır. Bu teknolojinin en dikkat çekici uygulamalarından biri de yoklama sistemleridi…",
+      "date": "Tem 2024",
+      "readTime": "7 dk",
+      "tag": "Bilgisayarlı Görü",
+      "url": "https://medium.com/@aleynaaltunsu/y%C3%BCz-tan%C4%B1ma-ve-yoklama-alma-sistemleri-projesi-%C3%BCzerine-rapor-9f4f9fa712f0"
+    },
+    {
+      "id": "deepface-derin-%C3%B6%C4%9Frenme-ile-y%C3%BCz-tan%C4%B1ma-devrimi-95349f067a19",
+      "title": "DeepFace: Derin Öğrenme ile Yüz Tanıma Devrimi",
+      "excerpt": "Giriş: Yüz tanıma, yapay zekanın en heyecan verici ve önemli alanlarından biridir. Kimlik doğrulama, gözetim ve erişim kontrolü gibi çeşitli uygulamalarda kullanılmaktadır. Geleneksel yöntemler, yüz özelliklerini çıkarma…",
+      "date": "Tem 2024",
+      "readTime": "5 dk",
+      "tag": "Bilgisayarlı Görü",
+      "url": "https://medium.com/@aleynaaltunsu/deepface-derin-%C3%B6%C4%9Frenme-ile-y%C3%BCz-tan%C4%B1ma-devrimi-95349f067a19"
+    },
+    {
+      "id": "bilgisayar-g%C3%B6r%C3%BCs%C3%BCnde-yolo-versiyon-8-ve-10-aras%C4%B1ndaki-farklar-2235e515cb79",
+      "title": "Bilgisayar Görüsünde YOLO: Versiyon 8 ve 10 Arasındaki Farklar",
+      "excerpt": "YOLO (You Only Look Once) , nesne algılamada kullanılan oldukça popüler bir derin öğrenme modelidir. Gerçek zamanlı nesne algılamada hızı ve doğruluğu ile öne çıkan YOLO, son yıllarda birçok farklı versiyona sahip olmuşt…",
+      "date": "Tem 2024",
+      "readTime": "27 dk",
+      "tag": "Bilgisayarlı Görü",
+      "url": "https://medium.com/@aleynaaltunsu/bilgisayar-g%C3%B6r%C3%BCs%C3%BCnde-yolo-versiyon-8-ve-10-aras%C4%B1ndaki-farklar-2235e515cb79"
+    }
+  ],
+  "source": "medium",
+  "syncedAt": "2026-07-29T15:02:39.855Z",
+  "profile": "https://medium.com/@aleynaaltunsu"
+}

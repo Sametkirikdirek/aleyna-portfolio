@@ -3,35 +3,50 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { writings as fallbackWritings, profile } from "../data/content";
 
+const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
+
+async function fetchWithTimeout(url, ms = 8000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data.posts) || data.posts.length === 0) {
+      throw new Error("Empty feed");
+    }
+    return data.posts;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function loadMediumArticles() {
+  for (const source of FEED_SOURCES) {
+    try {
+      return await fetchWithTimeout(source);
+    } catch {
+      // try next source
+    }
+  }
+  return fallbackWritings;
+}
+
 export default function Writings() {
   const [articles, setArticles] = useState(fallbackWritings);
-  const [loading, setLoading] = useState(true);
-  const [live, setLive] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadMediumPosts() {
-      try {
-        const response = await fetch("/api/medium");
-        if (!response.ok) throw new Error("Feed unavailable");
-
-        const data = await response.json();
-        if (!cancelled && Array.isArray(data.posts) && data.posts.length > 0) {
-          setArticles(data.posts);
-          setLive(true);
-        }
-      } catch {
-        if (!cancelled) {
-          setArticles(fallbackWritings);
-          setLive(false);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+    loadMediumArticles().then((posts) => {
+      if (!cancelled) {
+        setArticles(posts);
+        setReady(true);
       }
-    }
+    });
 
-    loadMediumPosts();
     return () => {
       cancelled = true;
     };
@@ -49,12 +64,8 @@ export default function Writings() {
               Medium'da yazdıklarım
             </h2>
             <p className="mt-4 font-sans text-sm text-ink/55 max-w-xl">
-              Aleyna Altunsu'nun Medium profilinden güncel yazılar.
-              {live && (
-                <span className="ml-2 font-mono text-[11px] text-brush">
-                  Canlı besleme aktif
-                </span>
-              )}
+              @aleynaaltunsu profilindeki tüm yazılar. Bir başlığa tıklayınca
+              Medium'daki asıl yazıya gidersin.
             </p>
           </div>
           <a
@@ -63,63 +74,62 @@ export default function Writings() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 font-sans text-sm text-ink/70 hover:text-brush transition-colors"
           >
-            @aleynaaltunsu <ExternalLink size={15} />
+            Medium profili <ExternalLink size={15} />
           </a>
         </header>
 
-        {loading ? (
-          <div className="flex flex-col divide-y divide-ink/10 border-t border-b border-ink/10">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="py-7 md:py-8 animate-pulse">
-                <div className="h-3 w-16 bg-ink/10 rounded mb-4" />
-                <div className="h-6 w-2/3 bg-ink/10 rounded mb-3" />
-                <div className="h-4 w-full max-w-xl bg-ink/10 rounded" />
-              </div>
-            ))}
-          </div>
+        {!ready ? (
+          <p className="font-mono text-xs text-ink/40 mb-6">Yazılar yükleniyor…</p>
         ) : (
-          <div className="flex flex-col divide-y divide-ink/10 border-t border-b border-ink/10">
-            {articles.map((w, i) => (
-              <motion.a
-                key={w.id}
-                href={w.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ duration: 0.5, delay: i * 0.06 }}
-                className="group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start"
-              >
-                <span className="font-mono text-xs text-umber order-1 md:order-none whitespace-nowrap">
-                  {w.date}
-                </span>
+          <p className="font-mono text-xs text-ink/40 mb-6">
+            {articles.length} yazı listeleniyor
+          </p>
+        )}
 
-                <div className="order-3 md:order-none">
-                  <h3 className="font-display text-xl md:text-2xl leading-snug group-hover:text-brush transition-colors">
-                    {w.title}
-                  </h3>
+        <div className="flex flex-col divide-y divide-ink/10 border-t border-b border-ink/10">
+          {articles.map((w, i) => (
+            <motion.a
+              key={w.id}
+              href={w.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: ready ? 1 : 0.6, y: 0 }}
+              transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.4) }}
+              className="group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start hover:bg-ink/[0.02] -mx-2 px-2 rounded-lg transition-colors"
+            >
+              <span className="font-mono text-xs text-umber order-1 md:order-none whitespace-nowrap">
+                {w.date}
+              </span>
+
+              <div className="order-3 md:order-none">
+                <h3 className="font-display text-xl md:text-2xl leading-snug group-hover:text-brush transition-colors">
+                  {w.title}
+                </h3>
+                {w.excerpt && (
                   <p className="mt-2 font-sans text-sm text-ink/60 leading-relaxed max-w-xl">
                     {w.excerpt}
                   </p>
-                  <div className="mt-3 flex items-center gap-3 flex-wrap">
-                    <span className="font-mono text-[11px] px-2 py-1 rounded-full border border-ink/15 text-ink/60">
-                      {w.tag}
-                    </span>
+                )}
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <span className="font-mono text-[11px] px-2 py-1 rounded-full border border-ink/15 text-ink/60">
+                    {w.tag}
+                  </span>
+                  {w.readTime && (
                     <span className="font-mono text-[11px] text-ink/40">
                       {w.readTime} okuma
                     </span>
-                  </div>
+                  )}
                 </div>
+              </div>
 
-                <ArrowUpRight
-                  size={20}
-                  className="order-2 md:order-none justify-self-end text-ink/30 group-hover:text-brush group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
-                />
-              </motion.a>
-            ))}
-          </div>
-        )}
+              <ArrowUpRight
+                size={20}
+                className="order-2 md:order-none justify-self-end text-ink/30 group-hover:text-brush group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
+              />
+            </motion.a>
+          ))}
+        </div>
 
         <div className="mt-10 text-center">
           <a
@@ -128,7 +138,7 @@ export default function Writings() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 border border-ink/15 rounded-full font-sans text-sm text-ink/70 hover:text-brush hover:border-brush/40 transition-colors"
           >
-            Medium profilinde tüm yazıları gör
+            Medium'da tüm yazıları gör
             <ArrowUpRight size={16} />
           </a>
         </div>
