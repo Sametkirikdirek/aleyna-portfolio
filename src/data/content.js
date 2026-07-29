@@ -90,50 +90,91 @@ export const paintings = [
   },
 ];
 
-// Medium yazıları: gerçek yazılarını eklemek için title/excerpt/url/date
-// alanlarını kendi Medium hesabındaki yazılarla değiştir. İstersen ileride
-// Medium RSS beslemesinden (medium.com/feed/@kullaniciadi) otomatik
-// çekilecek şekilde de genişletilebilir.
+// Medium yazıları — canlı RSS beslemesi /api/medium üzerinden çekilir.
+// Ağ hatası olursa bu statik liste yedek olarak kullanılır.
 export const writings = [
   {
     id: "w1",
-    title: "Bir Ressamın Gözünden Transformer Mimarisi",
+    title:
+      "Vision Transformer Mimarilerinde Dikkat Savaşları: ViT, Swin, Deformable Attention, Q-Former ve…",
     excerpt:
-      "Dikkat mekanizmasını anlamak için tuvale bakmayı bıraktığım an, kompozisyonun aslında bir ağırlıklandırma problemi olduğunu fark ettim.",
-    date: "Haz 2026",
-    readTime: "7 dk",
+      "Hepsi “attention” kullanıyor. Ama hiçbiri aynı sorunu çözmüyor. ViT, Swin, Deformable Attention ve SegFormer mimarilerini tek çatı altında karşılaştıran kapsamlı bir rehber.",
+    date: "Nis 2026",
+    readTime: "18 dk",
     tag: "Yapay Zeka",
-    url: "https://medium.com/@aleynaaltunsu/transformer-mimarisi",
+    url: "https://medium.com/@aleynaaltunsu/vision-transformer-mimarilerinde-dikkat-sava%C5%9Flar%C4%B1-vit-swin-deformable-attention-q-former-ve-c6091a3c9a2f",
   },
   {
     id: "w2",
-    title: "Rengin Matematiği: Palet Seçerken Ne Hesaplıyoruz?",
+    title:
+      "Model Değil, Sistem İnşa Ediyoruz: FastAPI, LLM ve Production Gerçekleriyle Yapay Zekâ Servisleri",
     excerpt:
-      "Tamamlayıcı renkler sadece göze hoş gelmiyor; aralarında ölçülebilir bir gerilim var. Bu yazıda o gerilimi sayılarla anlatıyorum.",
+      "Yapay zekâ projelerinin büyük bir kısmı etkileyici notebook'larla başlar; ancak önemli bir kısmı gerçek dünya senaryolarında production'a taşınamadan kalır.",
     date: "Mar 2026",
-    readTime: "5 dk",
-    tag: "Sanat",
-    url: "https://medium.com/@aleynaaltunsu/rengin-matematigi",
+    readTime: "12 dk",
+    tag: "Yapay Zeka",
+    url: "https://medium.com/@aleynaaltunsu/model-de%C4%9Fil-sistem-i%CC%87n%C5%9Fa-ediyoruz-fastapi-llm-ve-production-ger%C3%A7ekleriyle-yapay-zek%C3%A2-servisleri-30b5896b202b",
   },
   {
     id: "w3",
-    title: "Prodüksiyonda Bir Öneri Sistemi: Aldığım 6 Ders",
+    title:
+      "NeurIPS 2025'in Anatomisi: Yapay Zekada Yeni Bir Çağın Dört Sütunu ve Mimari Devrim",
     excerpt:
-      "Modelin doğruluğu yeterli değil. Kullanıcı gerçekten bunu mu istiyor, yoksa sadece en kolay tıklanabilir şeyi mi görüyor?",
+      "Model mimarisi, gradyan akışı ve genelleme teorileriyle yaşayan profesyoneller için NeurIPS 2025'in öne çıkan trendlerine derinlemesine bir bakış.",
     date: "Ock 2026",
-    readTime: "9 dk",
+    readTime: "14 dk",
     tag: "Yapay Zeka",
-    url: "https://medium.com/@aleynaaltunsu/oneri-sistemi-dersleri",
+    url: "https://medium.com/@aleynaaltunsu/neurips-2025in-anatomisi-yapay-zekada-yeni-bir-%C3%A7a%C4%9F%C4%B1n-d%C3%B6rt-s%C3%BCtunu-ve-mimari-devrim-fbcebb55be87",
   },
   {
     id: "w4",
-    title: "Atölye Günlüğü: Bitmemiş Tablolar Üzerine",
+    title: "Kurumsal Yapay Zekâ Sistemlerinde Yeni Çağ",
     excerpt:
-      "Bazı tabloları neden bitirmiyoruz? Belki de bitmemiş olmaları, üzerinde hâlâ düşünüyor olduğumuzun kanıtı.",
-    date: "Kas 2025",
-    readTime: "4 dk",
-    tag: "Sanat",
-    url: "https://medium.com/@aleynaaltunsu/bitmemis-tablolar",
+      "RAG, GPU optimizasyonu ve agentic mimari ile ölçeklenebilir LLM platformları tasarlamak üzerine kurumsal yapay zekâ perspektifi.",
+    date: "Ara 2025",
+    readTime: "11 dk",
+    tag: "Yapay Zeka",
+    url: "https://medium.com/@aleynaaltunsu/kurumsal-yapay-zek%C3%A2-sistemlerinde-yeni-%C3%A7a%C4%9F-e58881c52058",
+  },
+  {
+    id: "w5",
+    title: "Derin Öğrenmede Ön Eğitim (Pretraining) ve İnce Ayar (Fine-Tuning)",
+    excerpt:
+      "LLM'lerde pretraining ve fine-tuning süreçlerini, yöntemlerini ve pratik uygulamalarını adım adım açıklayan teknik bir kılavuz.",
+    date: "Kas 2024",
+    readTime: "10 dk",
+    tag: "Yapay Zeka",
+    url: "https://medium.com/kurumsal-gelisim/derin-%C3%B6%C4%9Frenmede-%C3%B6n-e%C4%9Fitim-pretraining-ve-i%CC%87nne-ayar-fine-tuning-6417e2914075",
+  },
+  {
+    id: "w6",
+    title: "NLP'de Vektör, Embedding ve Encoder: Kıyaslamalı Bir Kılavuz",
+    excerpt:
+      "BoW, TF-IDF, Word2Vec, GloVe ve FastText gibi temsil yöntemlerini karşılaştıran, NLP'ye giriş için kapsamlı bir rehber.",
+    date: "Eki 2024",
+    readTime: "9 dk",
+    tag: "NLP",
+    url: "https://medium.com/kurumsal-gelisim/nlpde-vekt%C3%B6r-embedding-ve-encoder-k%C4%B1yaslamal%C4%B1-bir-k%C4%B1lavuz-ec09b30d6619",
+  },
+  {
+    id: "w7",
+    title: "Doğal Dil İşleme (NLP) Tarihçesi ve Kıyaslaması",
+    excerpt:
+      "İnsan dilini bilgisayarlar tarafından anlamlandırma teknolojisinin tarihsel gelişimi ve temel yaklaşımların karşılaştırması.",
+    date: "Eyl 2024",
+    readTime: "8 dk",
+    tag: "NLP",
+    url: "https://medium.com/kurumsal-gelisim/do%C4%9Fal-dil-i%CC%87%C5%9Fleme-nlp-tarih%C3%A7esi-ve-k%C4%B1yaslamas%C4%B1-475f2c971400",
+  },
+  {
+    id: "w8",
+    title: "Yüz Tanıma ve Yoklama Alma Sistemleri Projesi Üzerine Rapor",
+    excerpt:
+      "Yüz tanıma teknolojisinin yoklama sistemlerindeki uygulaması, proje mimarisi ve gerçek dünya senaryoları üzerine teknik rapor.",
+    date: "Tem 2024",
+    readTime: "7 dk",
+    tag: "Bilgisayarlı Görü",
+    url: "https://medium.com/@aleynaaltunsu/y%C3%BCz-tan%C4%B1ma-ve-yoklama-alma-sistemleri-projesi-%C3%BCzerine-rapor-9f4f9fa712f0",
   },
 ];
 
