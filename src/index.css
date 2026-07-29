@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: #14151a;
+  --foreground: #e8e3d8;
+  --card: #1c1e26;
+  --card-foreground: #e8e3d8;
+  --popover: #1c1e26;
+  --popover-foreground: #e8e3d8;
+  --primary: #b5482e;
+  --primary-foreground: #f1ece1;
+  --secondary: #1c1e26;
+  --secondary-foreground: #e8e3d8;
+  --muted: #1c1e26;
+  --muted-foreground: #a8a29e;
+  --accent: #6ba3a6;
+  --accent-foreground: #14151a;
+  --destructive: #dc2626;
+  --border: rgba(241, 236, 225, 0.12);
+  --input: rgba(241, 236, 225, 0.12);
+  --ring: #6ba3a6;
+}
+
+@theme {
+  /* -- Renk paleti: "ıslak tuval + fildişi kağıt + sienna fırça + devre camgöbeği" -- */
+  --color-ink: #14151a;
+  --color-ink-soft: #1c1e26;
+  --color-paper: #f1ece1;
+  --color-paper-dim: #e7e0d0;
+  --color-brush: #b5482e;
+  --color-brush-soft: #d9704f;
+  --color-circuit: #6ba3a6;
+  --color-circuit-soft: #8fc0c2;
+  --color-umber: #5b4636;
+  --color-text-onlight: #1b1a17;
+  --color-text-ondark: #e8e3d8;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-sans: "Space Grotesk", "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-text-ondark);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-brush);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-circuit);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* İnce tuval dokusu (noise) — arka planlarda çok hafif kullanılacak */
+.canvas-grain {
+  position: relative;
+}
+.canvas-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.text-balance {
+  text-wrap: balance;
+}
