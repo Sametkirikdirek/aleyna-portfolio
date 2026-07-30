@@ -1,6 +1,6 @@
 # Aleyna Altunsu — Kişisel Portfolyo
 
-Ressam, yazar ve yapay zeka mühendisi Aleyna Altunsu için hazırlanmış,
+Yapay zeka mühendisi, ressam ve yazar Aleyna Altunsu için hazırlanmış,
 React + Vite + Tailwind CSS ile geliştirilmiş, mobil uyumlu ve animasyonlu
 tek sayfalık portfolyo sitesi.
 
