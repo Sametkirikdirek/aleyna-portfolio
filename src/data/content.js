@@ -8,10 +8,22 @@ export const profile = {
   name: "Aleyna Altunsu",
   roles: ["Yapay Zeka Mühendisi", "Ressam", "Yazar"],
   tagline: "Fırçayla başlayan çizgi, kodda devam ediyor.",
-  bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir
-  yaratıcıyım. Sanatın sezgisiyle mühendisliğin titizliğini aynı çizginin
-  iki ucu olarak görüyorum — biri hissi yakalar, diğeri onu bir sisteme
-  dönüştürür.`,
+  bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı yaratıcı sürecin iki tamamlayıcı yüzü olarak görüyorum — biri duyguyu ve kavramı yakalar, diğeri onu yaşayan sistemlere dönüştürür.`,
+  extendedBio: [
+    {
+      title: "Mühendislik & Yapay Zekâ",
+      content: `Derin öğrenme mimarileri (Vision Transformers, LLM Fine-Tuning, Difüzyon Modelleri) ve üretim seviyesi (production-ready) AI sistemleri üzerine odaklanıyorum. PyTorch, FastAPI ve MLOps araçlarıyla karmaşık veri problemlerini ölçeklenebilir, yüksek performanslı mimarilere dönüştürüyorum.`,
+    },
+    {
+      title: "Sanat & Atölye Pratiği",
+      content: `Tuval üzerinde akrilik, yağlı boya ve suluboya teknikleriyle insan zihni, katmanlı düşünce süreçleri ve dijital ağların hissettirdiği dokuları görselleştiriyorum. Fırça darbelerimdeki kompozisyon arayışı, kod yazarken kurduğum mimari temizlikle doğrudan besleniyor.`,
+    },
+    {
+      title: "Yazı & Bilgi Paylaşımı",
+      content: `Medium ve kişisel blogumda yapay zekâ teknolojilerinin teknik anatomisini (ViT, Swin, RAG, LLM servisleri) ve atölye günlüklerimi kaleme alıyorum. Karmaşık mühendislik kavramlarını berrak bir dille aktarmanın, gelişimin en güçlü parçası olduğuna inanıyorum.`,
+    },
+  ],
+  philosophy: "Tuvaldeki altın oran ile ekrandaki kod mimarisi arasında kopmaz bir akrabalık var. Sanat soruları sorar, mühendislik ise o sorulara sistemlerle cevap verir.",
   location: "İstanbul, Türkiye",
   email: "hello@aleynaaltunsu.com",
   social: {
