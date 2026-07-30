@@ -317,7 +317,8 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
     </section>
 
     {/* Full-screen cinematic Zaman Yolculuğu overlay — rendered directly, no portal */}
-    {activeTab === "zaman-yolculugu" && (
+    <AnimatePresence>
+      {activeTab === "zaman-yolculugu" && (
       <motion.div
         key="zaman-yolculugu-overlay"
         initial={{ opacity: 0 }}
@@ -380,7 +381,8 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
           <span>Geri Dön</span>
         </button>
       </motion.div>
-    )}
+      )}
+    </AnimatePresence>
     </>
   );
 }
