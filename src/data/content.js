@@ -27,13 +27,23 @@ export const profile = {
 // fotoğraflarını eklemek için `image: "/gallery/eser1.jpg"` gibi bir
 // alan eklemen yeterli — GalleryCard bileşeni varsa görseli, yoksa
 // üretimsel deseni gösterecek şekilde ayarlanabilir.
+export const galleryImagesPool = [
+  "/gallery/art-1.png",
+  "/gallery/art-2.png",
+  "/gallery/art-3.png",
+  "/gallery/art-4.png",
+  "/gallery/art-5.png",
+  "/gallery/art-6.png",
+];
+
 export const paintings = [
   {
     id: "p1",
     title: "Sinir Ağı Rüyası",
     year: "2024",
-    medium: "Tuval üzerine akrilik",
+    medium: "Tuval üzerine akrilik & AI stili",
     size: "80 × 100 cm",
+    image: "/gallery/art-1.png",
     seed: 12,
     palette: ["#B5482E", "#6BA3A6", "#F1ECE1"],
     note: "Katmanlı düşünce süreçlerinin fırça darbeleriyle görselleştirilmesi.",
@@ -44,6 +54,7 @@ export const paintings = [
     year: "2023",
     medium: "Tuval üzerine yağlı boya",
     size: "60 × 90 cm",
+    image: "/gallery/art-2.png",
     seed: 47,
     palette: ["#14151A", "#B5482E", "#5B4636"],
     note: "Kod yazarken geçen gecelerden ilham alınmış, sıcak-soğuk kontrastı.",
@@ -54,6 +65,7 @@ export const paintings = [
     year: "2023",
     medium: "Kağıt üzerine suluboya",
     size: "35 × 50 cm",
+    image: "/gallery/art-3.png",
     seed: 8,
     palette: ["#6BA3A6", "#F1ECE1", "#8FC0C2"],
     note: "İstanbul Boğazı'nın erken sabah ışığı.",
@@ -64,6 +76,7 @@ export const paintings = [
     year: "2022",
     medium: "Tuval üzerine karışık teknik",
     size: "70 × 70 cm",
+    image: "/gallery/art-4.png",
     seed: 91,
     palette: ["#B5482E", "#D9704F", "#14151A"],
     note: "Yazılım ve dil arasındaki gerilim üzerine bir çalışma.",
@@ -74,6 +87,7 @@ export const paintings = [
     year: "2022",
     medium: "Tuval üzerine akrilik",
     size: "50 × 65 cm",
+    image: "/gallery/art-5.png",
     seed: 33,
     palette: ["#5B4636", "#F1ECE1", "#B5482E"],
     note: "Eğitilmemiş bir modelin potansiyeli üzerine metafor.",
@@ -84,6 +98,7 @@ export const paintings = [
     year: "2021",
     medium: "Tuval üzerine yağlı boya",
     size: "100 × 140 cm",
+    image: "/gallery/art-6.png",
     seed: 65,
     palette: ["#6BA3A6", "#14151A", "#F1ECE1"],
     note: "İlk büyük ölçekli çalışmalarından biri.",

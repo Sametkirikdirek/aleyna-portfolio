@@ -1,11 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { paintings } from "../data/content";
+import { X, RefreshCw } from "lucide-react";
+import { paintings, galleryImagesPool } from "../data/content";
 import PaintingCanvas from "./PaintingCanvas";
+
+// Fisher-Yates shuffle algoritması
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 export default function Gallery() {
   const [active, setActive] = useState(null);
+  const [items, setItems] = useState(paintings);
+
+  // Sayfa her yüklendiğinde / yenilendiğinde görselleri karıştırıyoruz
+  useEffect(() => {
+    const shuffledImages = shuffleArray(galleryImagesPool);
+    const randomized = paintings.map((p, index) => ({
+      ...p,
+      image: shuffledImages[index % shuffledImages.length],
+    }));
+    setItems(randomized);
+  }, []);
+
+  const handleShuffle = () => {
+    const shuffledImages = shuffleArray(galleryImagesPool);
+    const randomized = items.map((p, index) => ({
+      ...p,
+      image: shuffledImages[index % shuffledImages.length],
+    }));
+    setItems(randomized);
+  };
 
   return (
     <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink">
@@ -19,13 +49,23 @@ export default function Gallery() {
               Tuval üzerine seçkiler
             </h2>
           </div>
-          <p className="font-sans text-sm text-paper/50 max-w-xs">
-            Görsele dokun, eserin hikâyesini ve teknik detaylarını gör.
-          </p>
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
+              Görsele dokun, eserin hikâyesini ve teknik detaylarını gör.
+            </p>
+            <button
+              onClick={handleShuffle}
+              className="inline-flex items-center gap-1.5 font-mono text-xs text-brush-soft hover:text-paper transition-colors py-1 px-3 rounded-full border border-paper/10 bg-paper/5"
+              title="Sergiyi Karıştır"
+            >
+              <RefreshCw size={13} />
+              Yenile & Karıştır
+            </button>
+          </div>
         </header>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-          {paintings.map((p, i) => (
+          {items.map((p, i) => (
             <motion.button
               key={p.id}
               onClick={() => setActive(p)}
@@ -33,12 +73,22 @@ export default function Gallery() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
-              className="group relative aspect-[4/5] rounded-lg overflow-hidden text-left"
+              className="group relative aspect-[4/5] rounded-lg overflow-hidden text-left bg-ink-soft"
             >
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : null}
               <PaintingCanvas
                 seed={p.seed}
                 palette={p.palette}
-                className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-[1.06]"
+                className="absolute inset-0 -z-10 w-full h-full"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/0 to-ink/0 opacity-80 group-hover:opacity-95 transition-opacity" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -70,8 +120,16 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
               className="max-w-3xl w-full grid md:grid-cols-[1.1fr_0.9fr] gap-0 bg-ink-soft rounded-xl overflow-hidden border border-paper/10"
             >
-              <div className="aspect-square md:aspect-auto md:h-full">
-                <PaintingCanvas seed={active.seed} palette={active.palette} className="w-full h-full" />
+              <div className="relative aspect-square md:aspect-auto md:h-full overflow-hidden bg-ink min-h-[300px]">
+                {active.image ? (
+                  <img
+                    src={active.image}
+                    alt={active.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <PaintingCanvas seed={active.seed} palette={active.palette} className="w-full h-full" />
+                )}
               </div>
               <div className="p-7 md:p-9 relative">
                 <button
