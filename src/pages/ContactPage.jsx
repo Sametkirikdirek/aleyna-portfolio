@@ -1,7 +1,6 @@
+import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/ui/hero-section-2";
-import { profile } from "../data/content";
-
-const CONTACT_IMAGE = "/images/contact-bg.png";
+import { profile, contactArtworks } from "../data/content";
 
 const socialLinks = [
   { label: "Medium", href: profile.social.medium },
@@ -11,6 +10,23 @@ const socialLinks = [
 ];
 
 export default function ContactPage() {
+  const [artwork, setArtwork] = useState(() => {
+    const randomIndex = Math.floor(Math.random() * contactArtworks.length);
+    return contactArtworks[randomIndex];
+  });
+
+  // Her sayfa açılışında veya yenilendiğinde rastgele bir resim seçilsin
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * contactArtworks.length);
+    setArtwork(contactArtworks[randomIndex]);
+  }, []);
+
+  const handleRefreshArtwork = () => {
+    const available = contactArtworks.filter((a) => a.id !== artwork?.id);
+    const randomIndex = Math.floor(Math.random() * available.length);
+    setArtwork(available[randomIndex]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <HeroSection
@@ -31,7 +47,9 @@ export default function ContactPage() {
           text: "E-POSTA GÖNDER",
           href: `mailto:${profile.email}`,
         }}
-        backgroundImage={CONTACT_IMAGE}
+        backgroundImage={artwork.image}
+        artwork={artwork}
+        onRefreshArtwork={handleRefreshArtwork}
         contactInfo={{
           website: "aleynaaltunsu.com",
           email: profile.email,

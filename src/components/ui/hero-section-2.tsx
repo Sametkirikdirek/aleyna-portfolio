@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, type Variants } from "framer-motion";
-import { Globe, Mail, MapPin } from "lucide-react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { Globe, Mail, MapPin, Sparkles, RefreshCw } from "lucide-react";
 
 type InfoType = "website" | "email" | "address";
 
@@ -29,6 +29,14 @@ export interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
     href: string;
   };
   backgroundImage: string;
+  artwork?: {
+    id?: string;
+    title: string;
+    year: string;
+    medium: string;
+    image: string;
+  };
+  onRefreshArtwork?: () => void;
   contactInfo: {
     website: string;
     email: string;
@@ -69,6 +77,8 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
       subtitle,
       callToAction,
       backgroundImage,
+      artwork,
+      onRefreshArtwork,
       contactInfo,
       ...props
     },
@@ -78,7 +88,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
       <motion.section
         ref={ref}
         className={cn(
-          "relative flex w-full flex-col overflow-hidden bg-background text-foreground md:flex-row",
+          "relative flex w-full flex-col overflow-hidden bg-background text-foreground md:flex-row min-h-[85vh]",
           className
         )}
         initial="hidden"
@@ -155,14 +165,54 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         </div>
 
         <motion.div
-          className="min-h-[320px] w-full bg-cover bg-center md:min-h-full md:w-1/2 lg:w-2/5"
+          className="relative min-h-[380px] w-full bg-cover bg-center md:min-h-full md:w-1/2 lg:w-2/5 overflow-hidden group cursor-pointer"
           style={{ backgroundImage: `url(${backgroundImage})` }}
           initial={{ clipPath: "polygon(100% 0, 100% 0, 100% 100%, 100% 100%)" }}
-          animate={{ clipPath: "polygon(25% 0, 100% 0, 100% 100%, 0% 100%)" }}
+          animate={{ clipPath: "polygon(0% 0, 100% 0, 100% 100%, 0% 100%)" }}
           transition={{ duration: 1.2, ease: "circOut" }}
           role="img"
           aria-label="İletişim görseli"
-        />
+          onClick={onRefreshArtwork}
+        >
+          {/* Sol Alt Köşe Estetik Animasyonlu Eser Kartı */}
+          <AnimatePresence mode="wait">
+            {artwork && (
+              <motion.div
+                key={artwork.title}
+                initial={{ opacity: 0, y: 30, scale: 0.92 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                className="absolute bottom-6 left-6 z-20 max-w-[280px] rounded-xl border border-white/20 bg-black/65 p-4 backdrop-blur-md shadow-2xl text-white pointer-events-auto"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                    {artwork.year} · SEÇKİ
+                  </span>
+                  {onRefreshArtwork && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRefreshArtwork();
+                      }}
+                      className="p-1 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                      title="Görseli Değiştir"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <h4 className="font-display text-base font-bold text-white leading-snug">
+                  {artwork.title}
+                </h4>
+                <p className="font-mono text-[11px] text-white/70 mt-1">
+                  {artwork.medium}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </motion.section>
     );
   }
