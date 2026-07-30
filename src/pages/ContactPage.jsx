@@ -1,8 +1,7 @@
 import { HeroSection } from "@/components/ui/hero-section-2";
 import { profile } from "../data/content";
 
-const SCREAM_IMAGE =
-  "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Edvard_Munch%2C_The_Scream%2C_1893%2C_oil%2C_tempera_and_pastel_on_cardboard%2C_91_x_73_cm%2C_National_Gallery_of_Norway.jpg/800px-Edvard_Munch%2C_The_Scream%2C_1893%2C_oil%2C_tempera_and_pastel_on_cardboard%2C_91_x_73_cm%2C_National_Gallery_of_Norway.jpg";
+const CONTACT_IMAGE = "/images/contact-bg.png";
 
 const socialLinks = [
   { label: "Medium", href: profile.social.medium },
@@ -32,7 +31,7 @@ export default function ContactPage() {
           text: "E-POSTA GÖNDER",
           href: `mailto:${profile.email}`,
         }}
-        backgroundImage={SCREAM_IMAGE}
+        backgroundImage={CONTACT_IMAGE}
         contactInfo={{
           website: "aleynaaltunsu.com",
           email: profile.email,
