@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Globe, Mail, MapPin, Sparkles, RefreshCw } from "lucide-react";
+import { Globe, Mail, MapPin, RefreshCw } from "lucide-react";
 
 type InfoType = "website" | "email" | "address";
 
@@ -186,8 +186,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                 className="absolute bottom-6 left-6 z-20 max-w-[280px] rounded-xl border border-white/20 bg-black/65 p-4 backdrop-blur-md shadow-2xl text-white pointer-events-auto"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">
                     {artwork.year} · SEÇKİ
                   </span>
                   {onRefreshArtwork && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Sparkles, Maximize2 } from "lucide-react";
+import { X, RefreshCw, Maximize2 } from "lucide-react";
 import { paintings } from "../data/content";
 import PaintingCanvas from "./PaintingCanvas";
 
@@ -32,8 +32,7 @@ export default function Gallery() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 md:mb-16 flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-4 flex items-center gap-2">
-              <Sparkles size={14} className="text-circuit-soft" />
+            <p className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-4">
               Galeri & Seçkiler
             </p>
             <h2 className="font-display text-3xl md:text-5xl text-paper leading-tight text-balance">
