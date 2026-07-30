@@ -4,8 +4,7 @@ import { Card } from "@/components/ui/card";
 import { paintings } from "@/data/content";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Grid, X, ZoomIn, History } from "lucide-react";
-import { KeyboardEvent, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { KeyboardEvent, useMemo, useState } from "react";
 import InfiniteGallery from "./infinite-gallery";
 
 const unsplashImages = [
@@ -317,51 +316,71 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
       </div>
     </section>
 
-    {/* Full-screen cinematic Zaman Yolculuğu overlay */}
-    <AnimatePresence>
-      {activeTab === "zaman-yolculugu" && typeof document !== "undefined" &&
-        createPortal(
-          <motion.main
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="fixed inset-0 z-[80] min-h-screen h-full w-full bg-black"
-          >
-            <InfiniteGallery
-              images={infiniteGalleryImages}
-              speed={1.2}
-              zSpacing={3}
-              visibleCount={12}
-              className="h-screen w-full"
-            />
+    {/* Full-screen cinematic Zaman Yolculuğu overlay — rendered directly, no portal */}
+    {activeTab === "zaman-yolculugu" && (
+      <motion.div
+        key="zaman-yolculugu-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{ position: "fixed", inset: 0, zIndex: 80, background: "#000", width: "100vw", height: "100vh" }}
+      >
+        <InfiniteGallery
+          images={infiniteGalleryImages}
+          speed={1.2}
+          visibleCount={12}
+          className="h-full w-full"
+          style={{ width: "100vw", height: "100vh" }}
+        />
 
-            {/* Centre title */}
-            <div className="h-screen inset-0 pointer-events-none fixed flex items-center justify-center text-center px-3 mix-blend-exclusion text-white">
-              <h1 className="font-serif text-5xl md:text-8xl tracking-tight select-none">
-                <span className="italic">ALEYNA</span>
-              </h1>
-            </div>
+        {/* Centre title */}
+        <div
+          style={{
+            position: "fixed", inset: 0, pointerEvents: "none",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            textAlign: "center", mixBlendMode: "exclusion", color: "#fff",
+          }}
+        >
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(3rem, 10vw, 9rem)", letterSpacing: "-0.04em", fontStyle: "italic", userSelect: "none" }}>
+            ALEYNA
+          </h1>
+        </div>
 
-            {/* Bottom hint */}
-            <div className="text-center fixed bottom-10 left-0 right-0 font-mono uppercase text-[11px] font-semibold text-white/70 pointer-events-none">
-              <p>Mouse tekerleği, yön tuşları veya dokunarak gezin</p>
-              <p className="opacity-60">3 sn. hareketsizlikten sonra otomatik oynatma devam eder</p>
-            </div>
+        {/* Bottom hint */}
+        <div
+          style={{
+            position: "fixed", bottom: 40, left: 0, right: 0, textAlign: "center",
+            fontFamily: "monospace", fontSize: "11px", textTransform: "uppercase",
+            letterSpacing: "0.1em", fontWeight: 600, color: "rgba(255,255,255,0.7)",
+            pointerEvents: "none",
+          }}
+        >
+          <p>Mouse tekerleği, yön tuşları veya dokunarak gezin</p>
+          <p style={{ opacity: 0.6 }}>3 sn. hareketsizlikten sonra otomatik oynatma devam eder</p>
+        </div>
 
-            {/* Close / Geri Dön */}
-            <button
-              onClick={() => setActiveTab("galeri")}
-              className="fixed top-6 right-6 z-[90] flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-mono text-xs uppercase tracking-widest hover:bg-white/20 transition-all"
-              aria-label="Galeri'ye geri dön"
-            >
-              <X size={14} />
-              <span>Geri Dön</span>
-            </button>
-          </motion.main>,
-          document.body
-        )}
-    </AnimatePresence>
+        {/* Close / Geri Dön */}
+        <button
+          onClick={() => setActiveTab("galeri")}
+          style={{
+            position: "fixed", top: 24, right: 24, zIndex: 90,
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "8px 18px", borderRadius: 999,
+            background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.2)", color: "#fff",
+            fontFamily: "monospace", fontSize: "11px", textTransform: "uppercase",
+            letterSpacing: "0.1em", cursor: "pointer", transition: "background 0.2s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.22)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+          aria-label="Galeri'ye geri dön"
+        >
+          <X size={14} />
+          <span>Geri Dön</span>
+        </button>
+      </motion.div>
+    )}
     </>
   );
 }
