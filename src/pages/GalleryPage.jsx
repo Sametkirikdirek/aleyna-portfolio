@@ -1,5 +1,5 @@
-import { GalleryGridBlock } from "@/components/ui/gallery-grid-block-shadcnui";
+import Gallery from "@/components/Gallery";
 
 export default function GalleryPage() {
-  return <GalleryGridBlock />;
+  return <Gallery />;
 }

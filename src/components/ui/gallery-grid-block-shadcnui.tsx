@@ -24,7 +24,7 @@ function categoryFromMedium(medium: string) {
 
 const defaultGalleryImages = paintings.map((painting, index) => ({
   id: index + 1,
-  url: unsplashImages[index] ?? unsplashImages[0],
+  url: painting.image || unsplashImages[index] || unsplashImages[0],
   title: painting.title,
   category: categoryFromMedium(painting.medium),
   year: painting.year,
