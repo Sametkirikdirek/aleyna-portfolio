@@ -26,6 +26,10 @@ export const profile = {
   philosophy: "Tuvaldeki kompozisyon ile ekrandaki kod mimarisi arasında kopmaz bir akrabalık var. Sanat sorular sorar ve ifade arar, mühendislik ise o sorulara sistemlerle cevap verir.",
   location: "İstanbul, Türkiye",
   email: "hello@aleynaaltunsu.com",
+  cv: {
+    tr: "/docs/Aleyna_Altunsu_CV_TR.pdf",
+    en: "/docs/Aleyna_Altunsu_CV_EN.pdf",
+  },
   social: {
     medium: "https://medium.com/@aleynaaltunsu",
     github: "https://github.com/aleynaaltunsu",
@@ -34,23 +38,65 @@ export const profile = {
   },
 };
 
-// Galeri: her eser için bir "seed" veriyoruz; bu seed'e göre soyut,
-// üretimsel (generative) bir kapak deseni oluşturuluyor. Gerçek tablo
-// fotoğraflarını eklemek için `image: "/gallery/eser1.jpg"` gibi bir
-// alan eklemen yeterli — GalleryCard bileşeni varsa görseli, yoksa
-// üretimsel deseni gösterecek şekilde ayarlanabilir.
-export const contactArtworks = [
+export const paintings = [
   {
-    id: "ca1",
-    title: "Sinir Ağı Rüyası",
-    image: "/gallery/art-1.png",
+    id: "eser-1",
+    title: "Derin Öğrenme Katmanları",
     year: "2024",
-    medium: "Tuval Üzerine Akrilik & Yapay Zeka",
+    medium: "Tuval üzerine akrilik ve dijital müdahale",
+    seed: 142,
+    image: "/gallery/art-1.png",
+    note: "Yapay sinir ağlarındaki veri akışının katmanlı renk geçişleriyle tuvale aktarılması.",
   },
   {
-    id: "ca2",
-    title: "Gece Vardiyası",
+    id: "eser-2",
+    title: "Algoritmik Rüyalar No. 3",
+    year: "2024",
+    medium: "Karma teknik",
+    seed: 88,
     image: "/gallery/art-2.png",
+    note: "Üretimsel modellerin latent uzayındaki biçim arayışının fırça darbeleriyle somutlaşması.",
+  },
+  {
+    id: "eser-3",
+    title: "Fırça ve Kod Arasındaki Çizgi",
+    year: "2023",
+    medium: "Yağlı boya ve akrilik",
+    seed: 205,
+    image: "/gallery/art-3.png",
+    note: "Mühendislik titizliği ile sanatsal serbestliğin tuval yüzeyindeki dengesi.",
+  },
+  {
+    id: "eser-4",
+    title: "Piksel ve Pigment",
+    year: "2023",
+    medium: "Dijital çizim & baskı üzeri akrilik",
+    seed: 310,
+    image: "/gallery/art-4.png",
+    note: "Dijital ekranlardaki piksel yapısının tuvaldeki boya katmanlarıyla diyaloğu.",
+  },
+  {
+    id: "eser-5",
+    title: "Latent Harita",
+    year: "2023",
+    medium: "Tuval üzerine akrilik",
+    seed: 512,
+    image: "/gallery/art-5.png",
+    note: "Çok boyutlu veri uzaylarının iki boyutlu yüzeyde renk kümeleri olarak izdüşümü.",
+  },
+  {
+    id: "eser-6",
+    title: "Sessiz Algoritma",
+    year: "2022",
+    medium: "Suluboya ve mürekkep",
+    seed: 740,
+    image: "/gallery/art-6.png",
+    note: "Kod döngülerinin getirdiği zihinsel odaklanmanın kağıt üzerindeki şeffaf izleri.",
+  },
+];
+
+export const contactArtworks = [
+  {
     year: "2023",
     medium: "Yağlı Boya & Siber Desen",
   },
@@ -88,69 +134,6 @@ export const contactArtworks = [
     image: "/images/contact-bg.png",
     year: "2024",
     medium: "Dijital Yağlı Boya Sentezi",
-  },
-];
-
-export const paintings = [
-  {
-    id: "p1",
-    title: "Sinir Ağı Rüyası",
-    year: "2024",
-    medium: "Tuval üzerine akrilik",
-    size: "80 × 100 cm",
-    seed: 12,
-    palette: ["#B5482E", "#6BA3A6", "#F1ECE1"],
-    note: "Katmanlı düşünce süreçlerinin fırça darbeleriyle görselleştirilmesi.",
-  },
-  {
-    id: "p2",
-    title: "Gece Vardiyası",
-    year: "2023",
-    medium: "Tuval üzerine yağlı boya",
-    size: "60 × 90 cm",
-    seed: 47,
-    palette: ["#14151A", "#B5482E", "#5B4636"],
-    note: "Kod yazarken geçen gecelerden ilham alınmış, sıcak-soğuk kontrastı.",
-  },
-  {
-    id: "p3",
-    title: "Kıyı Notları",
-    year: "2023",
-    medium: "Kağıt üzerine suluboya",
-    size: "35 × 50 cm",
-    seed: 8,
-    palette: ["#6BA3A6", "#F1ECE1", "#8FC0C2"],
-    note: "İstanbul Boğazı'nın erken sabah ışığı.",
-  },
-  {
-    id: "p4",
-    title: "Değişken İsimleri",
-    year: "2022",
-    medium: "Tuval üzerine karışık teknik",
-    size: "70 × 70 cm",
-    seed: 91,
-    palette: ["#B5482E", "#D9704F", "#14151A"],
-    note: "Yazılım ve dil arasındaki gerilim üzerine bir çalışma.",
-  },
-  {
-    id: "p5",
-    title: "Sessiz Model",
-    year: "2022",
-    medium: "Tuval üzerine akrilik",
-    size: "50 × 65 cm",
-    seed: 33,
-    palette: ["#5B4636", "#F1ECE1", "#B5482E"],
-    note: "Eğitilmemiş bir modelin potansiyeli üzerine metafor.",
-  },
-  {
-    id: "p6",
-    title: "Ufuk Çizgisi, v2",
-    year: "2021",
-    medium: "Tuval üzerine yağlı boya",
-    size: "100 × 140 cm",
-    seed: 65,
-    palette: ["#6BA3A6", "#14151A", "#F1ECE1"],
-    note: "İlk büyük ölçekli çalışmalarından biri.",
   },
 ];
 
