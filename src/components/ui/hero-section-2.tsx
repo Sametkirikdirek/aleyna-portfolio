@@ -165,8 +165,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         </div>
 
         <motion.div
-          className="relative min-h-[380px] w-full bg-cover bg-center md:min-h-full md:w-1/2 lg:w-2/5 overflow-hidden group cursor-pointer"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
+          className="relative min-h-[380px] w-full md:min-h-full md:w-1/2 lg:w-2/5 overflow-hidden group cursor-pointer bg-ink"
           initial={{ clipPath: "polygon(100% 0, 100% 0, 100% 100%, 100% 100%)" }}
           animate={{ clipPath: "polygon(0% 0, 100% 0, 100% 100%, 0% 100%)" }}
           transition={{ duration: 1.2, ease: "circOut" }}
@@ -174,6 +173,19 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
           aria-label="İletişim görseli"
           onClick={onRefreshArtwork}
         >
+          {/* Arka Plan Görseli Animasyonlu Sinematik Geçişi */}
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={backgroundImage}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${backgroundImage})` }}
+            />
+          </AnimatePresence>
+
           {/* Sol Alt Köşe Estetik Animasyonlu Eser Kartı */}
           <AnimatePresence mode="wait">
             {artwork && (
@@ -182,7 +194,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                 initial={{ opacity: 0, y: 30, scale: 0.92 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
                 className="absolute bottom-6 left-6 z-20 max-w-[280px] rounded-xl border border-white/20 bg-black/65 p-4 backdrop-blur-md shadow-2xl text-white pointer-events-auto"
               >
                 <div className="flex items-center justify-between mb-1.5">
@@ -195,10 +207,10 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                         e.stopPropagation();
                         onRefreshArtwork();
                       }}
-                      className="p-1 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                      className="p-1.5 text-white/60 hover:text-white transition-all rounded-full hover:bg-white/10 active:scale-90"
                       title="Görseli Değiştir"
                     >
-                      <RefreshCw className="w-3.5 h-3.5" />
+                      <RefreshCw className="w-3.5 h-3.5 transition-transform duration-500 hover:rotate-180" />
                     </button>
                   )}
                 </div>
