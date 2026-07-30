@@ -79,8 +79,22 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
   };
 
   const infiniteGalleryImages = useMemo(() => {
-    return images.map((img) => ({ src: img.url, alt: img.title }));
-  }, [images]);
+    return [
+      { src: "/gallery/art-1.png", alt: "Art 1" },
+      { src: "/gallery/zaman_1_1785423563633.png", alt: "Zaman Yolculuğu 1" },
+      { src: "/gallery/art-2.png", alt: "Art 2" },
+      { src: "/gallery/zaman_2_1785423572766.png", alt: "Zaman Yolculuğu 2" },
+      { src: "/gallery/art-3.png", alt: "Art 3" },
+      { src: "/gallery/zaman_3_1785423582323.png", alt: "Zaman Yolculuğu 3" },
+      { src: "/gallery/art-4.png", alt: "Art 4" },
+      { src: "/gallery/zaman_4_1785423591404.png", alt: "Zaman Yolculuğu 4" },
+      { src: "/gallery/art-5.png", alt: "Art 5" },
+      { src: "/gallery/zaman_5_1785423607333.png", alt: "Zaman Yolculuğu 5" },
+      { src: "/gallery/art-6.png", alt: "Art 6" },
+      { src: "/gallery/zaman_6_1785423615961.png", alt: "Zaman Yolculuğu 6" },
+      { src: "/images/contact-bg.png", alt: "Contact Art" },
+    ];
+  }, []);
 
   return (
     <section
@@ -302,8 +316,17 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full h-[70vh] rounded-xl overflow-hidden border border-border"
+            className="w-full h-[70vh] rounded-xl overflow-hidden border border-border relative"
           >
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-4 right-4 z-50 bg-background/50 backdrop-blur-md hover:bg-background/80"
+              onClick={() => setActiveTab("galeri")}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Geri Dön
+            </Button>
             <InfiniteGallery images={infiniteGalleryImages} />
           </motion.div>
         )}
