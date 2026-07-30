@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { profile, skills } from "../data/content";
-import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Sparkles } from "lucide-react";
+import { profile, skills, experiences } from "../data/content";
+import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Briefcase, Building2, Calendar, CheckCircle2 } from "lucide-react";
 
 export default function About() {
   return (
@@ -75,6 +75,29 @@ export default function About() {
             </div>
           </motion.div>
         </div>
+
+        {/* 3 Ana Üçlü Disiplin Odak Kartları */}
+        {profile.extendedBio && (
+          <div className="grid md:grid-cols-3 gap-6">
+            {profile.extendedBio.map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="p-6 md:p-7 rounded-xl border border-ink/12 bg-white/50 backdrop-blur-sm space-y-3 hover:border-ink/25 transition-all"
+              >
+                <h3 className="font-display text-xl text-ink font-semibold">
+                  {item.title}
+                </h3>
+                <p className="font-sans text-sm text-ink/70 leading-relaxed">
+                  {item.content}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* CV İndir & İncele Bölümü */}
         <motion.div
@@ -176,28 +199,95 @@ export default function About() {
           </div>
         </motion.div>
 
-        {/* 3 Ana Üçlü Disiplin Odak Kartları */}
-        {profile.extendedBio && (
-          <div className="grid md:grid-cols-3 gap-6 pt-4">
-            {profile.extendedBio.map((item, i) => (
+        {/* İş & Profesyonel Deneyim Geçmişi (LinkedIn / CV) */}
+        <div className="pt-8 border-t border-ink/10 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <span className="font-mono text-xs tracking-[0.25em] uppercase text-umber flex items-center gap-2 mb-2">
+                <Briefcase size={15} className="text-umber" />
+                İş & Kariyer Geçmişi
+              </span>
+              <h3 className="font-display text-2xl md:text-3xl text-ink font-bold">
+                Deneyim & Proje Sorumlulukları
+              </h3>
+            </div>
+            <a
+              href={profile.social.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-xs text-umber hover:text-brush transition-colors inline-flex items-center gap-1 self-start md:self-auto"
+            >
+              LinkedIn'de Tümünü Gör <ArrowUpRight size={13} />
+            </a>
+          </div>
+
+          <div className="space-y-6">
+            {experiences.map((exp, i) => (
               <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
+                key={exp.id}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="p-6 md:p-7 rounded-xl border border-ink/12 bg-white/50 backdrop-blur-sm space-y-3 hover:border-ink/25 transition-all"
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="p-6 md:p-8 rounded-2xl border border-ink/12 bg-white/60 backdrop-blur-sm space-y-4 hover:border-ink/25 transition-all"
               >
-                <h3 className="font-display text-xl text-ink font-semibold">
-                  {item.title}
-                </h3>
-                <p className="font-sans text-sm text-ink/70 leading-relaxed">
-                  {item.content}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-ink/10 pb-4">
+                  <div>
+                    <span className="font-mono text-xs text-umber uppercase tracking-wider">
+                      {exp.type}
+                    </span>
+                    <h4 className="font-display text-xl font-bold text-ink mt-0.5">
+                      {exp.role}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-3 font-sans text-sm text-ink/70 mt-1">
+                      <span className="flex items-center gap-1 font-medium text-ink">
+                        <Building2 size={14} className="text-umber" />
+                        {exp.company}
+                      </span>
+                      <span>·</span>
+                      <span className="flex items-center gap-1">
+                        <MapPin size={13} className="text-ink/40" />
+                        {exp.location}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="font-mono text-xs text-ink/60 bg-ink/5 px-3 py-1.5 rounded-full self-start md:self-auto border border-ink/10">
+                    <Calendar size={12} className="inline mr-1.5 opacity-70" />
+                    {exp.period}
+                  </div>
+                </div>
+
+                <p className="font-sans text-sm text-ink/80 leading-relaxed">
+                  {exp.description}
                 </p>
+
+                {/* Öne Çıkan Başarılar & Vurgular */}
+                {exp.highlights && (
+                  <div className="grid sm:grid-cols-2 gap-2 pt-2">
+                    {exp.highlights.map((item) => (
+                      <div key={item} className="flex items-start gap-2 font-sans text-xs text-ink/75">
+                        <CheckCircle2 size={14} className="text-brush shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Teknolojiler */}
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  {exp.technologies.map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1 rounded-md border border-ink/12 font-mono text-[11px] text-ink/80 bg-ink/[0.02]"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </motion.div>
             ))}
           </div>
-        )}
+        </div>
 
         {/* Detaylı Yetkinlik Grupları (Skills Breakdown from CV) */}
         <div className="pt-8 border-t border-ink/10">

@@ -38,6 +38,92 @@ export const profile = {
   },
 };
 
+// İş ve Profesyonel Deneyim Geçmişi (LinkedIn / CV)
+export const experiences = [
+  {
+    id: "exp-1",
+    role: "Yapay Zeka Mühendisi",
+    company: "Heysem AI",
+    location: "Eskişehir",
+    period: "2026 — Halen",
+    type: "Tam Zamanlı",
+    description:
+      "ERP finansal süreçleri için Türkçe doğal dil sorgularını SAP B1 OData servislerine dönüştüren multi-agent AI asistanı geliştirdim (CrewAI, LiteLLM, FastAPI, WebSocket). Intent-aware prompt dilimleme ile token kullanımını ~%70 azalttım. CLIP + SegFormer mimarisiyle 2 aşamalı endüstriyel kusur tespiti ve sentetik veri üretimi pipeline'ı kurdum.",
+    highlights: [
+      "SAP B1 OData Multi-Agent Finansal Asistan",
+      "Intent-Aware Prompt Slicing (~%70 Token Tasarrufu)",
+      "CLIP + SegFormer Endüstriyel Kusur Tespiti",
+      "Deformable Attention & Q-Former Multimodal Ar-Ge",
+    ],
+    technologies: ["Python", "FastAPI", "CrewAI", "LiteLLM", "PyTorch", "CLIP", "SegFormer", "Docker", "Prometheus"],
+  },
+  {
+    id: "exp-2",
+    role: "Yapay Zeka & Veri Bilimi Stajyeri",
+    company: "Huawei Ar-Ge Merkezi",
+    location: "İstanbul",
+    period: "2025",
+    type: "Staj",
+    description:
+      "Dify benzeri AI workflow platformlarının mimari analizine katkıda bulundum. DSPy ile yapılandırılmış prompt programlama modülleri kurarak pipeline'ları otomatik optimize edilebilir hale getirdim. 3+ dilde LLM değerlendirme testleri ve Table-RAG entegrasyon araştırmaları yürüttüm.",
+    highlights: [
+      "Production-Ready LLM Altyapı Analizi",
+      "DSPy ile Yapılandırılmış Prompt Programlama",
+      "Çok Dilli (3+ Dil) LLM Değerlendirme Testleri",
+      "Table-RAG Yapılandırılmış Veri Araştırması",
+    ],
+    technologies: ["Python", "DSPy", "LLM Evaluation", "Table-RAG", "Prompt Engineering"],
+  },
+  {
+    id: "exp-3",
+    role: "Yapay Zeka Mühendisi Stajyeri — NLP",
+    company: "Enqura",
+    location: "İstanbul",
+    period: "2024",
+    type: "Staj",
+    description:
+      "TF-IDF, BoW, Word2Vec ve FastText vektör temsillerini karşılaştırmalı analize tabi tuttum. LSTM tabanlı duygu analizi modeli ve PyMuPDF + FAISS + LangChain ile PDF belge soru-cevap sistemi kurdum. Kelime gömmelerini 3D uzayda görselleştiren kelime tahmin oyunu geliştirdim.",
+    highlights: [
+      "NLP Vektör Temsilleri Benchmark (Word2Vec, FastText)",
+      "LSTM Duygu Analizi & Ön İşleme Pipeline",
+      "PyMuPDF + FAISS + LangChain PDF QA Sistemi",
+      "3D Kelime Gömme Görselleştirme Oyunu",
+    ],
+    technologies: ["Python", "PyTorch", "LSTM", "LangChain", "FAISS", "Word2Vec", "FastText", "PyMuPDF"],
+  },
+  {
+    id: "exp-4",
+    role: "Yapay Zeka Stajyeri — Proje Yönetimi",
+    company: "SolPro LTD. ŞTİ.",
+    location: "Eskişehir",
+    period: "2024",
+    type: "Staj",
+    description:
+      "Polimer üretim optimizasyonu ve kalite kontrol için ML tabanlı prediktif bakım sistemlerinin geliştirilmesinde rol aldım. Gemini API kullanarak pazar analizi otomasyonu sağlayan chatbot geliştirdim.",
+    highlights: [
+      "Polimer Üretimi ML Prediktif Bakım Sistemleri",
+      "Gemini API Otomatik Pazar Analizi & Email Chatbotu",
+    ],
+    technologies: ["Python", "scikit-learn", "Gemini API", "Generative AI", "Data Visualization"],
+  },
+  {
+    id: "exp-5",
+    role: "Yapay Zeka Stajyeri — Bilgisayarlı Görü",
+    company: "Heysem AI",
+    location: "Eskişehir",
+    period: "2024",
+    type: "Staj",
+    description:
+      "YOLOv8 & YOLOv10 kullanan nesne tespiti ve yüz tanıma modellerini optimize ettim; eğitim epoch sayısını yarıya indirirken doğruluk metriklerini korudum. Güvenlik kameraları için gerçek zamanlı yüz tanıma tabanlı otomatik yoklama sistemi kurdum.",
+    highlights: [
+      "YOLOv8 & YOLOv10 Model Optimizasyonu",
+      "Gerçek Zamanlı Yüz Tanıma & Otomatik Yoklama Sistemi",
+      "Edge Device Voiceover Entegrasyonu",
+    ],
+    technologies: ["Python", "YOLOv8", "YOLOv10", "OpenCV", "Edge AI", "PyTorch"],
+  },
+];
+
 export const paintings = [
   {
     id: "eser-1",
