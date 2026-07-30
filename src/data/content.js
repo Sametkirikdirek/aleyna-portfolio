@@ -17,7 +17,7 @@ export const profile = {
   social: {
     medium: "https://medium.com/@aleynaaltunsu",
     github: "https://github.com/aleynaaltunsu",
-    linkedin: "https://linkedin.com/in/aleynaaltunsu",
+    linkedin: "https://www.linkedin.com/in/aleyna-altunsu/",
     instagram: "https://instagram.com/aleynaaltunsu.art",
   },
 };
