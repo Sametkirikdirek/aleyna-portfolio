@@ -120,3 +120,24 @@
 .text-balance {
   text-wrap: balance;
 }
+
+@keyframes colorShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.text-gradient-animated {
+  background: linear-gradient(135deg, #f1ece1 0%, #e6c594 25%, #d9704f 50%, #8fc0c2 75%, #f1ece1 100%);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: colorShimmer 6s ease infinite;
+}
+
