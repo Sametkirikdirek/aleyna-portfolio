@@ -27,15 +27,6 @@ export const profile = {
 // fotoğraflarını eklemek için `image: "/gallery/eser1.jpg"` gibi bir
 // alan eklemen yeterli — GalleryCard bileşeni varsa görseli, yoksa
 // üretimsel deseni gösterecek şekilde ayarlanabilir.
-export const galleryImagesPool = [
-  "/gallery/art-1.png",
-  "/gallery/art-2.png",
-  "/gallery/art-3.png",
-  "/gallery/art-4.png",
-  "/gallery/art-5.png",
-  "/gallery/art-6.png",
-];
-
 export const paintings = [
   {
     id: "p1",
@@ -46,29 +37,29 @@ export const paintings = [
     image: "/gallery/art-1.png",
     seed: 12,
     palette: ["#B5482E", "#6BA3A6", "#F1ECE1"],
-    note: "Katmanlı düşünce süreçlerinin fırça darbeleriyle görselleştirilmesi.",
+    note: "Katmanlı düşünce süreçlerinin ve niyet haritalarının fırça darbeleriyle görselleştirilmesi.",
   },
   {
     id: "p2",
     title: "Gece Vardiyası",
     year: "2023",
-    medium: "Tuval üzerine yağlı boya",
+    medium: "Tuval üzerine yağlı boya & Siber desen",
     size: "60 × 90 cm",
     image: "/gallery/art-2.png",
     seed: 47,
     palette: ["#14151A", "#B5482E", "#5B4636"],
-    note: "Kod yazarken geçen gecelerden ilham alınmış, sıcak-soğuk kontrastı.",
+    note: "Kod yazarken geçen gecelerden ilham alınmış, sıcak-soğuk algoritmik kontrast.",
   },
   {
     id: "p3",
     title: "Kıyı Notları",
     year: "2023",
-    medium: "Kağıt üzerine suluboya",
+    medium: "Kağıt üzerine suluboya & Altın yaprak",
     size: "35 × 50 cm",
     image: "/gallery/art-3.png",
     seed: 8,
     palette: ["#6BA3A6", "#F1ECE1", "#8FC0C2"],
-    note: "İstanbul Boğazı'nın erken sabah ışığı.",
+    note: "İstanbul Boğazı'nın erken sabah ışığı ile veri dalgalarının sentezi.",
   },
   {
     id: "p4",
@@ -79,29 +70,29 @@ export const paintings = [
     image: "/gallery/art-4.png",
     seed: 91,
     palette: ["#B5482E", "#D9704F", "#14151A"],
-    note: "Yazılım ve dil arasındaki gerilim üzerine bir çalışma.",
+    note: "Yazılım, derin öğrenme mimarileri ve dil arasındaki gerilim üzerine bir çalışma.",
   },
   {
     id: "p5",
     title: "Sessiz Model",
     year: "2022",
-    medium: "Tuval üzerine akrilik",
+    medium: "Tuval üzerine akrilik & Akışkan döküm",
     size: "50 × 65 cm",
     image: "/gallery/art-5.png",
     seed: 33,
     palette: ["#5B4636", "#F1ECE1", "#B5482E"],
-    note: "Eğitilmemiş bir modelin potansiyeli üzerine metafor.",
+    note: "Eğitilmemiş bir modelin potansiyeli ve Fibonacci spiralleri üzerine metafor.",
   },
   {
     id: "p6",
     title: "Ufuk Çizgisi, v2",
     year: "2021",
-    medium: "Tuval üzerine yağlı boya",
+    medium: "Tuval üzerine yağlı boya & Dijital devre",
     size: "100 × 140 cm",
     image: "/gallery/art-6.png",
     seed: 65,
     palette: ["#6BA3A6", "#14151A", "#F1ECE1"],
-    note: "İlk büyük ölçekli çalışmalarından biri.",
+    note: "Siberpunk estetiği ve klasik portre anlayışının kesiştiği ilk büyük ölçekli çalışma.",
   },
 ];
 
