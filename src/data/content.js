@@ -8,22 +8,22 @@ export const profile = {
   name: "Aleyna Altunsu",
   roles: ["Yapay Zeka Mühendisi", "Ressam", "Yazar"],
   tagline: "Fırçayla başlayan çizgi, kodda devam ediyor.",
-  bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı tefekkür ve üretim sürecinin iki tamamlayıcı yüzü olarak görüyorum — biri manayı ve duyguyu idrak eder, diğeri onu yaşayan sistemlerle tezahür ettirir.`,
+  bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı sanatsal üretim sürecinin iki tamamlayıcı yüzü olarak görüyorum — biri duyguyu ve kavramı yakalar, diğeri onu yaşayan sistemlere dönüştürür.`,
   extendedBio: [
     {
       title: "Mühendislik & Yapay Zekâ",
-      content: `Derin öğrenme mimarileri (Vision Transformers, LLM Fine-Tuning, Difüzyon Modelleri) ve üretim seviyesi (production-ready) AI sistemleri üzerine odaklanıyorum. Verinin saklı düzenini idrak ederek PyTorch, FastAPI ve MLOps araçlarıyla ölçeklenebilir, yüksek performanslı mimarilere dönüştürüyorum.`,
+      content: `Derin öğrenme mimarileri (Vision Transformers, LLM Fine-Tuning, Difüzyon Modelleri) ve üretim seviyesi (production-ready) AI sistemleri üzerine odaklanıyorum. PyTorch, FastAPI ve MLOps araçlarıyla karmaşık veri problemlerini ölçeklenebilir, yüksek performanslı mimarilere dönüştürüyorum.`,
     },
     {
       title: "Sanat & Atölye Pratiği",
-      content: `Tuval üzerinde akrilik, yağlı boya ve suluboya teknikleriyle insan ruhu, katmanlı tefekkür süreçleri ve dijital ağların hissettirdiği dokuları görselleştiriyorum. Fırça darbelerimdeki nizam ve kompozisyon arayışı, kod yazarken kurduğum mimari zarafetle doğrudan besleniyor.`,
+      content: `Tuval üzerinde akrilik, yağlı boya ve suluboya teknikleriyle insan zihni, katmanlı düşünce süreçleri ve dijital ağların hissettirdiği dokuları görselleştiriyorum. Fırça darbelerimdeki kompozisyon arayışı, kod yazarken kurduğum mimari temizlikle doğrudan besleniyor.`,
     },
     {
       title: "Yazı & Bilgi Paylaşımı",
-      content: `Medium ve kişisel blogumda yapay zekâ teknolojilerinin teknik anatomisini (ViT, Swin, RAG, LLM servisleri) ve atölye günlüklerimi kaleme alıyorum. İlim ve birikimi berrak bir dille paylaşmanın, hakikate ve gelişime hizmet eden en güçlü araç olduğuna inanıyorum.`,
+      content: `Medium ve kişisel blogumda yapay zekâ teknolojilerinin teknik anatomisini (ViT, Swin, RAG, LLM servisleri) ve atölye günlüklerimi kaleme alıyorum. Karmaşık mühendislik kavramlarını ve sanatsal süreçleri berrak bir dille aktarmanın gelişimin en güçlü parçası olduğuna inanıyorum.`,
     },
   ],
-  philosophy: "Tuvaldeki nizam ile ekrandaki kod mimarisi arasında derin bir akrabalık var. Sanat hakikati arar ve sorular sorar, mühendislik ise o sorulara idrak ve sistemlerle cevap verir.",
+  philosophy: "Tuvaldeki kompozisyon ile ekrandaki kod mimarisi arasında kopmaz bir akrabalık var. Sanat sorular sorar ve ifade arar, mühendislik ise o sorulara sistemlerle cevap verir.",
   location: "İstanbul, Türkiye",
   email: "hello@aleynaaltunsu.com",
   social: {

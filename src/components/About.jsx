@@ -57,7 +57,7 @@ export default function About() {
             className="p-7 md:p-8 rounded-2xl bg-ink/5 border border-ink/10 relative overflow-hidden"
           >
             <p className="font-mono text-xs uppercase tracking-widest text-umber mb-3">
-              Sanat & Tefekkür Felsefesi
+              Sanat & Üretim Felsefesi
             </p>
             <blockquote className="font-display text-lg md:text-xl text-ink leading-snug italic">
               "{profile.philosophy}"
