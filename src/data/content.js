@@ -377,7 +377,7 @@ export const aiProjects = [
     year: "2026",
     role: "Lead AI Architect",
     company: "Heysem AI",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/sap-multiagent-financial-assistant",
   },
   {
     id: "ai-pinned-2",
@@ -392,7 +392,7 @@ export const aiProjects = [
     year: "2026",
     role: "Computer Vision Engineer",
     company: "Heysem AI",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/industrial-defect-detection-clip",
   },
   {
     id: "ai-pinned-3",
@@ -422,7 +422,7 @@ export const aiProjects = [
     year: "2025",
     role: "AI Researcher",
     company: "Huawei Ar-Ge",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/dspy-table-rag-llm-eval",
   },
   {
     id: "ai-pinned-5",
@@ -437,7 +437,7 @@ export const aiProjects = [
     year: "2024",
     role: "NLP Research Intern",
     company: "Enqura",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/nlp-3d-embeddings-faiss-qa",
   },
   {
     id: "ai-pinned-6",
@@ -452,7 +452,7 @@ export const aiProjects = [
     year: "2025",
     role: "Generative AI Developer",
     company: "Atölye / Personal",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/brushstroke-diffusion",
   },
   {
     id: "ai-pinned-7",
@@ -467,7 +467,7 @@ export const aiProjects = [
     year: "2024",
     role: "Computer Vision Intern",
     company: "Heysem AI",
-    link: "https://github.com/aleynaaltunsu",
+    link: "https://github.com/aleynaaltunsu/yolo-edge-face-recognition",
   },
 ];
 
