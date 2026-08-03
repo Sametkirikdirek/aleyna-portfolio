@@ -1,23 +1,58 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { profile, skills, experiences } from "../data/content";
 import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Briefcase, Building2, Calendar, CheckCircle2 } from "lucide-react";
+import LottieAnimation from "./ui/LottieAnimation";
+import metaAiAnimation from "../assets/meta-ai.json";
 
 export default function About() {
+  const [isColorActive, setIsColorActive] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsColorActive((prev) => !prev);
+    window.addEventListener("toggleColorMode", handleToggle);
+    return () => window.removeEventListener("toggleColorMode", handleToggle);
+  }, []);
+
+  const handleLottieClick = () => {
+    window.dispatchEvent(new CustomEvent("toggleColorMode"));
+  };
+
   return (
     <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-paper text-ink">
       <div className="max-w-6xl mx-auto space-y-16">
         {/* Giriş Başlığı & Özet */}
         <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-12 md:gap-20 items-start">
           <div>
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 0.5 }}
-              className="font-mono text-xs tracking-[0.25em] uppercase text-umber mb-4"
+              className="flex items-center gap-2.5 mb-4"
             >
-              Hakkımda
-            </motion.p>
+              <button
+                type="button"
+                onClick={handleLottieClick}
+                className="w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                title="Renk paleti ve animasyonunu tetikleyin"
+                aria-label="Renk animasyonu butonu"
+              >
+                <div
+                  className="w-full h-full transition-all duration-700"
+                  style={{
+                    filter: isColorActive
+                      ? "drop-shadow(0 0 10px rgba(217,112,79,0.8))"
+                      : "brightness(0) drop-shadow(0 0 4px rgba(0,0,0,0.2))",
+                  }}
+                >
+                  <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+                </div>
+              </button>
+              <p className="font-mono text-xs tracking-[0.25em] uppercase text-umber font-semibold">
+                Hakkımda
+              </p>
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}

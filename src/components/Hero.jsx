@@ -1,11 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { profile } from "../data/content";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
-import LottieAnimation from "./ui/LottieAnimation";
-import metaAiAnimation from "../assets/meta-ai.json";
 
 /* Inline SVG social icons (lucide dropped brand icons in v1.x) */
 const GithubIcon = (props) => (
@@ -54,6 +52,12 @@ const roleColorStyles = [
 
 export default function Hero() {
   const [isColorActive, setIsColorActive] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsColorActive((prev) => !prev);
+    window.addEventListener("toggleColorMode", handleToggle);
+    return () => window.removeEventListener("toggleColorMode", handleToggle);
+  }, []);
 
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-ink">
@@ -155,35 +159,6 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-
-      {/* ── Lottie Animation Button (Initial White -> Animated Color Glow) ─────────────────────────── */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        onClick={() => setIsColorActive((prev) => !prev)}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#e6c594] rounded-full p-2 transition-all duration-500 hover:scale-110 active:scale-95 group"
-        aria-label="Sayfa etkileşim animasyonu"
-        title="Sayfa renk paletini ve animasyonunu tetikleyin"
-      >
-        <div
-          className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all duration-1000 ease-in-out ${
-            isColorActive
-              ? "brightness-100 drop-shadow-[0_0_20px_rgba(230,197,148,0.7)]"
-              : "brightness-200 contrast-200 grayscale-0 opacity-80 group-hover:opacity-100 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
-          }`}
-          style={{
-            filter: isColorActive
-              ? "drop-shadow(0 0 16px rgba(230,197,148,0.7))"
-              : "brightness(0) invert(1) drop-shadow(0 0 12px rgba(255,255,255,0.5))",
-          }}
-        >
-          <LottieAnimation
-            animationData={metaAiAnimation}
-            className="w-full h-full"
-          />
-        </div>
-      </motion.button>
     </section>
   );
 }

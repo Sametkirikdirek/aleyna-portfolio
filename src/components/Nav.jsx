@@ -3,6 +3,8 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { profile } from "../data/content";
+import LottieAnimation from "./ui/LottieAnimation";
+import metaAiAnimation from "../assets/meta-ai.json";
 
 const links = [
   { to: "/about", label: "Hakkımda" },
@@ -15,6 +17,7 @@ const links = [
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isColorActive, setIsColorActive] = useState(false);
   const { pathname } = useLocation();
   const isHome = pathname === "/";
 
@@ -32,6 +35,18 @@ export default function Nav() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const handleToggle = () => setIsColorActive((prev) => !prev);
+    window.addEventListener("toggleColorMode", handleToggle);
+    return () => window.removeEventListener("toggleColorMode", handleToggle);
+  }, []);
+
+  const handleLottieClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent("toggleColorMode"));
+  };
 
   const solidHeader = scrolled || !isHome;
 
@@ -53,7 +68,27 @@ export default function Nav() {
 
         <ul className="hidden md:flex items-center gap-8 font-sans text-sm">
           {links.map((l) => (
-            <li key={l.to}>
+            <li key={l.to} className="flex items-center gap-2">
+              {l.label === "Hakkımda" && (
+                <button
+                  type="button"
+                  onClick={handleLottieClick}
+                  className="w-6 h-6 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none"
+                  title="Sayfa renk paletini ve animasyonunu tetikleyin"
+                  aria-label="Renk animasyonu butonu"
+                >
+                  <div
+                    className="w-full h-full transition-all duration-700"
+                    style={{
+                      filter: isColorActive
+                        ? "drop-shadow(0 0 10px rgba(230,197,148,0.8))"
+                        : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.6))",
+                    }}
+                  >
+                    <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+                  </div>
+                </button>
+              )}
               <NavLink to={l.to} className={linkClass}>
                 {l.label}
               </NavLink>
@@ -82,11 +117,31 @@ export default function Nav() {
           >
             <ul className="flex flex-col gap-1 pt-2">
               {links.map((l) => (
-                <li key={l.to}>
+                <li key={l.to} className="flex items-center gap-3 py-3 border-b border-paper/5 last:border-0">
+                  {l.label === "Hakkımda" && (
+                    <button
+                      type="button"
+                      onClick={handleLottieClick}
+                      className="w-6 h-6 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                      title="Sayfa renk paletini ve animasyonunu tetikleyin"
+                      aria-label="Renk animasyonu butonu"
+                    >
+                      <div
+                        className="w-full h-full transition-all duration-700"
+                        style={{
+                          filter: isColorActive
+                            ? "drop-shadow(0 0 10px rgba(230,197,148,0.8))"
+                            : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.6))",
+                        }}
+                      >
+                        <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+                      </div>
+                    </button>
+                  )}
                   <NavLink
                     to={l.to}
                     className={({ isActive }) =>
-                      `block py-3 font-sans text-base border-b border-paper/5 last:border-0 transition-colors ${
+                      `font-sans text-base transition-colors ${
                         isActive ? "text-brush-soft" : "text-paper/85"
                       }`
                     }
