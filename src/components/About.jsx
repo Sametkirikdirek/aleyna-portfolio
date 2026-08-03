@@ -34,7 +34,7 @@ export default function About() {
               <button
                 type="button"
                 onClick={handleLottieClick}
-                className="w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none shrink-0 -my-2"
                 title="Renk paleti ve animasyonunu tetikleyin"
                 aria-label="Renk animasyonu butonu"
               >
@@ -42,8 +42,8 @@ export default function About() {
                   className="w-full h-full transition-all duration-700"
                   style={{
                     filter: isColorActive
-                      ? "drop-shadow(0 0 10px rgba(217,112,79,0.8))"
-                      : "brightness(0) drop-shadow(0 0 4px rgba(0,0,0,0.2))",
+                      ? "drop-shadow(0 0 14px rgba(217,112,79,0.9))"
+                      : "brightness(0) drop-shadow(0 0 6px rgba(0,0,0,0.25))",
                   }}
                 >
                   <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />

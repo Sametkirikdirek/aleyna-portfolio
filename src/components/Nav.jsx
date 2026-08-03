@@ -73,7 +73,7 @@ export default function Nav() {
                 <button
                   type="button"
                   onClick={handleLottieClick}
-                  className="w-6 h-6 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none"
+                  className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none -my-3 shrink-0"
                   title="Sayfa renk paletini ve animasyonunu tetikleyin"
                   aria-label="Renk animasyonu butonu"
                 >
@@ -81,8 +81,8 @@ export default function Nav() {
                     className="w-full h-full transition-all duration-700"
                     style={{
                       filter: isColorActive
-                        ? "drop-shadow(0 0 10px rgba(230,197,148,0.8))"
-                        : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.6))",
+                        ? "drop-shadow(0 0 14px rgba(230,197,148,0.9))"
+                        : "brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.7))",
                     }}
                   >
                     <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
@@ -122,7 +122,7 @@ export default function Nav() {
                     <button
                       type="button"
                       onClick={handleLottieClick}
-                      className="w-6 h-6 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                      className="w-12 h-12 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none shrink-0"
                       title="Sayfa renk paletini ve animasyonunu tetikleyin"
                       aria-label="Renk animasyonu butonu"
                     >
@@ -130,8 +130,8 @@ export default function Nav() {
                         className="w-full h-full transition-all duration-700"
                         style={{
                           filter: isColorActive
-                            ? "drop-shadow(0 0 10px rgba(230,197,148,0.8))"
-                            : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.6))",
+                            ? "drop-shadow(0 0 14px rgba(230,197,148,0.9))"
+                            : "brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.7))",
                         }}
                       >
                         <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
