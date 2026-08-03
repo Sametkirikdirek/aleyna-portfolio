@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import Lottie from "lottie-react";
 import { profile } from "../data/content";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
+import metaAiAnimation from "../assets/meta-ai.json";
 
 /* Inline SVG social icons (lucide dropped brand icons in v1.x) */
 const GithubIcon = (props) => (
@@ -154,45 +156,27 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ── Scroll indicator / Color Toggle Button ─────────────────────────── */}
+      {/* ── Lottie Animation Button (No text, pure animation) ─────────────────────────── */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.8 }}
         onClick={() => setIsColorActive((prev) => !prev)}
-        className="group absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#e6c594] rounded-full p-1 transition-transform duration-300 hover:scale-105"
-        aria-label="Renk paleti animasyonunu aç veya kapat"
-        title="Tıklayarak sayfa renk animasyonunu başlatın"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#e6c594] rounded-full p-2 transition-all duration-300 hover:scale-110 active:scale-95 group"
+        aria-label="Sayfa etkileşim animasyonu"
+        title="Sayfa renk paletini ve animasyonunu tetikleyin"
       >
-        <div
-          className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full border transition-all duration-500 backdrop-blur-md ${
-            isColorActive
-              ? "bg-[#1c1e26]/80 border-[#e6c594]/60 shadow-[0_0_15px_rgba(230,197,148,0.3)]"
-              : "bg-ink/60 border-paper/15 group-hover:border-paper/40"
-          }`}
-        >
-          <span
-            className={`font-mono text-[10px] tracking-[0.2em] uppercase transition-colors duration-500 ${
-              isColorActive
-                ? "text-[#e6c594] font-bold drop-shadow-[0_0_8px_rgba(230,197,148,0.6)]"
-                : "text-paper/50 group-hover:text-paper/90"
-            }`}
-          >
-            {isColorActive ? "KEŞFET (AKTİF)" : "KEŞFET"}
-          </span>
+        <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(107,163,166,0.35)] transition-all duration-500 group-hover:drop-shadow-[0_0_25px_rgba(230,197,148,0.6)]">
+          <Lottie
+            animationData={metaAiAnimation}
+            loop={true}
+            autoplay={true}
+            className="w-full h-full"
+          />
         </div>
-
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-          className={`w-[1.5px] h-8 transition-all duration-700 ${
-            isColorActive
-              ? "bg-gradient-to-b from-[#e6c594] via-[#d9704f] to-transparent shadow-[0_0_10px_rgba(230,197,148,0.5)]"
-              : "bg-gradient-to-b from-paper/30 to-transparent"
-          }`}
-        />
       </motion.button>
     </section>
   );
 }
+
 
