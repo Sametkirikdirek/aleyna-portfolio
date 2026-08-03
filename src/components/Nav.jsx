@@ -51,8 +51,8 @@ export default function Nav() {
   const solidHeader = scrolled || !isHome;
 
   const linkClass = ({ isActive }) =>
-    `transition-colors ${
-      isActive ? "text-brush-soft" : "text-paper/70 hover:text-brush-soft"
+    `transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+      isActive ? "text-brush-soft font-medium" : "text-paper/70 hover:text-brush-soft"
     }`;
 
   return (
@@ -61,8 +61,8 @@ export default function Nav() {
         solidHeader ? "bg-ink/90 backdrop-blur-md border-b border-paper/10" : "bg-transparent"
       }`}
     >
-      <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 md:px-10 py-4">
-        <Link to="/" className="font-display text-lg tracking-tight text-paper">
+      <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 md:px-10 h-16 md:h-20">
+        <Link to="/" className="font-display text-lg tracking-tight text-paper outline-none focus:outline-none focus-visible:outline-none">
           {profile.name}
         </Link>
 
@@ -73,7 +73,7 @@ export default function Nav() {
                 <button
                   type="button"
                   onClick={handleLottieClick}
-                  className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none -my-3 shrink-0"
+                  className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-120 focus:outline-none outline-none shrink-0"
                   title="Sayfa renk paletini ve animasyonunu tetikleyin"
                   aria-label="Renk animasyonu butonu"
                 >
@@ -81,8 +81,8 @@ export default function Nav() {
                     className="w-full h-full transition-all duration-700"
                     style={{
                       filter: isColorActive
-                        ? "drop-shadow(0 0 14px rgba(230,197,148,0.9))"
-                        : "brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.7))",
+                        ? "drop-shadow(0 0 10px rgba(230,197,148,0.85))"
+                        : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
                     }}
                   >
                     <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
