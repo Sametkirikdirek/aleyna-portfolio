@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, Cpu, Pin, Layers, BookOpen, Terminal, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, Cpu, Pin, Layers, BookOpen, Terminal, CheckCircle2, Filter, ChevronDown } from "lucide-react";
 import { aiProjects } from "../data/content";
 import SignatureLine from "./SignatureLine";
 
@@ -82,20 +82,47 @@ export default function AIWork() {
         </div>
 
         {/* ── Category Filter Bar ──────────────────────── */}
-        <div className="mt-8 flex flex-wrap items-center gap-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className={`px-4 py-2 rounded-full font-mono text-xs tracking-wider uppercase transition-all duration-300 ${
-                activeFilter === cat
-                  ? "bg-circuit-soft text-ink font-semibold shadow-[0_0_15px_rgba(107,163,166,0.3)] scale-105"
-                  : "bg-paper/[0.04] border border-paper/15 text-paper/60 hover:border-circuit-soft/40 hover:text-paper"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="mt-8">
+          {/* Mobile Filter Selector Dropdown (< md) */}
+          <div className="md:hidden relative w-full">
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-ink-soft border border-paper/15 text-paper">
+              <div className="flex items-center gap-2 font-mono text-xs uppercase text-circuit-soft font-semibold">
+                <Filter size={14} />
+                <span>Filtrele:</span>
+              </div>
+              <div className="relative flex items-center max-w-[65%]">
+                <select
+                  value={activeFilter}
+                  onChange={(e) => setActiveFilter(e.target.value)}
+                  className="appearance-none bg-transparent font-mono text-xs font-semibold tracking-wider text-paper uppercase pr-6 focus:outline-none cursor-pointer text-right truncate w-full"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat} className="bg-ink-soft text-paper">
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="pointer-events-none absolute right-0 text-paper/60" />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Filter Pills (>= md) */}
+          <div className="hidden md:flex flex-wrap items-center gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveFilter(cat)}
+                className={`px-4 py-2 rounded-full font-mono text-xs tracking-wider uppercase transition-all duration-300 ${
+                  activeFilter === cat
+                    ? "bg-circuit-soft text-ink font-semibold shadow-[0_0_15px_rgba(107,163,166,0.3)] scale-105"
+                    : "bg-paper/[0.04] border border-paper/15 text-paper/60 hover:border-circuit-soft/40 hover:text-paper"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ── Project Cards Grid ──────────────────────── */}
