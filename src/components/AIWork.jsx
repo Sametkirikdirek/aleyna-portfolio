@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, Cpu, Pin, Sparkles, Layers, BookOpen, Terminal, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, Cpu, Pin, Layers, BookOpen, Terminal, CheckCircle2 } from "lucide-react";
 import { aiProjects } from "../data/content";
 import SignatureLine from "./SignatureLine";
 
@@ -66,7 +66,7 @@ export default function AIWork() {
           <div className="flex items-center gap-4 p-4 rounded-xl border border-paper/10 bg-ink-soft/80 backdrop-blur-md self-start md:self-auto">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-circuit/15 text-circuit-soft">
-                <Sparkles size={20} />
+                <Pin size={18} />
               </div>
               <div>
                 <p className="font-mono text-xl font-bold text-paper">{pinnedCount} Pinned</p>

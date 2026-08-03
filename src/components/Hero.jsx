@@ -178,7 +178,7 @@ export default function Hero() {
                 : "text-paper/50 group-hover:text-paper/90"
             }`}
           >
-            {isColorActive ? "✨ KEŞFET (AKTİF)" : "KEŞFET"}
+            {isColorActive ? "KEŞFET (AKTİF)" : "KEŞFET"}
           </span>
         </div>
 

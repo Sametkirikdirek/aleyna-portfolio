@@ -183,8 +183,18 @@ export const paintings = [
 
 export const contactArtworks = [
   {
-    year: "2023",
+    id: "ca1",
+    title: "Derin Öğrenme Katmanları",
+    image: "/gallery/art-1.png",
+    year: "2024",
     medium: "Yağlı Boya & Siber Desen",
+  },
+  {
+    id: "ca2",
+    title: "Algoritmik Rüyalar",
+    image: "/gallery/art-2.png",
+    year: "2024",
+    medium: "Karma Teknik & Dijital Sentez",
   },
   {
     id: "ca3",
@@ -222,6 +232,7 @@ export const contactArtworks = [
     medium: "Dijital Yağlı Boya Sentezi",
   },
 ];
+
 
 // Medium yazıları — otomatik RSS ile çekilir; ağ hatasında yedek liste.
 export const mediumWritingsFallback = [
