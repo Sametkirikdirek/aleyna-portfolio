@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import Lottie from "lottie-react";
 import { profile } from "../data/content";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
+import LottieAnimation from "./ui/LottieAnimation";
 import metaAiAnimation from "../assets/meta-ai.json";
 
 /* Inline SVG social icons (lucide dropped brand icons in v1.x) */
@@ -167,10 +167,8 @@ export default function Hero() {
         title="Sayfa renk paletini ve animasyonunu tetikleyin"
       >
         <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(107,163,166,0.35)] transition-all duration-500 group-hover:drop-shadow-[0_0_25px_rgba(230,197,148,0.6)]">
-          <Lottie
+          <LottieAnimation
             animationData={metaAiAnimation}
-            loop={true}
-            autoplay={true}
             className="w-full h-full"
           />
         </div>
