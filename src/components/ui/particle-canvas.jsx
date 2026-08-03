@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 
 /**
  * ParticleHero — Canvas-based animated particle field with rotating spotlight.
- * Inspired by @designali-in/particle-hero from 21st.dev.
- *
- * Props:
- *  - particleCount   (number)  default 900
- *  - speed           (number)  global speed multiplier, default 1
- *  - accentColor     (string)  CSS colour for the spotlight, default "#c0956c"
- *  - className       (string)
+ * Features smooth color & speed lerping without resetting particle positions.
  */
 export default function ParticleCanvas({
   particleCount = 900,
@@ -30,6 +24,18 @@ export default function ParticleCanvas({
     };
   }, []);
 
+  // Refs for smooth lerp transitions without triggering particle re-creation
+  const speedRef = useRef(speed);
+  const currentSpeed = useRef(speed);
+  const targetRgbRef = useRef(hexToRgb(accentColor));
+  const currentRgbRef = useRef(hexToRgb(accentColor));
+
+  // Sync prop changes smoothly
+  useEffect(() => {
+    speedRef.current = speed;
+    targetRgbRef.current = hexToRgb(accentColor);
+  }, [speed, accentColor, hexToRgb]);
+
   useEffect(() => {
     const cvs = canvasRef.current;
     if (!cvs) return;
@@ -48,10 +54,7 @@ export default function ParticleCanvas({
     const W = () => cvs.offsetWidth;
     const H = () => cvs.offsetHeight;
 
-    /* accent colour in rgb */
-    const accent = hexToRgb(accentColor);
-
-    /* ── particles ────────────────────────────────── */
+    /* ── particles (created ONLY on mount or when count changes) ──── */
     const particles = [];
     for (let i = 0; i < particleCount; i++) {
       particles.push({
@@ -68,7 +71,14 @@ export default function ParticleCanvas({
     /* ── draw loop ────────────────────────────────── */
     let t = 0;
     const draw = () => {
-      t += 0.016 * speed;
+      // Smoothly lerp speed and colors
+      currentSpeed.current += (speedRef.current - currentSpeed.current) * 0.05;
+      const curR = currentRgbRef.current.r += (targetRgbRef.current.r - currentRgbRef.current.r) * 0.04;
+      const curG = currentRgbRef.current.g += (targetRgbRef.current.g - currentRgbRef.current.g) * 0.04;
+      const curB = currentRgbRef.current.b += (targetRgbRef.current.b - currentRgbRef.current.b) * 0.04;
+
+      const spd = currentSpeed.current;
+      t += 0.016 * spd;
       const w = W();
       const h = H();
 
@@ -80,12 +90,12 @@ export default function ParticleCanvas({
       const spotY = h * 0.5 + Math.sin(spotAngle) * h * 0.3;
       const spotR = Math.min(w, h) * 0.55;
       const grad = ctx.createRadialGradient(spotX, spotY, 0, spotX, spotY, spotR);
-      grad.addColorStop(0, `rgba(${accent.r},${accent.g},${accent.b},0.07)`);
+      grad.addColorStop(0, `rgba(${Math.round(curR)},${Math.round(curG)},${Math.round(curB)},0.08)`);
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      /* second subtle spotlight (complementary) */
+      /* second subtle spotlight */
       const spot2X = w * 0.5 + Math.cos(spotAngle + Math.PI) * w * 0.25;
       const spot2Y = h * 0.5 + Math.sin(spotAngle + Math.PI) * h * 0.25;
       const grad2 = ctx.createRadialGradient(spot2X, spot2Y, 0, spot2X, spot2Y, spotR * 0.7);
@@ -96,14 +106,14 @@ export default function ParticleCanvas({
 
       /* draw particles */
       for (const p of particles) {
-        /* gentle mouse repulsion */
+        /* mouse repulsion */
         const mx = mouse.current.x * w;
         const my = mouse.current.y * h;
         const dx = p.x - mx;
         const dy = p.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 120) {
-          const force = (120 - dist) / 120 * 0.6;
+          const force = ((120 - dist) / 120) * 0.6;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
         }
@@ -111,8 +121,8 @@ export default function ParticleCanvas({
         /* physics */
         p.vx *= 0.98;
         p.vy *= 0.98;
-        p.x += p.vx * speed;
-        p.y += p.vy * speed;
+        p.x += p.vx * spd;
+        p.y += p.vy * spd;
 
         /* wrap edges */
         if (p.x < 0) p.x = w;
@@ -121,16 +131,16 @@ export default function ParticleCanvas({
         if (p.y > h) p.y = 0;
 
         /* twinkle */
-        p.phase += p.twinkleSpeed * speed;
+        p.phase += p.twinkleSpeed * spd;
         const alpha = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(p.phase));
 
         /* distance to spotlight → warm tint */
         const dSpot = Math.sqrt((p.x - spotX) ** 2 + (p.y - spotY) ** 2);
         const inSpot = Math.max(0, 1 - dSpot / spotR);
 
-        const r = Math.round(200 + inSpot * (accent.r - 200));
-        const g = Math.round(200 + inSpot * (accent.g - 200));
-        const b = Math.round(210 + inSpot * (accent.b - 210));
+        const r = Math.round(200 + inSpot * (curR - 200));
+        const g = Math.round(200 + inSpot * (curG - 200));
+        const b = Math.round(210 + inSpot * (curB - 210));
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -138,7 +148,7 @@ export default function ParticleCanvas({
         ctx.fill();
       }
 
-      /* connection lines between nearby particles (within spotlight) */
+      /* connection lines */
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const a = particles[i];
@@ -153,7 +163,11 @@ export default function ParticleCanvas({
               ctx.beginPath();
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(${accent.r},${accent.g},${accent.b},${(0.08 * inSpotLine * (1 - d / 80)).toFixed(3)})`;
+              ctx.strokeStyle = `rgba(${Math.round(curR)},${Math.round(curG)},${Math.round(curB)},${(
+                0.08 *
+                inSpotLine *
+                (1 - d / 80)
+              ).toFixed(3)})`;
               ctx.lineWidth = 0.5;
               ctx.stroke();
             }
@@ -179,7 +193,7 @@ export default function ParticleCanvas({
       window.removeEventListener("resize", resize);
       cvs.removeEventListener("pointermove", onMove);
     };
-  }, [particleCount, speed, accentColor, hexToRgb]);
+  }, [particleCount]);
 
   return (
     <canvas

@@ -82,7 +82,7 @@ export default function Hero() {
               return (
                 <span
                   key={role}
-                  className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-700 backdrop-blur-sm ${
+                  className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-1000 ease-in-out backdrop-blur-sm ${
                     isColorActive
                       ? `${activeStyle.activeBorder} ${activeStyle.activeText} ${activeStyle.activeBg} ${activeStyle.activeShadow}`
                       : "border-paper/15 bg-paper/[0.04] text-paper/70"
@@ -97,7 +97,7 @@ export default function Hero() {
           {/* Name */}
           <motion.h1
             {...fadeUp(0.12)}
-            className={`font-display text-[clamp(2.8rem,11vw,7rem)] leading-[0.92] tracking-tight transition-all duration-700 ${
+            className={`font-display text-[clamp(2.8rem,11vw,7rem)] leading-[0.92] tracking-tight transition-all duration-1000 ease-in-out ${
               isColorActive
                 ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
                 : "text-paper"
@@ -109,7 +109,7 @@ export default function Hero() {
           {/* Tagline */}
           <motion.p
             {...fadeUp(0.24)}
-            className={`max-w-lg font-sans text-lg md:text-xl leading-relaxed transition-all duration-700 ${
+            className={`max-w-lg font-sans text-lg md:text-xl leading-relaxed transition-all duration-1000 ease-in-out ${
               isColorActive
                 ? "text-[#e6c594] drop-shadow-[0_0_12px_rgba(230,197,148,0.2)] font-medium"
                 : "text-paper/65"
@@ -156,17 +156,28 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ── Lottie Animation Button (No text, pure animation) ─────────────────────────── */}
+      {/* ── Lottie Animation Button (Initial White -> Animated Color Glow) ─────────────────────────── */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.8 }}
         onClick={() => setIsColorActive((prev) => !prev)}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#e6c594] rounded-full p-2 transition-all duration-300 hover:scale-110 active:scale-95 group"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#e6c594] rounded-full p-2 transition-all duration-500 hover:scale-110 active:scale-95 group"
         aria-label="Sayfa etkileşim animasyonu"
         title="Sayfa renk paletini ve animasyonunu tetikleyin"
       >
-        <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(107,163,166,0.35)] transition-all duration-500 group-hover:drop-shadow-[0_0_25px_rgba(230,197,148,0.6)]">
+        <div
+          className={`w-16 h-16 md:w-20 md:h-20 flex items-center justify-center transition-all duration-1000 ease-in-out ${
+            isColorActive
+              ? "brightness-100 drop-shadow-[0_0_20px_rgba(230,197,148,0.7)]"
+              : "brightness-200 contrast-200 grayscale-0 opacity-80 group-hover:opacity-100 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+          }`}
+          style={{
+            filter: isColorActive
+              ? "drop-shadow(0 0 16px rgba(230,197,148,0.7))"
+              : "brightness(0) invert(1) drop-shadow(0 0 12px rgba(255,255,255,0.5))",
+          }}
+        >
           <LottieAnimation
             animationData={metaAiAnimation}
             className="w-full h-full"
