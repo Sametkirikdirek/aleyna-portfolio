@@ -81,47 +81,35 @@ export default function AIWork() {
           </div>
         </div>
 
-        {/* ── Category Filter Bar ──────────────────────── */}
-        <div className="mt-8">
-          {/* Mobile Filter Selector Dropdown (< md) */}
-          <div className="md:hidden relative w-full">
-            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-ink-soft border border-paper/15 text-paper">
-              <div className="flex items-center gap-2 font-mono text-xs uppercase text-circuit-soft font-semibold">
-                <Filter size={14} />
-                <span>Filtrele:</span>
-              </div>
-              <div className="relative flex items-center max-w-[65%]">
-                <select
-                  value={activeFilter}
-                  onChange={(e) => setActiveFilter(e.target.value)}
-                  className="appearance-none bg-transparent font-mono text-xs font-semibold tracking-wider text-paper uppercase pr-6 focus:outline-none cursor-pointer text-right truncate w-full"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat} className="bg-ink-soft text-paper">
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="pointer-events-none absolute right-0 text-paper/60" />
-              </div>
+        {/* ── Category Filter Bar (Web & Mobile Unified Dropdown Filter) ──────────────────────── */}
+        <div className="mt-8 flex items-center justify-between p-4 rounded-xl bg-ink-soft/90 border border-paper/15 backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-circuit/15 text-circuit-soft">
+              <Filter size={16} />
+            </div>
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wider text-circuit-soft font-semibold block">
+                Kategori Filtresi
+              </span>
+              <span className="font-sans text-xs text-paper/50 hidden sm:inline">
+                Seçilen kategoriye göre eserleri sırala
+              </span>
             </div>
           </div>
 
-          {/* Desktop Filter Pills (>= md) */}
-          <div className="hidden md:flex flex-wrap items-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveFilter(cat)}
-                className={`px-4 py-2 rounded-full font-mono text-xs tracking-wider uppercase transition-all duration-300 ${
-                  activeFilter === cat
-                    ? "bg-circuit-soft text-ink font-semibold shadow-[0_0_15px_rgba(107,163,166,0.3)] scale-105"
-                    : "bg-paper/[0.04] border border-paper/15 text-paper/60 hover:border-circuit-soft/40 hover:text-paper"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="relative flex items-center min-w-[180px] sm:min-w-[240px]">
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="w-full appearance-none bg-ink/80 border border-paper/20 hover:border-circuit-soft/50 rounded-lg px-4 py-2.5 font-mono text-xs font-semibold tracking-wider text-paper uppercase pr-8 focus:outline-none focus:border-circuit-soft transition-all cursor-pointer shadow-inner"
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat} className="bg-ink-soft text-paper py-1">
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={15} className="pointer-events-none absolute right-3 text-circuit-soft" />
           </div>
         </div>
 
