@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { profile } from "../data/content";
 import LottieAnimation from "./ui/LottieAnimation";
 import ThemeToggle from "./ui/ThemeToggle";
+import { useColorMode } from "../context/ColorModeContext";
 
 const links = [
   { to: "/about", label: "Hakkımda" },
@@ -14,13 +15,14 @@ const links = [
   { to: "/contact", label: "İletişim" },
 ];
 
-function HeaderControls({ isColorActive, handleLottieClick }) {
+function HeaderControls() {
+  const { isColorActive, toggleColorMode } = useColorMode();
   return (
     <div className="flex items-center gap-3 shrink-0">
       <ThemeToggle />
       <button
         type="button"
-        onClick={handleLottieClick}
+        onClick={toggleColorMode}
         className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
         title="Kalp animasyonunu ve renk paletini tetikleyin"
         aria-label="Kalp animasyonu butonu"
@@ -34,7 +36,7 @@ function HeaderControls({ isColorActive, handleLottieClick }) {
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isColorActive, setIsColorActive] = useState(false);
+  const { isColorActive, toggleColorMode } = useColorMode();
   const { pathname } = useLocation();
   const isHome = pathname === "/";
 
@@ -52,18 +54,6 @@ export default function Nav() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    const handleToggle = () => setIsColorActive((prev) => !prev);
-    window.addEventListener("toggleColorMode", handleToggle);
-    return () => window.removeEventListener("toggleColorMode", handleToggle);
-  }, []);
-
-  const handleLottieClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    window.dispatchEvent(new CustomEvent("toggleColorMode"));
-  };
 
   const solidHeader = scrolled || !isHome;
 
@@ -94,12 +84,12 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <HeaderControls isColorActive={isColorActive} handleLottieClick={handleLottieClick} />
+          <HeaderControls />
         </div>
 
         {/* Mobile Header */}
         <div className="flex items-center gap-3 md:hidden">
-          <HeaderControls isColorActive={isColorActive} handleLottieClick={handleLottieClick} />
+          <HeaderControls />
 
           <button
             onClick={() => setOpen((v) => !v)}

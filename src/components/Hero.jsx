@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { profile } from "../data/content";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
+import { useColorMode } from "../context/ColorModeContext";
 
 /* Inline SVG social icons (lucide dropped brand icons in v1.x) */
 const GithubIcon = (props) => (
@@ -51,13 +52,7 @@ const roleColorStyles = [
 ];
 
 export default function Hero() {
-  const [isColorActive, setIsColorActive] = useState(false);
-
-  useEffect(() => {
-    const handleToggle = () => setIsColorActive((prev) => !prev);
-    window.addEventListener("toggleColorMode", handleToggle);
-    return () => window.removeEventListener("toggleColorMode", handleToggle);
-  }, []);
+  const { isColorActive } = useColorMode();
 
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-ink">

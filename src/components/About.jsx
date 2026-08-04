@@ -3,19 +3,10 @@ import { motion } from "framer-motion";
 import { profile, skills, experiences } from "../data/content";
 import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Briefcase, Building2, Calendar, CheckCircle2 } from "lucide-react";
 import LottieAnimation from "./ui/LottieAnimation";
+import { useColorMode } from "../context/ColorModeContext";
 
 export default function About() {
-  const [isColorActive, setIsColorActive] = useState(false);
-
-  useEffect(() => {
-    const handleToggle = () => setIsColorActive((prev) => !prev);
-    window.addEventListener("toggleColorMode", handleToggle);
-    return () => window.removeEventListener("toggleColorMode", handleToggle);
-  }, []);
-
-  const handleLottieClick = () => {
-    window.dispatchEvent(new CustomEvent("toggleColorMode"));
-  };
+  const { isColorActive, toggleColorMode } = useColorMode();
 
   return (
     <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-paper text-ink">
@@ -32,7 +23,7 @@ export default function About() {
             >
               <button
                 type="button"
-                onClick={handleLottieClick}
+                onClick={toggleColorMode}
                 className="relative overflow-visible bg-transparent border-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
                 title="Kalp animasyonunu ve renk paletini tetikleyin"
                 aria-label="Kalp animasyonu butonu"
