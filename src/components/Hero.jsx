@@ -31,22 +31,22 @@ const fadeUp = (delay = 0) => ({
 
 const roleColorStyles = [
   {
-    activeBorder: "border-[#6ba3a6]/50",
-    activeText: "text-[#8fc0c2]",
-    activeBg: "bg-[#6ba3a6]/15",
-    activeShadow: "shadow-[0_0_15px_rgba(107,163,166,0.3)]",
+    activeBorder: "border-[#ff8fa3]/50",
+    activeText: "text-[#ff8fa3]",
+    activeBg: "bg-[#ff758f]/15",
+    activeShadow: "shadow-[0_0_15px_rgba(255,143,163,0.35)]",
   },
   {
-    activeBorder: "border-[#d9704f]/50",
-    activeText: "text-[#d9704f]",
-    activeBg: "bg-[#b5482e]/15",
-    activeShadow: "shadow-[0_0_15px_rgba(217,112,79,0.3)]",
+    activeBorder: "border-[#3b82f6]/50",
+    activeText: "text-[#60a5fa]",
+    activeBg: "bg-[#1d4ed8]/15",
+    activeShadow: "shadow-[0_0_15px_rgba(59,130,246,0.35)]",
   },
   {
-    activeBorder: "border-[#e6c594]/50",
-    activeText: "text-[#e6c594]",
-    activeBg: "bg-[#c0956c]/15",
-    activeShadow: "shadow-[0_0_15px_rgba(230,197,148,0.3)]",
+    activeBorder: "border-[#f7cad0]/50",
+    activeText: "text-[#f7cad0]",
+    activeBg: "bg-[#ff8fa3]/15",
+    activeShadow: "shadow-[0_0_15px_rgba(247,202,208,0.35)]",
   },
 ];
 
@@ -64,8 +64,8 @@ export default function Hero() {
       {/* ── Particle background ──────────────────────── */}
       <ParticleCanvas
         particleCount={800}
-        speed={isColorActive ? 1.2 : 1}
-        accentColor={isColorActive ? "#e6c594" : "#c0956c"}
+        speed={isColorActive ? 1.25 : 1}
+        accentColor={isColorActive ? "#ff758f" : "#c0956c"}
       />
 
       {/* ── Subtle grain overlay ─────────────────────── */}

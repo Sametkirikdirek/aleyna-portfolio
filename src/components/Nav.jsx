@@ -72,20 +72,11 @@ export default function Nav() {
                 <button
                   type="button"
                   onClick={handleLottieClick}
-                  className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-120 focus:outline-none outline-none shrink-0"
-                  title="Sayfa renk paletini ve animasyonunu tetikleyin"
-                  aria-label="Renk animasyonu butonu"
+                  className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
+                  title="Kalp animasyonunu ve renk paletini tetikleyin"
+                  aria-label="Kalp animasyonu butonu"
                 >
-                  <div
-                    className="w-full h-full transition-all duration-700"
-                    style={{
-                      filter: isColorActive
-                        ? "drop-shadow(0 0 10px rgba(230,197,148,0.85))"
-                        : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
-                    }}
-                  >
-                    <LottieAnimation className="w-full h-full" />
-                  </div>
+                  <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
                 </button>
               )}
               <NavLink to={l.to} className={linkClass}>
@@ -99,20 +90,11 @@ export default function Nav() {
           <button
             type="button"
             onClick={handleLottieClick}
-            className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 active:scale-95 focus:outline-none outline-none shrink-0"
-            title="Sayfa renk paletini ve animasyonunu tetikleyin"
-            aria-label="Renk animasyonu butonu"
+            className="w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 active:scale-95 focus:outline-none outline-none shrink-0"
+            title="Kalp animasyonunu ve renk paletini tetikleyin"
+            aria-label="Kalp animasyonu butonu"
           >
-            <div
-              className="w-full h-full transition-all duration-700"
-              style={{
-                filter: isColorActive
-                  ? "drop-shadow(0 0 10px rgba(230,197,148,0.85))"
-                  : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
-              }}
-            >
-              <LottieAnimation className="w-full h-full" />
-            </div>
+            <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
           </button>
 
           <button

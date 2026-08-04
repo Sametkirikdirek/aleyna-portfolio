@@ -33,20 +33,11 @@ export default function About() {
               <button
                 type="button"
                 onClick={handleLottieClick}
-                className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none shrink-0 -my-2"
-                title="Renk paleti ve animasyonunu tetikleyin"
-                aria-label="Renk animasyonu butonu"
+                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                title="Kalp animasyonunu ve renk paletini tetikleyin"
+                aria-label="Kalp animasyonu butonu"
               >
-                <div
-                  className="w-full h-full transition-all duration-700"
-                  style={{
-                    filter: isColorActive
-                      ? "drop-shadow(0 0 14px rgba(217,112,79,0.9))"
-                      : "brightness(0) drop-shadow(0 0 6px rgba(0,0,0,0.25))",
-                  }}
-                >
-                  <LottieAnimation className="w-full h-full" />
-                </div>
+                <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
               </button>
               <p className="font-mono text-xs tracking-[0.25em] uppercase text-umber font-semibold">
                 Hakkımda
