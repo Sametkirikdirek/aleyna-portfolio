@@ -23,7 +23,7 @@ function HeaderControls() {
       <button
         type="button"
         onClick={toggleColorMode}
-        className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
+        className="relative overflow-visible bg-transparent border-0 w-9 h-9 md:w-10 md:h-10 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
         title="Kalp animasyonunu ve renk paletini tetikleyin"
         aria-label="Kalp animasyonu butonu"
       >

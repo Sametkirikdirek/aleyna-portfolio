@@ -78,7 +78,7 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
           className="w-full h-full flex items-center justify-center overflow-visible"
         >
           <svg
-            viewBox="-6 -6 36 36"
+            viewBox="-2 -2 28 28"
             className="w-full h-full overflow-visible pointer-events-none"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
