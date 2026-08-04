@@ -1,14 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useColorMode } from "../../context/ColorModeContext";
 
 /**
- * Animated Heart Component — Pulsating Glowing Heart with Theme-adaptive Colors & 360 Spin on Theme Change.
+ * Animated Heart Component — Pulsating Glowing Heart with Theme-adaptive Colors, Unique SVG Instance IDs & Fallback Fills.
  */
 export default function HeartAnimation({ isColorActive, className = "" }) {
   const { theme } = useColorMode();
   const isDark = theme === "dark";
   const [particles, setParticles] = useState([]);
+  const instanceId = useId().replace(/:/g, "");
+
+  const activeGradId = `heartGradActive_${instanceId}`;
+  const idleGradId = `heartGradIdle_${instanceId}`;
+  const activeGlowId = `heartGlowActive_${instanceId}`;
+  const idleGlowId = `heartGlowIdle_${instanceId}`;
 
   useEffect(() => {
     // Generate a 12-particle radial splash whenever isColorActive state changes
@@ -31,6 +37,11 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
     const timer = setTimeout(() => setParticles([]), 750);
     return () => clearTimeout(timer);
   }, [isColorActive, isDark]);
+
+  // Solid fill color for 100% guaranteed rendering across all browsers and devices
+  const solidFill = isDark
+    ? isColorActive ? "#e11d48" : "#ffffff"
+    : isColorActive ? "#9f1239" : "#881337";
 
   return (
     <div className={`relative inline-flex items-center justify-center overflow-visible ${className}`}>
@@ -80,25 +91,25 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
           <svg
             viewBox="-2 -2 28 28"
             className="w-full h-full overflow-visible pointer-events-none"
-            fill="none"
+            fill={solidFill}
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
               {/* Active Gradient: Dark vs Light mode */}
-              <linearGradient id="heartGradActive" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={activeGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={isDark ? "#e11d48" : "#9f1239"} />
                 <stop offset="45%" stopColor={isDark ? "#e5488b" : "#881337"} />
                 <stop offset="100%" stopColor={isDark ? "#3b82f6" : "#312e81"} />
               </linearGradient>
 
               {/* Idle Gradient: Dark vs Light mode */}
-              <linearGradient id="heartGradIdle" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={idleGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={isDark ? "#ffffff" : "#ffffff"} />
                 <stop offset="100%" stopColor={isDark ? "#f43f5e" : "#881337"} />
               </linearGradient>
 
               {/* Vector Glow Filter for Active State */}
-              <filter id="heartGlowActive" x="-50%" y="-50%" width="200%" height="200%">
+              <filter id={activeGlowId} x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow
                   dx="0"
                   dy="0"
@@ -116,7 +127,7 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
               </filter>
 
               {/* Vector Glow Filter for Idle State */}
-              <filter id="heartGlowIdle" x="-50%" y="-50%" width="200%" height="200%">
+              <filter id={idleGlowId} x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow
                   dx="0"
                   dy="0"
@@ -129,8 +140,8 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
 
             <path
               d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-              fill={isColorActive ? "url(#heartGradActive)" : "url(#heartGradIdle)"}
-              filter={isColorActive ? "url(#heartGlowActive)" : "url(#heartGlowIdle)"}
+              fill={`url(#${isColorActive ? activeGradId : idleGradId})`}
+              filter={`url(#${isColorActive ? activeGlowId : idleGlowId})`}
             />
           </svg>
         </motion.div>
