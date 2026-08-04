@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { profile, skills, experiences } from "../data/content";
 import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Briefcase, Building2, Calendar, CheckCircle2 } from "lucide-react";
 import LottieAnimation from "./ui/LottieAnimation";
-import metaAiAnimation from "../assets/meta-ai.json";
 
 export default function About() {
   const [isColorActive, setIsColorActive] = useState(false);
@@ -46,7 +45,7 @@ export default function About() {
                       : "brightness(0) drop-shadow(0 0 6px rgba(0,0,0,0.25))",
                   }}
                 >
-                  <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+                  <LottieAnimation className="w-full h-full" />
                 </div>
               </button>
               <p className="font-mono text-xs tracking-[0.25em] uppercase text-umber font-semibold">

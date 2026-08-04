@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { profile } from "../data/content";
 import LottieAnimation from "./ui/LottieAnimation";
-import metaAiAnimation from "../assets/meta-ai.json";
 
 const links = [
   { to: "/about", label: "Hakkımda" },
@@ -85,7 +84,7 @@ export default function Nav() {
                         : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
                     }}
                   >
-                    <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+                    <LottieAnimation className="w-full h-full" />
                   </div>
                 </button>
               )}
@@ -112,7 +111,7 @@ export default function Nav() {
                   : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
               }}
             >
-              <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+              <LottieAnimation className="w-full h-full" />
             </div>
           </button>
 

@@ -1,24 +1,15 @@
-import { useEffect, useRef } from "react";
-import lottie from "lottie-web/build/player/lottie_light";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-export default function LottieAnimation({ animationData, className = "" }) {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!containerRef.current || !animationData) return;
-
-    const instance = lottie.loadAnimation({
-      container: containerRef.current,
-      renderer: "svg",
-      loop: true,
-      autoplay: true,
-      animationData: animationData,
-    });
-
-    return () => {
-      instance.destroy();
-    };
-  }, [animationData]);
-
-  return <div ref={containerRef} className={className} />;
+export default function LottieAnimation({
+  src = "https://lottie.host/9fbe4ca7-fc55-437b-991f-895ef78a3b83/qO83AZAFbd.lottie",
+  className = "",
+}) {
+  return (
+    <DotLottieReact
+      src={src}
+      loop
+      autoplay
+      className={className}
+    />
+  );
 }
