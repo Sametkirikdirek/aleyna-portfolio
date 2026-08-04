@@ -18,7 +18,7 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
         x: Math.cos(rad) * distance,
         y: Math.sin(rad) * distance,
         size: 3 + Math.random() * 4,
-        color: i % 2 === 0 ? "#ff8fa3" : "#3b82f6",
+        color: i % 2 === 0 ? "#e11d48" : "#3b82f6",
       };
     });
 
@@ -71,22 +71,22 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Active Gradient: Light Pink -> Midnight Blue */}
+            {/* Active Gradient: Rich Deep Pink -> Midnight Blue */}
             <linearGradient id="heartGradActive" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ff8fa3" />
-              <stop offset="45%" stopColor="#ff758f" />
+              <stop offset="0%" stopColor="#e11d48" />
+              <stop offset="45%" stopColor="#e5488b" />
               <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
 
-            {/* Idle Gradient: Crisp White -> Soft Pastel Pink */}
+            {/* Idle Gradient: Crisp White -> Deep Rose Pink */}
             <linearGradient id="heartGradIdle" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#f7cad0" />
+              <stop offset="100%" stopColor="#f43f5e" />
             </linearGradient>
 
             {/* Vector Glow Filter for Active State */}
             <filter id="heartGlowActive" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#ff8fa3" floodOpacity="0.9" />
+              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#e11d48" floodOpacity="0.9" />
               <feDropShadow dx="0" dy="0" stdDeviation="4.5" floodColor="#3b82f6" floodOpacity="0.75" />
             </filter>
 

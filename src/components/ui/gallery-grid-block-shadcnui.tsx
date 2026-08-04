@@ -152,17 +152,24 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
               role="group"
               aria-label="Galeri kategorileri"
             >
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={filter === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilter(category)}
-                  aria-pressed={filter === category}
-                >
-                  {category}
-                </Button>
-              ))}
+              {categories.map((category) => {
+                const isActive = filter === category;
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setFilter(category)}
+                    aria-pressed={isActive}
+                    className={`px-4 py-2 text-xs md:text-sm font-medium rounded-xl transition-all duration-300 shadow-sm cursor-pointer outline-none focus:outline-none ${
+                      isActive
+                        ? "bg-brush text-paper border border-brush-soft/80 shadow-[0_0_12px_rgba(217,112,79,0.35)] scale-105"
+                        : "bg-paper/10 text-paper border border-paper/15 hover:bg-brush-soft/20 hover:text-brush-soft hover:border-brush-soft/50"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
             </motion.div>
 
             <motion.div

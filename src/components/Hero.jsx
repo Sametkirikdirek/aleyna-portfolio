@@ -31,10 +31,10 @@ const fadeUp = (delay = 0) => ({
 
 const roleColorStyles = [
   {
-    activeBorder: "border-[#ff8fa3]/50",
-    activeText: "text-[#ff8fa3]",
-    activeBg: "bg-[#ff758f]/15",
-    activeShadow: "shadow-[0_0_15px_rgba(255,143,163,0.35)]",
+    activeBorder: "border-[#e11d48]/50",
+    activeText: "text-[#fb7185]",
+    activeBg: "bg-[#e11d48]/15",
+    activeShadow: "shadow-[0_0_15px_rgba(225,29,72,0.35)]",
   },
   {
     activeBorder: "border-[#3b82f6]/50",
@@ -43,10 +43,10 @@ const roleColorStyles = [
     activeShadow: "shadow-[0_0_15px_rgba(59,130,246,0.35)]",
   },
   {
-    activeBorder: "border-[#f7cad0]/50",
-    activeText: "text-[#f7cad0]",
-    activeBg: "bg-[#ff8fa3]/15",
-    activeShadow: "shadow-[0_0_15px_rgba(247,202,208,0.35)]",
+    activeBorder: "border-[#f43f5e]/50",
+    activeText: "text-[#fda4af]",
+    activeBg: "bg-[#f43f5e]/15",
+    activeShadow: "shadow-[0_0_15px_rgba(244,63,94,0.35)]",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function Hero() {
       <ParticleCanvas
         particleCount={800}
         speed={isColorActive ? 1.25 : 1}
-        accentColor={isColorActive ? "#ff758f" : "#c0956c"}
+        accentColor={isColorActive ? "#e11d48" : "#c0956c"}
       />
 
       {/* ── Subtle grain overlay ─────────────────────── */}

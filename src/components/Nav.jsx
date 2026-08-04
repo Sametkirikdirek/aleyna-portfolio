@@ -14,6 +14,23 @@ const links = [
   { to: "/contact", label: "İletişim" },
 ];
 
+function HeaderControls({ isColorActive, handleLottieClick }) {
+  return (
+    <div className="flex items-center gap-3 shrink-0">
+      <ThemeToggle />
+      <button
+        type="button"
+        onClick={handleLottieClick}
+        className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
+        title="Kalp animasyonunu ve renk paletini tetikleyin"
+        aria-label="Kalp animasyonu butonu"
+      >
+        <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
+      </button>
+    </div>
+  );
+}
+
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -66,42 +83,23 @@ export default function Nav() {
           {profile.name}
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
+        {/* Desktop Header */}
+        <div className="hidden md:flex items-center gap-8">
           <ul className="flex items-center gap-8 font-sans text-sm">
             {links.map((l) => (
-              <li key={l.to} className="flex items-center gap-2">
-                {l.label === "Hakkımda" && (
-                  <button
-                    type="button"
-                    onClick={handleLottieClick}
-                    className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
-                    title="Kalp animasyonunu ve renk paletini tetikleyin"
-                    aria-label="Kalp animasyonu butonu"
-                  >
-                    <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
-                  </button>
-                )}
+              <li key={l.to}>
                 <NavLink to={l.to} className={linkClass}>
                   {l.label}
                 </NavLink>
               </li>
             ))}
           </ul>
-          <ThemeToggle />
+          <HeaderControls isColorActive={isColorActive} handleLottieClick={handleLottieClick} />
         </div>
 
+        {/* Mobile Header */}
         <div className="flex items-center gap-3 md:hidden">
-          <ThemeToggle />
-
-          <button
-            type="button"
-            onClick={handleLottieClick}
-            className="relative overflow-visible bg-transparent border-0 w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 active:scale-95 focus:outline-none outline-none shrink-0"
-            title="Kalp animasyonunu ve renk paletini tetikleyin"
-            aria-label="Kalp animasyonu butonu"
-          >
-            <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
-          </button>
+          <HeaderControls isColorActive={isColorActive} handleLottieClick={handleLottieClick} />
 
           <button
             onClick={() => setOpen((v) => !v)}
