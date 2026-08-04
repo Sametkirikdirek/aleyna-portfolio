@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { profile } from "../data/content";
 import LottieAnimation from "./ui/LottieAnimation";
+import ThemeToggle from "./ui/ThemeToggle";
 
 const links = [
   { to: "/about", label: "Hakkımda" },
@@ -65,28 +66,33 @@ export default function Nav() {
           {profile.name}
         </Link>
 
-        <ul className="hidden md:flex items-center gap-8 font-sans text-sm">
-          {links.map((l) => (
-            <li key={l.to} className="flex items-center gap-2">
-              {l.label === "Hakkımda" && (
-                <button
-                  type="button"
-                  onClick={handleLottieClick}
-                  className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
-                  title="Kalp animasyonunu ve renk paletini tetikleyin"
-                  aria-label="Kalp animasyonu butonu"
-                >
-                  <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
-                </button>
-              )}
-              <NavLink to={l.to} className={linkClass}>
-                {l.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+        <div className="hidden md:flex items-center gap-6">
+          <ul className="flex items-center gap-8 font-sans text-sm">
+            {links.map((l) => (
+              <li key={l.to} className="flex items-center gap-2">
+                {l.label === "Hakkımda" && (
+                  <button
+                    type="button"
+                    onClick={handleLottieClick}
+                    className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
+                    title="Kalp animasyonunu ve renk paletini tetikleyin"
+                    aria-label="Kalp animasyonu butonu"
+                  >
+                    <LottieAnimation isColorActive={isColorActive} className="w-full h-full" />
+                  </button>
+                )}
+                <NavLink to={l.to} className={linkClass}>
+                  {l.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          <ThemeToggle />
+        </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-3 md:hidden">
+          <ThemeToggle />
+
           <button
             type="button"
             onClick={handleLottieClick}

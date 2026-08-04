@@ -29,6 +29,30 @@ html {
   --ring: #6ba3a6;
 }
 
+html.dark {
+  --color-ink: #14151a;
+  --color-ink-soft: #1c1e26;
+  --color-paper: #f1ece1;
+  --color-paper-dim: #e7e0d0;
+  --color-umber: #5b4636;
+  color-scheme: dark;
+}
+
+html.light {
+  --color-ink: #faf8f5;
+  --color-ink-soft: #f2ece4;
+  --color-paper: #1c1e26;
+  --color-paper-dim: #2d303e;
+  --color-umber: #8c6a53;
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out;
+}
+
 @theme {
   /* -- Renk paleti: "ıslak tuval + fildişi kağıt + sienna fırça + devre camgöbeği" -- */
   --color-ink: #14151a;
