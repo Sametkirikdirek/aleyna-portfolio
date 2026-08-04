@@ -96,14 +96,35 @@ export default function Nav() {
           ))}
         </ul>
 
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="md:hidden text-paper p-2 -mr-2"
-          aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-          aria-expanded={open}
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            type="button"
+            onClick={handleLottieClick}
+            className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 active:scale-95 focus:outline-none outline-none shrink-0"
+            title="Sayfa renk paletini ve animasyonunu tetikleyin"
+            aria-label="Renk animasyonu butonu"
+          >
+            <div
+              className="w-full h-full transition-all duration-700"
+              style={{
+                filter: isColorActive
+                  ? "drop-shadow(0 0 10px rgba(230,197,148,0.85))"
+                  : "brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.7))",
+              }}
+            >
+              <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-paper p-2 -mr-2"
+            aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
+            aria-expanded={open}
+          >
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -117,31 +138,11 @@ export default function Nav() {
           >
             <ul className="flex flex-col gap-1 pt-2">
               {links.map((l) => (
-                <li key={l.to} className="flex items-center gap-3 py-3 border-b border-paper/5 last:border-0">
-                  {l.label === "Hakkımda" && (
-                    <button
-                      type="button"
-                      onClick={handleLottieClick}
-                      className="w-12 h-12 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-115 focus:outline-none shrink-0"
-                      title="Sayfa renk paletini ve animasyonunu tetikleyin"
-                      aria-label="Renk animasyonu butonu"
-                    >
-                      <div
-                        className="w-full h-full transition-all duration-700"
-                        style={{
-                          filter: isColorActive
-                            ? "drop-shadow(0 0 14px rgba(230,197,148,0.9))"
-                            : "brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.7))",
-                        }}
-                      >
-                        <LottieAnimation animationData={metaAiAnimation} className="w-full h-full" />
-                      </div>
-                    </button>
-                  )}
+                <li key={l.to}>
                   <NavLink
                     to={l.to}
                     className={({ isActive }) =>
-                      `font-sans text-base transition-colors ${
+                      `block py-3 font-sans text-base border-b border-paper/5 last:border-0 transition-colors ${
                         isActive ? "text-brush-soft" : "text-paper/85"
                       }`
                     }
