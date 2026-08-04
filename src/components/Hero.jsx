@@ -108,10 +108,10 @@ export default function Hero() {
           {/* Tagline */}
           <motion.p
             {...fadeUp(0.24)}
-            className={`max-w-lg font-sans text-lg md:text-xl leading-relaxed transition-all duration-1000 ease-in-out ${
+            className={`max-w-lg font-sans text-lg md:text-xl leading-relaxed transition-all duration-500 ease-in-out ${
               isColorActive
-                ? "text-[#e6c594] drop-shadow-[0_0_12px_rgba(230,197,148,0.2)] font-medium"
-                : "text-paper/65"
+                ? "text-[#fb7185] drop-shadow-[0_0_12px_rgba(251,113,133,0.3)] font-medium"
+                : "text-paper/70"
             }`}
           >
             {profile.tagline}

@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useColorMode } from "../../context/ColorModeContext";
 
 /**
- * Animated Heart Component — Pulsating Glowing Heart with Splash Burst & Light Pink/Midnight Blue theme.
+ * Animated Heart Component — Pulsating Glowing Heart with Theme-adaptive Colors & 360 Spin on Theme Change.
  */
 export default function HeartAnimation({ isColorActive, className = "" }) {
+  const { theme } = useColorMode();
+  const isDark = theme === "dark";
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
@@ -18,14 +21,16 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
         x: Math.cos(rad) * distance,
         y: Math.sin(rad) * distance,
         size: 3 + Math.random() * 4,
-        color: i % 2 === 0 ? "#e11d48" : "#3b82f6",
+        color: isDark
+          ? i % 2 === 0 ? "#e11d48" : "#3b82f6"
+          : i % 2 === 0 ? "#9f1239" : "#312e81",
       };
     });
 
     setParticles(newParticles);
     const timer = setTimeout(() => setParticles([]), 750);
     return () => clearTimeout(timer);
-  }, [isColorActive]);
+  }, [isColorActive, isDark]);
 
   return (
     <div className={`relative inline-flex items-center justify-center overflow-visible ${className}`}>
@@ -54,54 +59,81 @@ export default function HeartAnimation({ isColorActive, className = "" }) {
         ))}
       </AnimatePresence>
 
-      {/* Heart Pulse */}
+      {/* Heart Container with Spin on Theme Change */}
       <motion.div
-        animate={{ scale: isColorActive ? [1, 1.18, 1, 1.12, 1] : [1, 1.06, 1] }}
-        transition={{
-          duration: isColorActive ? 1.6 : 2.6,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        key={theme}
+        initial={{ rotate: -180, scale: 0.8 }}
+        animate={{ rotate: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 18 }}
         className="w-full h-full flex items-center justify-center overflow-visible"
       >
-        <svg
-          viewBox="-6 -6 36 36"
-          className="w-full h-full overflow-visible pointer-events-none"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+        {/* Heart Pulse */}
+        <motion.div
+          animate={{ scale: isColorActive ? [1, 1.18, 1, 1.12, 1] : [1, 1.06, 1] }}
+          transition={{
+            duration: isColorActive ? 1.6 : 2.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="w-full h-full flex items-center justify-center overflow-visible"
         >
-          <defs>
-            {/* Active Gradient: Rich Deep Pink -> Midnight Blue */}
-            <linearGradient id="heartGradActive" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#e11d48" />
-              <stop offset="45%" stopColor="#e5488b" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
+          <svg
+            viewBox="-6 -6 36 36"
+            className="w-full h-full overflow-visible pointer-events-none"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Active Gradient: Dark vs Light mode */}
+              <linearGradient id="heartGradActive" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={isDark ? "#e11d48" : "#9f1239"} />
+                <stop offset="45%" stopColor={isDark ? "#e5488b" : "#881337"} />
+                <stop offset="100%" stopColor={isDark ? "#3b82f6" : "#312e81"} />
+              </linearGradient>
 
-            {/* Idle Gradient: Crisp White -> Deep Rose Pink */}
-            <linearGradient id="heartGradIdle" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#f43f5e" />
-            </linearGradient>
+              {/* Idle Gradient: Dark vs Light mode */}
+              <linearGradient id="heartGradIdle" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={isDark ? "#ffffff" : "#ffffff"} />
+                <stop offset="100%" stopColor={isDark ? "#f43f5e" : "#881337"} />
+              </linearGradient>
 
-            {/* Vector Glow Filter for Active State */}
-            <filter id="heartGlowActive" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#e11d48" floodOpacity="0.9" />
-              <feDropShadow dx="0" dy="0" stdDeviation="4.5" floodColor="#3b82f6" floodOpacity="0.75" />
-            </filter>
+              {/* Vector Glow Filter for Active State */}
+              <filter id="heartGlowActive" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="2.5"
+                  floodColor={isDark ? "#e11d48" : "#881337"}
+                  floodOpacity="0.9"
+                />
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="4.5"
+                  floodColor={isDark ? "#3b82f6" : "#312e81"}
+                  floodOpacity="0.75"
+                />
+              </filter>
 
-            {/* Vector Glow Filter for Idle State */}
-            <filter id="heartGlowIdle" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="0" stdDeviation="1.5" floodColor="#ffffff" floodOpacity="0.85" />
-            </filter>
-          </defs>
+              {/* Vector Glow Filter for Idle State */}
+              <filter id="heartGlowIdle" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="1.5"
+                  floodColor={isDark ? "#ffffff" : "#881337"}
+                  floodOpacity="0.85"
+                />
+              </filter>
+            </defs>
 
-          <path
-            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-            fill={isColorActive ? "url(#heartGradActive)" : "url(#heartGradIdle)"}
-            filter={isColorActive ? "url(#heartGlowActive)" : "url(#heartGlowIdle)"}
-          />
-        </svg>
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+              fill={isColorActive ? "url(#heartGradActive)" : "url(#heartGradIdle)"}
+              filter={isColorActive ? "url(#heartGlowActive)" : "url(#heartGlowIdle)"}
+            />
+          </svg>
+        </motion.div>
       </motion.div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useColorMode } from "../../context/ColorModeContext";
 
 /**
  * Custom Day / Night Theme Toggle Switch
@@ -7,31 +7,8 @@ import { motion } from "framer-motion";
  * Remembers user preference in localStorage (defaults to Dark mode)
  */
 export default function ThemeToggle({ className = "" }) {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("theme");
-      if (saved === "light" || saved === "dark") return saved;
-    }
-    return "dark"; // Default is Dark Mode
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.add("light");
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
+  const { theme, toggleTheme } = useColorMode();
   const isDark = theme === "dark";
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
 
   return (
     <button
