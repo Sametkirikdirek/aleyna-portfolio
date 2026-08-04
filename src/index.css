@@ -39,11 +39,11 @@ html.dark {
 }
 
 html.light {
-  --color-ink: #faf8f5;
-  --color-ink-soft: #f2ece4;
-  --color-paper: #1c1e26;
-  --color-paper-dim: #2d303e;
-  --color-umber: #8c6a53;
+  --color-ink: #fdf0f3;
+  --color-ink-soft: #f8e1e7;
+  --color-paper: #1f1625;
+  --color-paper-dim: #3b2a45;
+  --color-umber: #a34866;
   color-scheme: light;
 }
 
