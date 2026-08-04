@@ -79,8 +79,8 @@ export default function Nav() {
       }`}
     >
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 md:px-10 h-16 md:h-20">
-        <Link to="/" className="font-display text-lg tracking-tight text-paper outline-none focus:outline-none focus-visible:outline-none">
-          {profile.name}
+        <Link to="/" className="font-display text-xl font-bold tracking-widest text-paper hover:text-brush-soft transition-colors outline-none focus:outline-none focus-visible:outline-none">
+          A&A
         </Link>
 
         {/* Desktop Header */}
