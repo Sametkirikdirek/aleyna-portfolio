@@ -33,7 +33,7 @@ export default function About() {
               <button
                 type="button"
                 onClick={handleLottieClick}
-                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
+                className="relative overflow-visible bg-transparent border-0 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none shrink-0"
                 title="Kalp animasyonunu ve renk paletini tetikleyin"
                 aria-label="Kalp animasyonu butonu"
               >

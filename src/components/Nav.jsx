@@ -72,7 +72,7 @@ export default function Nav() {
                 <button
                   type="button"
                   onClick={handleLottieClick}
-                  className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
+                  className="relative overflow-visible bg-transparent border-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 focus:outline-none outline-none shrink-0"
                   title="Kalp animasyonunu ve renk paletini tetikleyin"
                   aria-label="Kalp animasyonu butonu"
                 >
@@ -90,7 +90,7 @@ export default function Nav() {
           <button
             type="button"
             onClick={handleLottieClick}
-            className="w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 active:scale-95 focus:outline-none outline-none shrink-0"
+            className="relative overflow-visible bg-transparent border-0 w-7 h-7 flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-125 active:scale-95 focus:outline-none outline-none shrink-0"
             title="Kalp animasyonunu ve renk paletini tetikleyin"
             aria-label="Kalp animasyonu butonu"
           >
