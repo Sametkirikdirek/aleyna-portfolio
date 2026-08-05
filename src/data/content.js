@@ -37,13 +37,13 @@ export const profile = {
     instagram: "https://instagram.com/aleynaaltunsu.art",
   },
   heroCards: [
-    { imgUrl: "/artworks/sanat_1.jpg", title: "Atölye Günlüğü", linkUrl: "/writings" },
-    { imgUrl: "/artworks/sanat_2.jpg", title: "Rengin Matematiği", linkUrl: "/gallery" },
-    { imgUrl: "/artworks/sanat_3.jpg", title: "Yapay Zeka & Görüntü", linkUrl: "/ai-work" },
-    { imgUrl: "/artworks/sanat_4.jpg", title: "Gece Vardiyası", linkUrl: "/gallery" },
-    { imgUrl: "/artworks/sanat_5.jpg", title: "Kompozisyon", linkUrl: "/writings" },
-    { imgUrl: "/artworks/sanat_6.jpg", title: "Siber Desen", linkUrl: "/ai-work" },
-    { imgUrl: "/artworks/sanat_7.jpg", title: "Tuval & Kod", linkUrl: "/gallery" },
+    { imgUrl: "/artworks/hero_card_1.png", title: "Atölye Günlüğü", linkUrl: "/writings" },
+    { imgUrl: "/artworks/hero_card_2.png", title: "Rengin Matematiği", linkUrl: "/gallery" },
+    { imgUrl: "/artworks/hero_card_3.png", title: "Yapay Zeka & Görüntü", linkUrl: "/ai-work" },
+    { imgUrl: "/artworks/hero_card_4.png", title: "Gece Vardiyası", linkUrl: "/gallery" },
+    { imgUrl: "/artworks/hero_card_5.png", title: "Kompozisyon", linkUrl: "/writings" },
+    { imgUrl: "/artworks/hero_card_6.png", title: "Siber Desen", linkUrl: "/ai-work" },
+    { imgUrl: "/artworks/hero_card_7.png", title: "Tuval & Kod", linkUrl: "/gallery" },
   ],
 };
 
