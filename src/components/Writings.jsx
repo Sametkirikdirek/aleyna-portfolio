@@ -69,17 +69,17 @@ function WritingModal({ article, onClose }) {
 
       {/* Pop-Up Penceresi */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        initial={{ opacity: 0, scale: 0.93, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 16 }}
+        exit={{ opacity: 0, scale: 0.95, y: 14 }}
         transition={{ type: "spring", stiffness: 320, damping: 26 }}
-        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-paper text-ink rounded-2xl p-6 md:p-10 shadow-2xl border border-ink/10 z-10 my-auto"
+        className="relative w-full max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[88vh] overflow-y-auto bg-paper text-ink rounded-3xl p-8 md:p-12 lg:p-14 shadow-2xl border border-ink/10 z-10 my-auto"
       >
         {/* Üst Bilgiler & Kapat Butonu */}
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3 flex-wrap">
             {article.tag && (
-              <span className="font-mono text-xs uppercase tracking-wider px-3 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
+              <span className="font-mono text-xs uppercase tracking-widest px-3.5 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
                 {article.tag}
               </span>
             )}
@@ -98,20 +98,20 @@ function WritingModal({ article, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full bg-ink/5 hover:bg-ink/12 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
             aria-label="Kapat"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Yazı Başlığı */}
-        <h2 className="font-display text-2xl md:text-4xl text-ink leading-snug tracking-tight mb-6">
+        <h2 className="font-display text-3xl md:text-5xl text-ink leading-snug tracking-tight mb-8">
           {article.title}
         </h2>
 
         {/* Yazı İçeriği */}
-        <div className="text-ink/80 font-sans text-base md:text-lg leading-relaxed whitespace-pre-line space-y-4 border-t border-ink/10 pt-6">
+        <div className="text-ink/85 font-sans text-base md:text-lg lg:text-xl leading-relaxed whitespace-pre-line space-y-6 border-t border-ink/10 pt-8">
           {article.content || article.excerpt}
         </div>
       </motion.div>
