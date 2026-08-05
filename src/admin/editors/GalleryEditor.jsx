@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Upload, GripVertical } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../lib/firebase";
+import { uploadToCloudinary } from "../../lib/cloudinary";
 import {
   EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
 } from "../components/AdminUI";
@@ -62,9 +61,7 @@ export default function GalleryEditor() {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [idx]: true }));
     try {
-      const fileRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
+      const url = await uploadToCloudinary(file, "gallery");
       updateArtwork(idx, "image", url);
     } catch (err) {
       console.error("Yükleme hatası:", err);

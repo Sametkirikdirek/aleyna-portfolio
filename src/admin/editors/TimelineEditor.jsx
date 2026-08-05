@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { useTimeline } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../lib/firebase";
+import { uploadToCloudinary } from "../../lib/cloudinary";
 import {
   EditorHeader, Field, TextInput, Card, SaveButton,
 } from "../components/AdminUI";
@@ -57,9 +56,7 @@ export default function TimelineEditor() {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [idx]: true }));
     try {
-      const storageRef = ref(storage, `timeline/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadToCloudinary(file, "timeline");
       updateImage(idx, "url", url);
     } catch (err) {
       console.error(err);

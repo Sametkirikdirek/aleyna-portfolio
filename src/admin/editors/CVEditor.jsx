@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { FileText, Upload, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
 import { useCv } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../lib/firebase";
+import { uploadToCloudinary } from "../../lib/cloudinary";
 import { EditorHeader, SectionTitle, Card } from "../components/AdminUI";
 
 function CVUploader({ language, label, currentUrl, onUpload }) {
@@ -14,9 +13,7 @@ function CVUploader({ language, label, currentUrl, onUpload }) {
     if (!file) return;
     setStatus("uploading");
     try {
-      const storageRef = ref(storage, `cv/CV_${language}_${Date.now()}.pdf`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadToCloudinary(file, "cv");
       await onUpload(url);
       setStatus("done");
       setTimeout(() => setStatus("idle"), 3000);
