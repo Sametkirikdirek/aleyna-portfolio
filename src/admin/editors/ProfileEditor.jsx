@@ -311,23 +311,37 @@ export default function ProfileEditor() {
               key={idx}
               className="bg-white/[0.03] border border-white/8 rounded-lg p-4 flex items-start gap-4"
             >
-              {/* Resim Yükle / Önizleme */}
-              <div className="shrink-0">
+              {/* Resim Yükle / Çerçeve Hizalama */}
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
                 <div
-                  className="w-20 h-24 rounded-lg border-2 border-dashed border-white/15 hover:border-rose-500/50 cursor-pointer overflow-hidden flex items-center justify-center bg-white/[0.03] transition-colors relative"
+                  className="group/frame relative w-20 h-28 rounded-xl border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex items-center justify-center bg-white/[0.03] transition-all shadow-md"
                   onClick={() => {
-                    setPendingCardIdx(idx);
-                    fileInputRef.current?.click();
+                    if (card.imgUrl) {
+                      openAdjustModal(card.imgUrl, "heroCard", idx, "card", "Yelpaze Kartı Hizala & Kırp");
+                    } else {
+                      setPendingCardIdx(idx);
+                      fileInputRef.current?.click();
+                    }
                   }}
+                  title="Görseli kırpmak ve hizalamak için çerçeveye tıklayın"
                 >
                   {card.imgUrl ? (
-                    <img
-                      src={card.imgUrl}
-                      alt={card.title || `Card ${idx}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <img
+                        src={card.imgUrl}
+                        alt={card.title || `Card ${idx}`}
+                        className="w-full h-full object-cover group-hover/frame:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-black/55 opacity-0 group-hover/frame:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-mono gap-1">
+                        <Scissors size={14} className="text-rose-400" />
+                        <span>Hizala</span>
+                      </div>
+                    </>
                   ) : (
-                    <Upload size={18} className="text-white/30" />
+                    <div className="flex flex-col items-center text-white/30">
+                      <Upload size={18} />
+                      <span className="text-[10px] mt-0.5">Görsel</span>
+                    </div>
                   )}
                   {uploading[idx] && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -335,7 +349,28 @@ export default function ProfileEditor() {
                     </div>
                   )}
                 </div>
-                <p className="text-white/30 text-[10px] text-center mt-1">Görsel Yükle</p>
+
+                <div className="flex flex-col gap-1 items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingCardIdx(idx);
+                      fileInputRef.current?.click();
+                    }}
+                    className="text-[10px] text-rose-300 hover:text-rose-200 bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded transition-colors cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <Upload size={10} /> Görsel Yükle
+                  </button>
+                  {card.imgUrl && (
+                    <button
+                      type="button"
+                      onClick={() => openAdjustModal(card.imgUrl, "heroCard", idx, "card", "Yelpaze Kartı Hizala & Kırp")}
+                      className="text-[9px] text-white/50 hover:text-white transition-colors cursor-pointer"
+                    >
+                      ✂️ Hizala / Kırp
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Detaylar */}
