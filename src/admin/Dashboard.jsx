@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import {
-  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X,
+  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X, BarChart3,
 } from "lucide-react";
 import ProfileEditor from "./editors/ProfileEditor";
 import GalleryEditor from "./editors/GalleryEditor";
@@ -11,11 +11,13 @@ import AIProjectEditor from "./editors/AIProjectEditor";
 import TimelineEditor from "./editors/TimelineEditor";
 import WritingsEditor from "./editors/WritingsEditor";
 import ContactEditor from "./editors/ContactEditor";
+import AnalyticsEditor from "./editors/AnalyticsEditor";
 
 const NAV_ITEMS = [
+  { id: "analytics", label: "Analitik & İstatistikler", icon: BarChart3 },
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
-  { id: "writings", label: "Yazılarım", icon: BookOpen },
+  { id: "writings", label: "Yazılarım & Kütüphane", icon: BookOpen },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },
   { id: "cv", label: "CV Yönetimi", icon: FileText },
@@ -23,6 +25,7 @@ const NAV_ITEMS = [
 ];
 
 const EDITORS = {
+  analytics: AnalyticsEditor,
   profile: ProfileEditor,
   gallery: GalleryEditor,
   contact: ContactEditor,
@@ -34,13 +37,13 @@ const EDITORS = {
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [active, setActive] = useState("profile");
+  const [active, setActive] = useState("analytics");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const ActiveEditor = EDITORS[active];
+  const ActiveEditor = EDITORS[active] || AnalyticsEditor;
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] flex text-white">
+    <div className="min-h-screen bg-[#0d0d12] flex text-white font-sans">
       {/* ── Overlay (mobile) ── */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -67,7 +70,7 @@ export default function Dashboard() {
             <p className="text-white/40 text-xs mt-0.5 truncate max-w-[160px]">{user?.email}</p>
           </div>
           <button
-            className="md:hidden text-white/40 hover:text-white"
+            className="md:hidden text-white/40 hover:text-white cursor-pointer"
             onClick={() => setSidebarOpen(false)}
           >
             <X size={18} />
@@ -80,7 +83,7 @@ export default function Dashboard() {
             <button
               key={id}
               onClick={() => { setActive(id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
                 active === id
                   ? "bg-rose-600/20 text-rose-300 border border-rose-500/20"
                   : "text-white/50 hover:text-white/80 hover:bg-white/5"
@@ -96,7 +99,7 @@ export default function Dashboard() {
         <div className="p-3 border-t border-white/8">
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/40 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 cursor-pointer"
           >
             <LogOut size={16} />
             Çıkış Yap
@@ -108,7 +111,7 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Üst Bar (Mobile) */}
         <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-white/8 bg-[#111118]">
-          <button onClick={() => setSidebarOpen(true)} className="text-white/60 hover:text-white">
+          <button onClick={() => setSidebarOpen(true)} className="text-white/60 hover:text-white cursor-pointer">
             <Menu size={20} />
           </button>
           <span className="text-sm font-medium text-white/80">
