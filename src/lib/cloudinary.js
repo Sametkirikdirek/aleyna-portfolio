@@ -7,14 +7,8 @@
  * @returns {Promise<string>} - Yüklenen dosyanın URL'si
  */
 export async function uploadToCloudinary(file, folder = "portfolio") {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || !uploadPreset) {
-    throw new Error(
-      "Cloudinary ortam değişkenleri eksik. .env.local dosyasını kontrol edin."
-    );
-  }
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "REMOVED_CLOUD_NAME";
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "REMOVED_UPLOAD_PRESET";
 
   const formData = new FormData();
   formData.append("file", file);
