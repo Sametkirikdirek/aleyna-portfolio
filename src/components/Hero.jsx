@@ -112,17 +112,30 @@ export default function Hero() {
               })}
             </motion.div>
 
-            {/* Name */}
-            <motion.h1
-              {...fadeUp(0.12)}
-              className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out ${
-                isColorActive
-                  ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
-                  : "text-paper"
-              }`}
-            >
-              {profile.name}
-            </motion.h1>
+            {/* Profile Avatar Capsule & Name */}
+            <motion.div {...fadeUp(0.12)} className="flex flex-col items-start gap-4">
+              {profile.avatar && (
+                <div className="group relative cursor-pointer">
+                  <div className="w-[58px] h-[92px] sm:w-[72px] sm:h-[115px] lg:w-[82px] lg:h-[130px] rounded-full overflow-hidden border-2 border-white/20 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-rose-400/80 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.4)]">
+                    <img
+                      src={profile.avatar}
+                      alt={profile.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <h1
+                className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out ${
+                  isColorActive
+                    ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
+                    : "text-paper"
+                }`}
+              >
+                {profile.name}
+              </h1>
+            </motion.div>
 
             {/* Tagline */}
             <motion.p

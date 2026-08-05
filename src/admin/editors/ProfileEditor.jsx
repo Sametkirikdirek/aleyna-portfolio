@@ -20,6 +20,7 @@ export default function ProfileEditor() {
     if (data && !form) {
       setForm({
         name: data.name || "",
+        avatar: data.avatar || "",
         tagline: data.tagline || "",
         bio: data.bio || "",
         location: data.location || "",
@@ -116,6 +117,22 @@ export default function ProfileEditor() {
     }
   };
 
+  const avatarInputRef = useRef();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const uploadAvatar = async (file) => {
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const url = await uploadToCloudinary(file, "profile");
+      setField("avatar", url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   if (loading || !form) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -128,14 +145,59 @@ export default function ProfileEditor() {
     <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Anasayfa & Hakkımda"
-        subtitle="Profil bilgileri, yelpaze görselleri, biyografi ve deneyimler"
+        subtitle="Profil bilgileri, profil fotoğrafı, yelpaze görselleri, biyografi ve deneyimler"
         saveStatus={saveStatus}
         onSave={save}
       />
 
-      {/* Temel Bilgiler */}
+      {/* Temel Bilgiler & Profil Fotoğrafı */}
       <Card>
-        <SectionTitle>Temel Bilgiler</SectionTitle>
+        <SectionTitle>Temel Bilgiler & Profil Fotoğrafı (Avatar)</SectionTitle>
+        <div className="flex flex-col md:flex-row gap-6 items-start mb-6 pb-6 border-b border-white/8">
+          <div
+            className="w-24 h-36 rounded-full border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-white/[0.03] transition-colors relative shrink-0 shadow-lg"
+            onClick={() => avatarInputRef.current?.click()}
+          >
+            {form.avatar ? (
+              <img src={form.avatar} alt={form.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center text-white/40 text-center p-2">
+                <Upload size={20} />
+                <span className="text-[10px] mt-1">Fotoğraf Yükle</span>
+              </div>
+            )}
+            {uploadingAvatar && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-white/90">Anasayfa Profil Fotoğrafı (Rozet Avatar)</p>
+            <p className="text-xs text-white/40 leading-relaxed max-w-md">
+              Anasayfada "Aleyna Altunsu" başlığının üstünde/yanında kapsül rozet animasyonu ile sergilenen profil vesikanız.
+            </p>
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="mt-2 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Upload size={13} /> Fotoğraf Değiştir
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files[0]) uploadAvatar(e.target.files[0]);
+                e.target.value = "";
+              }}
+            />
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="İsim">
             <TextInput value={form.name} onChange={(v) => setField("name", v)} />
