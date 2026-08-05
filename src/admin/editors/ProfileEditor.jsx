@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Upload } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Scissors } from "lucide-react";
 import { useProfile } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
+import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
   EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
 } from "../components/AdminUI";
@@ -15,6 +16,31 @@ export default function ProfileEditor() {
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [pendingCardIdx, setPendingCardIdx] = useState(null);
+
+  const avatarInputRef = useRef();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Image adjust modal states
+  const [adjustState, setAdjustState] = useState({
+    isOpen: false,
+    imageUrl: "",
+    targetType: "", // "avatar" | "heroCard"
+    targetIdx: null,
+    aspectRatio: "capsule",
+    title: "Profil Fotoğrafı Ayarla & Kırp",
+  });
+
+  const openAdjustModal = (imageUrl, targetType, targetIdx = null, aspectRatio = "capsule", title = "Fotoğrafı Kırp & Hizala") => {
+    if (!imageUrl) return;
+    setAdjustState({
+      isOpen: true,
+      imageUrl,
+      targetType,
+      targetIdx,
+      aspectRatio,
+      title,
+    });
+  };
 
   useEffect(() => {
     if (data && !form) {
