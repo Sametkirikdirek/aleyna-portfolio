@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, Feather, BookOpen, X, ArrowRight, BookMarked, ExternalLink } from "lucide-react";
+import {
+  ArrowUpRight, Feather, BookOpen, X, ArrowRight, BookMarked, ExternalLink, Library, User,
+} from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
 
@@ -10,6 +12,7 @@ const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
 const TABS = [
   { id: "medium", label: "Medium", icon: BookOpen },
   { id: "personal", label: "Yazılarım", icon: Feather },
+  { id: "library", label: "Kütüphane", icon: Library },
 ];
 
 async function fetchWithTimeout(url, ms = 8000) {
@@ -237,14 +240,25 @@ function ArticleList({ articles, external = true, onSelectArticle }) {
 }
 
 export default function Writings() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: writingsData } = useWritings();
   const { data: profile } = useProfile();
   const personalWritings = writingsData?.personalWritings || [];
   const mediumUrl = profile?.social?.medium || "https://medium.com/@aleynaaltunsu";
-  const [activeTab, setActiveTab] = useState("medium");
+
+  const initialTab = searchParams.get("tab") || "medium";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [mediumArticles, setMediumArticles] = useState(mediumWritingsFallback);
   const [mediumReady, setMediumReady] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab) {
+      setActiveTab(requestedTab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -309,7 +323,7 @@ export default function Writings() {
         </div>
 
         <AnimatePresence mode="wait">
-          {activeTab === "medium" ? (
+          {activeTab === "medium" && (
             <motion.div
               key="medium"
               initial={{ opacity: 0, y: 8 }}
@@ -357,7 +371,9 @@ export default function Writings() {
                 </a>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {activeTab === "personal" && (
             <motion.div
               key="personal"
               initial={{ opacity: 0, y: 8 }}
@@ -380,6 +396,78 @@ export default function Writings() {
                 external={false}
                 onSelectArticle={(article) => setSelectedArticle(article)}
               />
+            </motion.div>
+          )}
+
+          {activeTab === "library" && (
+            <motion.div
+              key="library"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              role="tabpanel"
+            >
+              <div className="mb-6">
+                <h3 className="font-display text-xl md:text-2xl text-ink">
+                  Kütüphane
+                </h3>
+                <p className="mt-1 font-sans text-sm text-ink/55">
+                  Kapak fotoğrafları, yazar künyesi ve konu özetleri ile tüm kişisel yazılar kütüphanesi.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {personalWritings.map((w, i) => (
+                  <motion.article
+                    key={w.id || i}
+                    onClick={() => navigate(`/writings/${w.id}`)}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="group bg-ink/[0.02] border border-ink/10 rounded-2xl p-4 flex flex-col justify-between hover:border-brush/40 hover:bg-ink/[0.04] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <div>
+                      {/* Kapak Görseli */}
+                      <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-ink/5 border border-ink/5 relative">
+                        {w.image ? (
+                          <img
+                            src={w.image}
+                            alt={w.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-ink/30 bg-ink/[0.03]">
+                            <BookMarked size={28} />
+                            <span className="font-mono text-xs mt-1">Aleyna Altunsu</span>
+                          </div>
+                        )}
+                        {w.tag && (
+                          <span className="absolute top-2.5 left-2.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-paper font-medium">
+                            {w.tag}
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="font-sans font-medium text-base md:text-lg text-ink group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors leading-snug mb-2">
+                        {w.title}
+                      </h4>
+
+                      <p className="font-sans text-xs text-ink/65 line-clamp-3 leading-relaxed mb-4">
+                        {w.excerpt}
+                      </p>
+                    </div>
+
+                    {/* Alt Künye */}
+                    <div className="pt-3 border-t border-ink/8 flex items-center justify-between font-mono text-[11px] text-ink/40">
+                      <span className="flex items-center gap-1">
+                        <User size={12} /> {profile?.name || "Aleyna Altunsu"}
+                      </span>
+                      <span>{w.readTime || "4 dk"}</span>
+                    </div>
+                  </motion.article>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
