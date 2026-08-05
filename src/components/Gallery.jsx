@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RefreshCw, Maximize2 } from "lucide-react";
-import { paintings } from "../data/content";
 import PaintingCanvas from "./PaintingCanvas";
+import { useGallery } from "../hooks/useContent";
 
 // Fisher-Yates shuffle algoritması
 function shuffleArray(array) {
@@ -15,16 +15,19 @@ function shuffleArray(array) {
 }
 
 export default function Gallery() {
+  const { data: galleryData } = useGallery();
+  const artworks = galleryData?.artworks || [];
   const [active, setActive] = useState(null);
-  const [items, setItems] = useState(paintings);
+  const [items, setItems] = useState([]);
 
-  // Sayfa her yüklendiğinde / yenilendiğinde eserlerin dizilimini karıştırıyoruz (isim + resim eşleşmesi %100 korunur)
   useEffect(() => {
-    setItems(shuffleArray(paintings));
-  }, []);
+    if (artworks.length > 0) {
+      setItems(shuffleArray(artworks));
+    }
+  }, [artworks]);
 
   const handleShuffle = () => {
-    setItems(shuffleArray(paintings));
+    setItems(shuffleArray(artworks));
   };
 
   return (

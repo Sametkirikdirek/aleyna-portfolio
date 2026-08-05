@@ -1,15 +1,24 @@
 import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/ui/hero-section-2";
-import { profile, contactArtworks } from "../data/content";
-
-const socialLinks = [
-  { label: "Medium", href: profile.social.medium },
-  { label: "GitHub", href: profile.social.github },
-  { label: "LinkedIn", href: profile.social.linkedin },
-  { label: "Instagram", href: profile.social.instagram },
-];
+import { contactArtworks } from "../data/content";
+import { useProfile, useCv } from "../hooks/useContent";
 
 export default function ContactPage() {
+  const { data: profile } = useProfile();
+  const { data: cv } = useCv();
+
+  const socialLinks = [
+    { label: "Medium", href: profile?.social?.medium || "#" },
+    { label: "GitHub", href: profile?.social?.github || "#" },
+    { label: "LinkedIn", href: profile?.social?.linkedin || "#" },
+    { label: "Instagram", href: profile?.social?.instagram || "#" },
+  ];
+
+  const cvLinks = {
+    tr: cv?.tr || profile?.cv?.tr || "/docs/Aleyna_Altunsu_CV_TR.pdf",
+    en: cv?.en || profile?.cv?.en || "/docs/Aleyna_Altunsu_CV_EN.pdf",
+  };
+
   const [artwork, setArtwork] = useState(() => {
     const randomIndex = Math.floor(Math.random() * contactArtworks.length);
     return contactArtworks[randomIndex];
@@ -32,10 +41,10 @@ export default function ContactPage() {
       <HeroSection
         logo={{
           url: "",
-          alt: profile.name,
-          text: profile.name,
+          alt: profile?.name || "Aleyna Altunsu",
+          text: profile?.name || "Aleyna Altunsu",
         }}
-        slogan={profile.roles.join(" · ").toUpperCase()}
+        slogan={(profile?.roles || ["Yapay Zeka Mühendisi", "Ressam", "Yazar"]).join(" · ").toUpperCase()}
         title={
           <>
             Birlikte bir şey <br />
@@ -45,15 +54,15 @@ export default function ContactPage() {
         subtitle="İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz."
         callToAction={{
           text: "E-POSTA GÖNDER",
-          href: `mailto:${profile.email}`,
+          href: `mailto:${profile?.email || "hello@aleynaaltunsu.com"}`,
         }}
         backgroundImage={artwork.image}
         artwork={artwork}
         onRefreshArtwork={handleRefreshArtwork}
         contactInfo={{
           website: "aleynaaltunsu.com",
-          email: profile.email,
-          address: profile.location,
+          email: profile?.email || "hello@aleynaaltunsu.com",
+          address: profile?.location || "İstanbul, Türkiye",
         }}
       />
 

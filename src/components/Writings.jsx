@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, ExternalLink, Feather, BookOpen } from "lucide-react";
-import {
-  mediumWritingsFallback,
-  personalWritings,
-  profile,
-} from "../data/content";
+import { mediumWritingsFallback } from "../data/content";
+import { useWritings } from "../hooks/useContent";
 
 const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
 
@@ -63,47 +60,49 @@ function ArticleList({ articles, ready, external = true }) {
               {w.date}
             </span>
 
-            <div className="order-3 md:order-none">
-              <h3 className="font-display text-xl md:text-2xl leading-snug group-hover:text-brush transition-colors">
-                {w.title}
-              </h3>
-              {w.excerpt && (
-                <p className="mt-2 font-sans text-sm text-ink/60 leading-relaxed max-w-xl">
-                  {w.excerpt}
-                </p>
-              )}
-              <div className="mt-3 flex items-center gap-3 flex-wrap">
-                <span className="font-mono text-[11px] px-2 py-1 rounded-full border border-ink/15 text-ink/60">
-                  {w.tag}
-                </span>
-                {w.readTime && (
-                  <span className="font-mono text-[11px] text-ink/40">
-                    {w.readTime} okuma
+            <div className="order-2 md:order-none space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-sans font-medium text-lg md:text-xl text-ink group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                  {w.title}
+                </h3>
+                {w.tag && (
+                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-ink/[0.06] text-ink/70">
+                    {w.tag}
                   </span>
                 )}
               </div>
+              <p className="font-sans text-sm text-ink/65 leading-relaxed line-clamp-2">
+                {w.excerpt}
+              </p>
             </div>
 
-            {external && w.url && (
-              <ArrowUpRight
-                size={20}
-                className="order-2 md:order-none justify-self-end text-ink/30 group-hover:text-brush group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
-              />
-            )}
+            <div className="order-3 md:order-none flex items-center gap-3 shrink-0 self-center md:self-start">
+              {w.readTime && (
+                <span className="font-mono text-xs text-ink/40">
+                  {w.readTime}
+                </span>
+              )}
+              {external && (
+                <ArrowUpRight
+                  size={18}
+                  className="text-ink/40 group-hover:text-ink group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
+                />
+              )}
+            </div>
           </>
         );
 
-        if (external && w.url) {
+        if (w.url) {
           return (
             <motion.a
-              key={w.id}
+              key={w.id || i}
               href={w.url}
               target="_blank"
               rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: ready ? 1 : 0.6, y: 0 }}
-              transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.4) }}
               className={className}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
             >
               {content}
             </motion.a>
@@ -112,11 +111,11 @@ function ArticleList({ articles, ready, external = true }) {
 
         return (
           <motion.article
-            key={w.id}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: Math.min(i * 0.04, 0.4) }}
+            key={w.id || i}
             className={className}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
           >
             {content}
           </motion.article>
@@ -127,6 +126,8 @@ function ArticleList({ articles, ready, external = true }) {
 }
 
 export default function Writings() {
+  const { data: writingsData } = useWritings();
+  const personalWritings = writingsData?.personalWritings || [];
   const [activeTab, setActiveTab] = useState("medium");
   const [mediumArticles, setMediumArticles] = useState(mediumWritingsFallback);
   const [mediumReady, setMediumReady] = useState(false);

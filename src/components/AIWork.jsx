@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Cpu, Pin, Layers, BookOpen, Terminal, CheckCircle2, Filter, ChevronDown } from "lucide-react";
-import { aiProjects } from "../data/content";
 import SignatureLine from "./SignatureLine";
+import { useAiProjects } from "../hooks/useContent";
 
 export default function AIWork() {
+  const { data: aiData } = useAiProjects();
+  const aiProjects = aiData?.projects || [];
   const [activeFilter, setActiveFilter] = useState("Tümü");
 
   // Dynamic category list from projects
@@ -16,14 +18,14 @@ export default function AIWork() {
       if (p.category) set.add(p.category);
     });
     return Array.from(set);
-  }, []);
+  }, [aiProjects]);
 
   // Filter logic
   const filteredProjects = useMemo(() => {
     if (activeFilter === "Tümü") return aiProjects;
     if (activeFilter === "📌 Öne Çıkarılanlar") return aiProjects.filter((p) => p.pinned);
     return aiProjects.filter((p) => p.category === activeFilter);
-  }, [activeFilter]);
+  }, [activeFilter, aiProjects]);
 
   // Statistics
   const pinnedCount = aiProjects.filter((p) => p.pinned).length;
