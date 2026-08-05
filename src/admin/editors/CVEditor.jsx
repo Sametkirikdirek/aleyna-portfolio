@@ -108,7 +108,7 @@ export default function CVEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-2xl">
+    <div className="space-y-7 max-w-4xl mx-auto">
       <EditorHeader
         title="CV Yönetimi"
         subtitle="Türkçe ve İngilizce CV dosyalarını güncelleyin"

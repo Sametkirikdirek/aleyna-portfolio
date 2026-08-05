@@ -67,7 +67,7 @@ export default function WritingsEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-3xl">
+    <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Yazılarım"
         subtitle="Kişisel yazılar ve pop-up içeriği"

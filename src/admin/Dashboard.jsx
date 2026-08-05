@@ -117,7 +117,7 @@ export default function Dashboard() {
         </div>
 
         {/* Editör İçeriği */}
-        <main className="flex-1 overflow-y-auto p-5 md:p-8">
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12 bg-[#0d0d12]">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -125,6 +125,7 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.22 }}
+              className="max-w-5xl mx-auto w-full"
             >
               <ActiveEditor />
             </motion.div>
