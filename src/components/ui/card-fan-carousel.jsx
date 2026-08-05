@@ -15,21 +15,20 @@ const FAN_POSITIONS = [
 ];
 
 function getResponsiveMultiplier(width) {
-  if (width < 380) return 0.18;
-  if (width < 480) return 0.21;
-  if (width < 640) return 0.32;
-  if (width < 768) return 0.45;
-  if (width < 1024) return 0.62;
-  return 0.80;
+  if (width < 480) return 0.24;
+  if (width < 640) return 0.35;
+  if (width < 768) return 0.48;
+  if (width < 1024) return 0.65;
+  return 0.82;
 }
 
 function getHeightMultiplier(width) {
   let idealPx;
-  if (width < 480) idealPx = 20 * 16;
-  else if (width < 640) idealPx = 24 * 16;
-  else if (width < 768) idealPx = 26 * 16;
-  else if (width < 1024) idealPx = 32 * 16;
-  else idealPx = 36 * 16;
+  if (width < 480) idealPx = 22 * 16;
+  else if (width < 640) idealPx = 26 * 16;
+  else if (width < 768) idealPx = 28 * 16;
+  else if (width < 1024) idealPx = 34 * 16;
+  else idealPx = 38 * 16;
 
   const available = window.innerHeight * 0.7;
   if (available >= idealPx) return 1;
@@ -60,10 +59,6 @@ export default function SocialCards({ cards = [] }) {
   const directionRef = useRef(null);
   const prevVisible = useRef(new Set());
 
-  // Touch / Swipe Tracking Refs
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
-
   const totalCards = cards.length;
   const needsPagination = totalCards > MAX_VISIBLE;
   const [centerIndex, setCenterIndex] = useState(needsPagination ? HALF : totalCards >> 1);
@@ -88,32 +83,6 @@ export default function SocialCards({ cards = [] }) {
       direction === "right" ? (prev + 1) % totalCards : (prev - 1 + totalCards) % totalCards
     );
   }, [totalCards, needsPagination]);
-
-  // Touch Swipe Handlers for Mobile
-  const handleTouchStart = (e) => {
-    if (e.touches && e.touches[0]) {
-      touchStartX.current = e.touches[0].clientX;
-      touchEndX.current = e.touches[0].clientX;
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (e.touches && e.touches[0]) {
-      touchEndX.current = e.touches[0].clientX;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    const swipeDistance = touchStartX.current - touchEndX.current;
-    const threshold = 35; // px swipe sensitivity
-    if (Math.abs(swipeDistance) > threshold) {
-      if (swipeDistance > 0) {
-        cycle("right"); // Swiped left -> next card
-      } else {
-        cycle("left"); // Swiped right -> prev card
-      }
-    }
-  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -265,9 +234,6 @@ export default function SocialCards({ cards = [] }) {
 
   if (!totalCards) return null;
 
-  const visibleMap = getVisibleMap(centerIndex);
-  const centerSlot = needsPagination ? HALF : (totalCards >> 1);
-
   const chevron = (direction) => (
     <svg className="relative z-[2] w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points={direction === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6"} />
@@ -275,27 +241,12 @@ export default function SocialCards({ cards = [] }) {
   );
 
   return (
-    <section className="flex flex-col items-center w-full py-2 lg:py-6 px-1 md:px-4 relative z-20 overflow-visible select-none">
+    <section className="flex flex-col items-center w-full py-4 lg:py-6 px-2 md:px-4 relative z-20 overflow-visible">
       <div className="flex items-center justify-center w-full max-w-[42rem]">
-        <div
-          ref={containerRef}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="fan-layout flex relative justify-center items-center w-full h-[16.5rem] sm:h-[19rem] md:h-[24rem] touch-pan-y"
-        >
+        <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full h-[20rem] md:h-[24rem]">
           {cards.map((card, index) => {
-            const slot = visibleMap.get(index);
-            const isCenterCard = slot === centerSlot;
-
             const cardContent = (
-              <div
-                className={`relative w-[8.5rem] h-[12.5rem] sm:w-[10rem] sm:h-[14.5rem] md:w-[12rem] md:h-[17rem] rounded-2xl overflow-hidden shadow-2xl border-2 transition-all duration-300 bg-ink group ${
-                  isCenterCard
-                    ? "border-rose-400/80 shadow-[0_0_25px_rgba(244,63,94,0.3)] cursor-pointer"
-                    : "border-white/20 opacity-90 cursor-pointer"
-                }`}
-              >
+              <div className="relative w-[10rem] h-[14rem] md:w-[12rem] md:h-[17rem] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-ink group transition-transform duration-300">
                 <img
                   src={card.imgUrl || card.image}
                   loading="lazy"
@@ -303,53 +254,26 @@ export default function SocialCards({ cards = [] }) {
                   className="absolute inset-0 w-full h-full object-cover z-10"
                 />
                 {card.title && (
-                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-20 text-white font-mono text-[10px] sm:text-[11px] font-medium leading-tight">
+                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent z-20 text-white font-mono text-[11px] font-medium leading-tight">
                     {card.title}
-                  </div>
-                )}
-
-                {/* Öne Çıkan Aktif Kart Rozeti */}
-                {isCenterCard && (
-                  <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-full bg-rose-600/90 text-white font-mono text-[9px] tracking-wider uppercase shadow-md backdrop-blur-sm">
-                    Aktif
                   </div>
                 )}
               </div>
             );
 
             const link = card.linkUrl || card.link;
-
-            const handleCardClick = (e) => {
-              // Yan kart tıklandığında: Kartı öne getir!
-              if (!isCenterCard) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (slot < centerSlot) {
-                  cycle("left");
-                } else if (slot > centerSlot) {
-                  cycle("right");
-                }
-              }
-              // Ortadaki karta tıklandığında link normal çalışır
-            };
-
             return link ? (
               <a
                 key={index}
-                href={isCenterCard ? link : "#"}
-                target={isCenterCard && link.startsWith("http") ? "_blank" : "_self"}
+                href={link}
+                target={link.startsWith("http") ? "_blank" : "_self"}
                 rel="noopener noreferrer"
-                onClick={handleCardClick}
-                className="fan-card absolute transition-transform"
+                className="fan-card absolute cursor-pointer"
               >
                 {cardContent}
               </a>
             ) : (
-              <div
-                key={index}
-                onClick={handleCardClick}
-                className="fan-card absolute transition-transform"
-              >
+              <div key={index} className="fan-card absolute">
                 {cardContent}
               </div>
             );
@@ -358,7 +282,7 @@ export default function SocialCards({ cards = [] }) {
       </div>
 
       {needsPagination && (
-        <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2 md:mt-4 z-30">
+        <div className="flex items-center justify-center gap-4 mt-2 md:mt-4 z-30">
           <button className={`${ARROW_CLASSES} w-9 h-9 md:w-10 md:h-10`} onClick={() => cycle("left")} aria-label="Previous">
             {chevron("left")}
           </button>
