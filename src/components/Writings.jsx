@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, ExternalLink, Feather, BookOpen } from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
-import { useWritings } from "../hooks/useContent";
+import { useWritings, useProfile } from "../hooks/useContent";
 
 const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
 
@@ -127,7 +127,9 @@ function ArticleList({ articles, ready, external = true }) {
 
 export default function Writings() {
   const { data: writingsData } = useWritings();
+  const { data: profile } = useProfile();
   const personalWritings = writingsData?.personalWritings || [];
+  const mediumUrl = profile?.social?.medium || "https://medium.com/@aleynaaltunsu";
   const [activeTab, setActiveTab] = useState("medium");
   const [mediumArticles, setMediumArticles] = useState(mediumWritingsFallback);
   const [mediumReady, setMediumReady] = useState(false);
@@ -216,7 +218,7 @@ export default function Writings() {
                   </p>
                 </div>
                 <a
-                  href={profile.social.medium}
+                  href={mediumUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 font-sans text-sm text-ink/70 hover:text-brush transition-colors"
@@ -233,7 +235,7 @@ export default function Writings() {
 
               <div className="mt-8 text-center">
                 <a
-                  href={profile.social.medium}
+                  href={mediumUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 border border-ink/15 rounded-full font-sans text-sm text-ink/70 hover:text-brush hover:border-brush/40 transition-colors"
