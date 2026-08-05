@@ -1,18 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, RefreshCw, Crop, Scissors } from "lucide-react";
+import { X, RefreshCw, Crop, Scissors, Maximize2 } from "lucide-react";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 
 /**
  * Serbest Kırpma Aracı (Free-form Cropper)
  *
- * Fotoğraf pop-up'ta tam görünür.
- * Üzerinde turuncu bir kırpma dikdörtgeni vardır.
- * Kullanıcı dikdörtgeni:
- *   - Ortasından sürükleyerek taşır
- *   - Köşelerinden ve kenarlarından sürükleyerek boyutlandırır
- *   - Kare, dikdörtgen, yatay, dikey istediği boyuta çeker
- * "Kırp ve Kaydet" → Canvas ile kırpıp Cloudinary'ye yükler.
+ * Fotoğraf pop-up'ta tam boyutunda gösterilir.
+ * Üzerinde turuncu/pembe sürüklenebilir ve boyutlandırılabilir kırpma kutusu bulunur.
+ * ResizeObserver ile modal animasyonundan etkilenmeden tam sınır ölçümü yapar.
  */
 export default function ImageAdjustModal({
   isOpen,
@@ -21,11 +17,10 @@ export default function ImageAdjustModal({
   onSave,
   title = "Görsel Kırpma",
 }) {
-  const containerRef = useRef(null);
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Displayed image dimensions (fitted to container)
+  // Displayed image dimensions (unscaled CSS layout size)
   const [imgDisplay, setImgDisplay] = useState({ w: 0, h: 0, natW: 0, natH: 0 });
 
   // Crop rectangle (relative to displayed image, in px)
@@ -35,52 +30,82 @@ export default function ImageAdjustModal({
   const [dragging, setDragging] = useState(null); // null | "move" | "nw" | "ne" | "sw" | "se" | "n" | "s" | "e" | "w"
   const dragStart = useRef({ mx: 0, my: 0, cx: 0, cy: 0, cw: 0, ch: 0 });
 
-  // Measure displayed image size after load
+  // Measure displayed image size accurately using clientWidth / clientHeight
   const measureImage = useCallback(() => {
     const img = imgRef.current;
-    if (!img) return;
-    const rect = img.getBoundingClientRect();
+    if (!img || !img.naturalWidth) return;
+
+    const w = img.clientWidth || img.offsetWidth;
+    const h = img.clientHeight || img.offsetHeight;
     const natW = img.naturalWidth;
     const natH = img.naturalHeight;
-    setImgDisplay({ w: rect.width, h: rect.height, natW, natH });
 
-    // Default crop: 70% centered
-    const cw = rect.width * 0.7;
-    const ch = rect.height * 0.7;
-    setCrop({
-      x: (rect.width - cw) / 2,
-      y: (rect.height - ch) / 2,
-      w: cw,
-      h: ch,
-    });
+    if (w > 0 && h > 0) {
+      setImgDisplay((prev) => {
+        if (prev.w !== w || prev.h !== h) {
+          // If first measure, default crop covers 100% of the image
+          if (prev.w === 0) {
+            setCrop({ x: 0, y: 0, w: w, h: h });
+          } else {
+            // Adjust existing crop proportionally on resize
+            const scaleX = w / prev.w;
+            const scaleY = h / prev.h;
+            setCrop((c) => ({
+              x: c.x * scaleX,
+              y: c.y * scaleY,
+              w: c.w * scaleX,
+              h: c.h * scaleY,
+            }));
+          }
+        }
+        return { w, h, natW, natH };
+      });
+    }
   }, []);
 
-  // Re-measure on window resize
+  // Use ResizeObserver for accurate sizing during/after animations
   useEffect(() => {
     if (!isOpen) return;
-    const handler = () => setTimeout(measureImage, 50);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, [isOpen, measureImage]);
+    const img = imgRef.current;
+    if (!img) return;
 
-  // Reset when opening
+    const observer = new ResizeObserver(() => {
+      measureImage();
+    });
+    observer.observe(img);
+    measureImage();
+
+    return () => observer.disconnect();
+  }, [isOpen, measureImage, imageUrl]);
+
+  // Reset when modal opens with new image
   useEffect(() => {
     if (isOpen) {
       setSaving(false);
       setDragging(null);
+      setImgDisplay({ w: 0, h: 0, natW: 0, natH: 0 });
     }
   }, [isOpen, imageUrl]);
 
-  // ─── Drag logic ───────────────────────────────────────
-  const MIN_SIZE = 30;
+  // ─── Drag & Clamp logic ───────────────────────────────
+  const MIN_SIZE = 25;
 
   const clampCrop = useCallback((c) => {
     const { w: iw, h: ih } = imgDisplay;
+    if (iw === 0 || ih === 0) return c;
     let { x, y, w, h } = c;
-    w = Math.max(MIN_SIZE, Math.min(w, iw));
-    h = Math.max(MIN_SIZE, Math.min(h, ih));
-    x = Math.max(0, Math.min(x, iw - w));
-    y = Math.max(0, Math.min(y, ih - h));
+
+    // Minimum size constraint
+    w = Math.max(MIN_SIZE, w);
+    h = Math.max(MIN_SIZE, h);
+
+    // Boundary constraints
+    x = Math.max(0, Math.min(x, iw - MIN_SIZE));
+    y = Math.max(0, Math.min(y, ih - MIN_SIZE));
+
+    w = Math.min(w, iw - x);
+    h = Math.min(h, ih - y);
+
     return { x, y, w, h };
   }, [imgDisplay]);
 
@@ -183,7 +208,7 @@ export default function ImageAdjustModal({
         onSave(url);
         setSaving(false);
         onClose();
-      }, "image/png", 0.92);
+      }, "image/png", 0.95);
     } catch (err) {
       console.error("Crop error:", err);
       onSave(imageUrl);
@@ -192,35 +217,38 @@ export default function ImageAdjustModal({
     }
   };
 
-  const resetCrop = () => {
-    const cw = imgDisplay.w * 0.7;
-    const ch = imgDisplay.h * 0.7;
-    setCrop({
-      x: (imgDisplay.w - cw) / 2,
-      y: (imgDisplay.h - ch) / 2,
-      w: cw,
-      h: ch,
-    });
+  const selectFullImage = () => {
+    if (imgDisplay.w > 0 && imgDisplay.h > 0) {
+      setCrop({
+        x: 0,
+        y: 0,
+        w: imgDisplay.w,
+        h: imgDisplay.h,
+      });
+    }
   };
 
-  // Corner handle component
+  // Handle component for crop handles
   const Handle = ({ pos, cursor }) => {
     const style = {};
-    if (pos.includes("n")) style.top = -5;
-    if (pos.includes("s")) style.bottom = -5;
-    if (pos.includes("w")) style.left = -5;
-    if (pos.includes("e")) style.right = -5;
+    if (pos.includes("n")) style.top = -6;
+    if (pos.includes("s")) style.bottom = -6;
+    if (pos.includes("w")) style.left = -6;
+    if (pos.includes("e")) style.right = -6;
 
-    // Center handles for edges
     if (pos === "n" || pos === "s") { style.left = "50%"; style.transform = "translateX(-50%)"; }
     if (pos === "w" || pos === "e") { style.top = "50%"; style.transform = "translateY(-50%)"; }
 
     const isCorner = pos.length === 2;
-    const size = isCorner ? "w-3.5 h-3.5" : pos === "n" || pos === "s" ? "w-6 h-2.5" : "w-2.5 h-6";
+    const sizeClasses = isCorner
+      ? "w-4 h-4 rounded-full"
+      : pos === "n" || pos === "s"
+      ? "w-7 h-3 rounded-full"
+      : "w-3 h-7 rounded-full";
 
     return (
       <div
-        className={`absolute ${size} bg-rose-500 border border-rose-300 rounded-sm z-30 shadow-md hover:bg-rose-400 transition-colors`}
+        className={`absolute ${sizeClasses} bg-rose-500 border-2 border-white z-30 shadow-lg hover:scale-125 transition-transform cursor-pointer`}
         style={{ ...style, cursor }}
         onPointerDown={(e) => onPointerDown(e, pos)}
       />
@@ -229,7 +257,7 @@ export default function ImageAdjustModal({
 
   if (!isOpen || !imageUrl) return null;
 
-  // Crop dimensions info
+  // Real native pixel dimensions calculation
   const cropNatW = imgDisplay.natW > 0 ? Math.round(crop.w * (imgDisplay.natW / imgDisplay.w)) : 0;
   const cropNatH = imgDisplay.natH > 0 ? Math.round(crop.h * (imgDisplay.natH / imgDisplay.h)) : 0;
 
@@ -237,9 +265,9 @@ export default function ImageAdjustModal({
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-lg">
         <motion.div
-          initial={{ opacity: 0, scale: 0.93, y: 12 }}
+          initial={{ opacity: 0, scale: 0.94, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.93, y: 12 }}
+          exit={{ opacity: 0, scale: 0.94, y: 10 }}
           className="relative w-full max-w-3xl bg-[#111118] border border-white/12 rounded-2xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[95vh]"
         >
           {/* Header */}
@@ -256,51 +284,48 @@ export default function ImageAdjustModal({
             </button>
           </div>
 
-          {/* Info */}
-          <div className="px-5 py-2 text-[11px] text-white/45 border-b border-white/5 shrink-0 flex items-center justify-between">
-            <span>Dikdörtgeni <strong className="text-white/70">sürükleyin</strong>, köşelerinden <strong className="text-white/70">boyutlandırın</strong></span>
+          {/* Info bar */}
+          <div className="px-5 py-2 text-[11px] text-white/50 border-b border-white/5 shrink-0 flex items-center justify-between">
+            <span>Dikdörtgeni <strong className="text-white/80">sürükleyin</strong>, tutamaçlardan <strong className="text-white/80">boyutlandırın</strong></span>
             {cropNatW > 0 && (
-              <span className="font-mono text-rose-300/70">{cropNatW} × {cropNatH} px</span>
+              <span className="font-mono text-rose-400 font-semibold">{cropNatW} × {cropNatH} px</span>
             )}
           </div>
 
-          {/* Image + Crop Area */}
-          <div
-            ref={containerRef}
-            className="flex-1 overflow-auto flex items-center justify-center bg-black/60 p-4 md:p-6 min-h-0"
-          >
+          {/* Image + Free Crop Area */}
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-black/70 p-4 md:p-6 min-h-0">
             <div className="relative inline-block select-none" style={{ touchAction: "none" }}>
-              {/* The image itself */}
+              {/* Image */}
               <img
                 ref={imgRef}
                 src={imageUrl}
                 alt="Crop preview"
                 onLoad={measureImage}
-                className="block max-w-full max-h-[60vh] w-auto h-auto rounded-lg"
+                className="block max-w-full max-h-[62vh] w-auto h-auto rounded-lg shadow-2xl"
                 draggable={false}
                 style={{ userSelect: "none" }}
               />
 
-              {/* Dark overlay outside crop area (4 dark rectangles) */}
+              {/* Dark Overlay Outside Crop Box */}
               {imgDisplay.w > 0 && (
                 <>
                   {/* Top */}
                   <div
-                    className="absolute left-0 top-0 bg-black/60 pointer-events-none"
+                    className="absolute left-0 top-0 bg-black/65 pointer-events-none"
                     style={{ width: imgDisplay.w, height: crop.y }}
                   />
                   {/* Bottom */}
                   <div
-                    className="absolute left-0 bg-black/60 pointer-events-none"
+                    className="absolute left-0 bg-black/65 pointer-events-none"
                     style={{
                       width: imgDisplay.w,
                       top: crop.y + crop.h,
-                      height: imgDisplay.h - crop.y - crop.h,
+                      height: Math.max(0, imgDisplay.h - crop.y - crop.h),
                     }}
                   />
                   {/* Left */}
                   <div
-                    className="absolute left-0 bg-black/60 pointer-events-none"
+                    className="absolute left-0 bg-black/65 pointer-events-none"
                     style={{
                       top: crop.y,
                       width: crop.x,
@@ -309,16 +334,16 @@ export default function ImageAdjustModal({
                   />
                   {/* Right */}
                   <div
-                    className="absolute bg-black/60 pointer-events-none"
+                    className="absolute bg-black/65 pointer-events-none"
                     style={{
                       top: crop.y,
                       left: crop.x + crop.w,
-                      width: imgDisplay.w - crop.x - crop.w,
+                      width: Math.max(0, imgDisplay.w - crop.x - crop.w),
                       height: crop.h,
                     }}
                   />
 
-                  {/* Crop Rectangle Border */}
+                  {/* Crop Box Frame */}
                   <div
                     className="absolute border-2 border-rose-500 z-20"
                     style={{
@@ -327,46 +352,56 @@ export default function ImageAdjustModal({
                       width: crop.w,
                       height: crop.h,
                       cursor: dragging === "move" ? "grabbing" : "grab",
-                      boxShadow: "0 0 0 1px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.08)",
+                      boxShadow: "0 0 0 1px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.15)",
                     }}
                     onPointerDown={(e) => onPointerDown(e, "move")}
                   >
-                    {/* Rule of thirds grid lines */}
+                    {/* Rule of Thirds Grid */}
                     <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/15" />
-                      <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/15" />
-                      <div className="absolute top-1/3 left-0 right-0 h-px bg-white/15" />
-                      <div className="absolute top-2/3 left-0 right-0 h-px bg-white/15" />
+                      <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/20" />
+                      <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/20" />
+                      <div className="absolute top-1/3 left-0 right-0 h-px bg-white/20" />
+                      <div className="absolute top-2/3 left-0 right-0 h-px bg-white/20" />
                     </div>
 
-                    {/* Corner handles */}
-                    <Handle pos="nw" cursor="nw-resize" />
-                    <Handle pos="ne" cursor="ne-resize" />
-                    <Handle pos="sw" cursor="sw-resize" />
-                    <Handle pos="se" cursor="se-resize" />
+                    {/* Handles */}
+                    <Handle pos="nw" cursor="nwse-resize" />
+                    <Handle pos="ne" cursor="nesw-resize" />
+                    <Handle pos="sw" cursor="nesw-resize" />
+                    <Handle pos="se" cursor="nwse-resize" />
 
-                    {/* Edge handles */}
-                    <Handle pos="n" cursor="n-resize" />
-                    <Handle pos="s" cursor="s-resize" />
-                    <Handle pos="w" cursor="w-resize" />
-                    <Handle pos="e" cursor="e-resize" />
+                    <Handle pos="n" cursor="ns-resize" />
+                    <Handle pos="s" cursor="ns-resize" />
+                    <Handle pos="w" cursor="ew-resize" />
+                    <Handle pos="e" cursor="ew-resize" />
                   </div>
                 </>
               )}
             </div>
           </div>
 
-          {/* Hidden canvas */}
+          {/* Hidden Canvas */}
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Action Buttons */}
+          {/* Footer Controls */}
           <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-white/10 shrink-0">
-            <button
-              onClick={resetCrop}
-              className="px-3.5 py-2 rounded-xl border border-white/15 text-white/60 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw size={13} /> Sıfırla
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={selectFullImage}
+                className="px-3.5 py-2 rounded-xl border border-white/15 text-white/70 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Fotoğrafın tamamını seç"
+              >
+                <Maximize2 size={13} className="text-rose-400" /> Tam Görsel
+              </button>
+
+              <button
+                onClick={selectFullImage}
+                className="px-3 py-2 rounded-xl border border-white/15 text-white/50 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Sıfırla"
+              >
+                <RefreshCw size={13} /> Sıfırla
+              </button>
+            </div>
 
             <div className="flex items-center gap-2">
               <button
