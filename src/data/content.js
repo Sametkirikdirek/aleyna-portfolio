@@ -36,6 +36,15 @@ export const profile = {
     linkedin: "https://www.linkedin.com/in/aleyna-altunsu/",
     instagram: "https://instagram.com/aleynaaltunsu.art",
   },
+  heroCards: [
+    { imgUrl: "/artworks/sanat_1.jpg", title: "Atölye Günlüğü", linkUrl: "/writings" },
+    { imgUrl: "/artworks/sanat_2.jpg", title: "Rengin Matematiği", linkUrl: "/gallery" },
+    { imgUrl: "/artworks/sanat_3.jpg", title: "Yapay Zeka & Görüntü", linkUrl: "/ai-work" },
+    { imgUrl: "/artworks/sanat_4.jpg", title: "Gece Vardiyası", linkUrl: "/gallery" },
+    { imgUrl: "/artworks/sanat_5.jpg", title: "Kompozisyon", linkUrl: "/writings" },
+    { imgUrl: "/artworks/sanat_6.jpg", title: "Siber Desen", linkUrl: "/ai-work" },
+    { imgUrl: "/artworks/sanat_7.jpg", title: "Tuval & Kod", linkUrl: "/gallery" },
+  ],
 };
 
 // İş ve Profesyonel Deneyim Geçmişi (LinkedIn / CV)
