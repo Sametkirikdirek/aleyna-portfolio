@@ -93,13 +93,13 @@ export default function Hero() {
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-10 lg:gap-12 items-center">
           {/* Sol Taraf: Metinler & Butonlar (Sola Hizalı) */}
           <div className="flex flex-col items-start gap-6 text-left relative z-20">
-            {/* 1. Profil Fotoğrafı Kapsülü (Kullanıcının Sarı Daire ile İşaretlediği Tam Konum) */}
+            {/* 1. Profil Fotoğrafı Kapsülü (Büyütülmüş & Sağa Hizalanmış) */}
             {profile.avatar && (
               <motion.div
                 {...fadeUp(0)}
-                className="group relative cursor-pointer my-1"
+                className="group relative cursor-pointer my-2 ml-4 sm:ml-12 lg:ml-16"
               >
-                <div className="w-[85px] h-[140px] sm:w-[105px] sm:h-[170px] lg:w-[125px] lg:h-[200px] rounded-full overflow-hidden border-2 border-white/25 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.4)] bg-ink">
+                <div className="w-[100px] h-[160px] sm:w-[125px] sm:h-[200px] lg:w-[150px] lg:h-[240px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink">
                   <img
                     src={profile.avatar}
                     alt={profile.name}
