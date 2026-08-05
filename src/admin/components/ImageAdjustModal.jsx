@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Crop, Scissors, Maximize2, ZoomIn, ZoomOut } from "lucide-react";
+import { X, RefreshCw, Crop, Scissors, Maximize2 } from "lucide-react";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 
 /**
- * Serbest Kırpma & Görsel Büyütme Aracı (Free-form Cropper & Image Zoom)
+ * Serbest Kırpma Aracı (Free-form Cropper)
  *
  * Özellikler:
- * 1. Görseli pop-up içerisinde %100 - %300 arası büyütme/küçültme (Zoom slider & scroll)
- * 2. Üzerinde serbest sürüklenebilir ve 8 noktadan boyutlandırılabilir kırpma kutusu
- * 3. ResizeObserver ile modal animasyonundan etkilenmeyen hassas sınır takibi
- * 4. Canvas üzerinden yüksek kaliteli kırpma ve Cloudinary yüklemesi
+ * 1. Fotoğraf pop-up içerisinde doğal boyutlarında gösterilir.
+ * 2. Üzerinde 8 noktadan sürüklenebilir ve boyutlandırılabilir turuncu/pembe kırpma kutusu bulunur.
+ * 3. ResizeObserver ile modal animasyonundan etkilenmeyen hassas sınır takibi (0'dan en dış limite kadar tam erişim).
+ * 4. Canvas üzerinden yüksek kaliteli kırpma ve Cloudinary yüklemesi.
  */
 export default function ImageAdjustModal({
   isOpen,
@@ -22,22 +22,15 @@ export default function ImageAdjustModal({
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Base unscaled image dimensions
+  // Unscaled image display dimensions
   const [imgDisplay, setImgDisplay] = useState({ w: 0, h: 0, natW: 0, natH: 0 });
 
-  // Zoom scale factor (1.0x to 3.0x)
-  const [zoom, setZoom] = useState(1);
-
-  // Crop rectangle (relative to scaled image bounds, in px)
+  // Crop rectangle (relative to displayed image bounds, in px)
   const [crop, setCrop] = useState({ x: 0, y: 0, w: 0, h: 0 });
 
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(null); // null | "move" | "nw" | "ne" | "sw" | "se" | "n" | "s" | "e" | "w"
   const dragStart = useRef({ mx: 0, my: 0, cx: 0, cy: 0, cw: 0, ch: 0 });
-
-  // Effective scaled display dimensions
-  const scaledW = imgDisplay.w * zoom;
-  const scaledH = imgDisplay.h * zoom;
 
   // Measure base image size accurately using clientWidth / clientHeight
   const measureImage = useCallback(() => {
@@ -53,10 +46,10 @@ export default function ImageAdjustModal({
       setImgDisplay((prev) => {
         if (prev.w !== w || prev.h !== h) {
           if (prev.w === 0) {
-            setCrop({ x: 0, y: 0, w: w * zoom, h: h * zoom });
+            setCrop({ x: 0, y: 0, w: w, h: h });
           } else {
-            const scaleX = (w * zoom) / (prev.w * zoom);
-            const scaleY = (h * zoom) / (prev.h * zoom);
+            const scaleX = w / prev.w;
+            const scaleY = h / prev.h;
             setCrop((c) => ({
               x: c.x * scaleX,
               y: c.y * scaleY,
@@ -68,7 +61,7 @@ export default function ImageAdjustModal({
         return { w, h, natW, natH };
       });
     }
-  }, [zoom]);
+  }, []);
 
   // Use ResizeObserver for accurate initial measurement
   useEffect(() => {
@@ -90,62 +83,29 @@ export default function ImageAdjustModal({
     if (isOpen) {
       setSaving(false);
       setDragging(null);
-      setZoom(1);
       setImgDisplay({ w: 0, h: 0, natW: 0, natH: 0 });
     }
   }, [isOpen, imageUrl]);
-
-  // Handle Zoom change
-  const handleZoomChange = (newZoom) => {
-    const clampedZoom = Math.max(1, Math.min(3, newZoom));
-    const zoomRatio = clampedZoom / zoom;
-    setZoom(clampedZoom);
-
-    // Adjust crop proportionally to zoom
-    setCrop((c) => {
-      const sw = imgDisplay.w * clampedZoom;
-      const sh = imgDisplay.h * clampedZoom;
-      let newW = c.w * zoomRatio;
-      let newH = c.h * zoomRatio;
-      let newX = c.x * zoomRatio;
-      let newY = c.y * zoomRatio;
-
-      newW = Math.min(newW, sw);
-      newH = Math.min(newH, sh);
-      newX = Math.max(0, Math.min(newX, sw - newW));
-      newY = Math.max(0, Math.min(newY, sh - newH));
-
-      return { x: newX, y: newY, w: newW, h: newH };
-    });
-  };
-
-  // Mouse wheel zoom
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    handleZoomChange(zoom + delta);
-  };
 
   // ─── Drag & Clamp logic ───────────────────────────────
   const MIN_SIZE = 25;
 
   const clampCrop = useCallback((c) => {
-    const sw = scaledW;
-    const sh = scaledH;
-    if (sw === 0 || sh === 0) return c;
+    const { w: iw, h: ih } = imgDisplay;
+    if (iw === 0 || ih === 0) return c;
     let { x, y, w, h } = c;
 
     w = Math.max(MIN_SIZE, w);
     h = Math.max(MIN_SIZE, h);
 
-    x = Math.max(0, Math.min(x, sw - MIN_SIZE));
-    y = Math.max(0, Math.min(y, sh - MIN_SIZE));
+    x = Math.max(0, Math.min(x, iw - MIN_SIZE));
+    y = Math.max(0, Math.min(y, ih - MIN_SIZE));
 
-    w = Math.min(w, sw - x);
-    h = Math.min(h, sh - y);
+    w = Math.min(w, iw - x);
+    h = Math.min(h, ih - y);
 
     return { x, y, w, h };
-  }, [scaledW, scaledH]);
+  }, [imgDisplay]);
 
   const onPointerDown = useCallback((e, handle) => {
     e.preventDefault();
@@ -225,11 +185,8 @@ export default function ImageAdjustModal({
       img.src = imageUrl;
       await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
 
-      const currentScaledW = imgDisplay.w * zoom;
-      const currentScaledH = imgDisplay.h * zoom;
-
-      const scaleX = img.naturalWidth / currentScaledW;
-      const scaleY = img.naturalHeight / currentScaledH;
+      const scaleX = img.naturalWidth / imgDisplay.w;
+      const scaleY = img.naturalHeight / imgDisplay.h;
 
       const sx = crop.x * scaleX;
       const sy = crop.y * scaleY;
@@ -259,18 +216,6 @@ export default function ImageAdjustModal({
   };
 
   const selectFullImage = () => {
-    if (scaledW > 0 && scaledH > 0) {
-      setCrop({
-        x: 0,
-        y: 0,
-        w: scaledW,
-        h: scaledH,
-      });
-    }
-  };
-
-  const resetAll = () => {
-    setZoom(1);
     if (imgDisplay.w > 0 && imgDisplay.h > 0) {
       setCrop({
         x: 0,
@@ -311,8 +256,8 @@ export default function ImageAdjustModal({
   if (!isOpen || !imageUrl) return null;
 
   // Real native pixel dimensions calculation
-  const cropNatW = imgDisplay.natW > 0 ? Math.round(crop.w * (imgDisplay.natW / scaledW)) : 0;
-  const cropNatH = imgDisplay.natH > 0 ? Math.round(crop.h * (imgDisplay.natH / scaledH)) : 0;
+  const cropNatW = imgDisplay.natW > 0 ? Math.round(crop.w * (imgDisplay.natW / imgDisplay.w)) : 0;
+  const cropNatH = imgDisplay.natH > 0 ? Math.round(crop.h * (imgDisplay.natH / imgDisplay.h)) : 0;
 
   return (
     <AnimatePresence>
@@ -321,7 +266,7 @@ export default function ImageAdjustModal({
           initial={{ opacity: 0, scale: 0.94, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 10 }}
-          className="relative w-full max-w-4xl bg-[#111118] border border-white/12 rounded-2xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[95vh]"
+          className="relative w-full max-w-3xl bg-[#111118] border border-white/12 rounded-2xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[95vh]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 shrink-0">
@@ -329,42 +274,6 @@ export default function ImageAdjustModal({
               <Crop size={18} className="text-rose-400" />
               <h3 className="text-base font-semibold tracking-tight">{title}</h3>
             </div>
-
-            {/* Zoom Controls in Header */}
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-1 rounded-xl">
-              <button
-                onClick={() => handleZoomChange(zoom - 0.2)}
-                disabled={zoom <= 1}
-                className="text-white/60 hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                title="Büyütmeyi Azalt"
-              >
-                <ZoomOut size={15} />
-              </button>
-
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="0.05"
-                value={zoom}
-                onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-                className="w-20 sm:w-28 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-rose-500"
-              />
-
-              <button
-                onClick={() => handleZoomChange(zoom + 0.2)}
-                disabled={zoom >= 3}
-                className="text-white/60 hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                title="Görseli Büyüt"
-              >
-                <ZoomIn size={15} />
-              </button>
-
-              <span className="font-mono text-xs text-rose-300 font-semibold min-w-[42px]">
-                %{Math.round(zoom * 100)}
-              </span>
-            </div>
-
             <button
               onClick={onClose}
               className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -375,19 +284,16 @@ export default function ImageAdjustModal({
 
           {/* Info bar */}
           <div className="px-5 py-2 text-[11px] text-white/50 border-b border-white/5 shrink-0 flex items-center justify-between">
-            <span>Dikdörtgeni <strong className="text-white/80">sürükleyin</strong>, tutamaçlardan <strong className="text-white/80">boyutlandırın</strong>, görseli <strong className="text-white/80">büyütüp yakınlaştırın</strong></span>
+            <span>Dikdörtgeni <strong className="text-white/80">sürükleyin</strong>, tutamaçlardan <strong className="text-white/80">boyutlandırın</strong></span>
             {cropNatW > 0 && (
               <span className="font-mono text-rose-400 font-semibold">{cropNatW} × {cropNatH} px</span>
             )}
           </div>
 
           {/* Image + Free Crop Area */}
-          <div
-            className="flex-1 overflow-auto flex items-center justify-center bg-black/70 p-4 md:p-6 min-h-0"
-            onWheel={handleWheel}
-          >
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-black/70 p-4 md:p-6 min-h-0">
             <div className="relative inline-block select-none" style={{ touchAction: "none" }}>
-              {/* Image with dynamic zoom width/height */}
+              {/* Image */}
               <img
                 ref={imgRef}
                 src={imageUrl}
@@ -395,28 +301,24 @@ export default function ImageAdjustModal({
                 onLoad={measureImage}
                 className="block max-w-full max-h-[62vh] w-auto h-auto rounded-lg shadow-2xl"
                 draggable={false}
-                style={{
-                  userSelect: "none",
-                  width: imgDisplay.w > 0 ? `${scaledW}px` : "auto",
-                  height: imgDisplay.h > 0 ? `${scaledH}px` : "auto",
-                }}
+                style={{ userSelect: "none" }}
               />
 
               {/* Dark Overlay Outside Crop Box */}
-              {scaledW > 0 && (
+              {imgDisplay.w > 0 && (
                 <>
                   {/* Top */}
                   <div
                     className="absolute left-0 top-0 bg-black/65 pointer-events-none"
-                    style={{ width: scaledW, height: crop.y }}
+                    style={{ width: imgDisplay.w, height: crop.y }}
                   />
                   {/* Bottom */}
                   <div
                     className="absolute left-0 bg-black/65 pointer-events-none"
                     style={{
-                      width: scaledW,
+                      width: imgDisplay.w,
                       top: crop.y + crop.h,
-                      height: Math.max(0, scaledH - crop.y - crop.h),
+                      height: Math.max(0, imgDisplay.h - crop.y - crop.h),
                     }}
                   />
                   {/* Left */}
@@ -434,7 +336,7 @@ export default function ImageAdjustModal({
                     style={{
                       top: crop.y,
                       left: crop.x + crop.w,
-                      width: Math.max(0, scaledW - crop.x - crop.w),
+                      width: Math.max(0, imgDisplay.w - crop.x - crop.w),
                       height: crop.h,
                     }}
                   />
@@ -491,7 +393,7 @@ export default function ImageAdjustModal({
               </button>
 
               <button
-                onClick={resetAll}
+                onClick={selectFullImage}
                 className="px-3 py-2 rounded-xl border border-white/15 text-white/50 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Sıfırla"
               >
