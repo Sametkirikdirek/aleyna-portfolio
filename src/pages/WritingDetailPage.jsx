@@ -32,10 +32,10 @@ export default function WritingDetailPage() {
         <h1 className="font-display text-2xl md:text-3xl mb-2">Yazı Bulunamadı</h1>
         <p className="font-sans text-sm text-ink/60 mb-6">Aradığınız yazı mevcut olmayabilir veya kaldırılmış olabilir.</p>
         <Link
-          to="/writings"
+          to="/writings?tab=library"
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brush text-paper font-sans text-sm font-medium hover:bg-brush-soft transition-colors"
         >
-          <ArrowLeft size={16} /> Tüm Yazılara Dön
+          <ArrowLeft size={16} /> Kütüphaneye Dön
         </Link>
       </div>
     );
@@ -51,11 +51,11 @@ export default function WritingDetailPage() {
           transition={{ duration: 0.4 }}
         >
           <Link
-            to="/writings?tab=personal"
+            to="/writings?tab=library"
             className="inline-flex items-center gap-2 text-sm font-sans text-ink/60 hover:text-brush transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Yazılara Dön
+            Kütüphaneye Dön
           </Link>
         </motion.div>
 
@@ -135,10 +135,10 @@ export default function WritingDetailPage() {
           className="pt-12 border-t border-ink/10 flex items-center justify-between"
         >
           <Link
-            to="/writings?tab=personal"
+            to="/writings?tab=library"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-ink/15 text-ink/70 hover:text-brush hover:border-brush/40 font-sans text-sm transition-all"
           >
-            <ArrowLeft size={16} /> Tüm Yazılara Dön
+            <ArrowLeft size={16} /> Kütüphaneye Dön
           </Link>
           <span className="font-mono text-xs text-ink/30">Aleyna Altunsu</span>
         </motion.footer>
