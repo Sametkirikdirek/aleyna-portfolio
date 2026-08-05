@@ -43,6 +43,7 @@ export default function WritingsEditor() {
       id: `p-${Date.now()}`,
       title: "",
       excerpt: "",
+      content: "",
       date: "",
       readTime: "",
       tag: "",
@@ -68,8 +69,8 @@ export default function WritingsEditor() {
   return (
     <div className="space-y-7 max-w-3xl">
       <EditorHeader
-        title="Kişisel Yazılar"
-        subtitle="Medium dışındaki kişisel yazılar"
+        title="Yazılarım"
+        subtitle="Kişisel yazılar ve pop-up içeriği"
         saveStatus={saveStatus}
         onSave={save}
       />
@@ -126,10 +127,18 @@ export default function WritingsEditor() {
                     <TextInput value={w.readTime} onChange={(v) => update(idx, "readTime", v)} placeholder="4 dk" />
                   </Field>
                 </div>
-                <Field label="Özet / İlk Paragraf">
-                  <TextArea value={w.excerpt} onChange={(v) => update(idx, "excerpt", v)} rows={3} />
+                <Field label="Özet / Liste Görünümü">
+                  <TextArea value={w.excerpt} onChange={(v) => update(idx, "excerpt", v)} rows={2} />
                 </Field>
-                <Field label="Harici Link (opsiyonel)">
+                <Field label="Tam Yazı İçeriği (Pop-up Detayı)">
+                  <TextArea
+                    value={w.content || ""}
+                    onChange={(v) => update(idx, "content", v)}
+                    rows={6}
+                    placeholder="Pop-up penceresinde görünecek tam metin…"
+                  />
+                </Field>
+                <Field label="Harici Link (opsiyonel - doldurulursa harici sekmeye yönlendirir)">
                   <TextInput value={w.url || ""} onChange={(v) => update(idx, "url", v)} placeholder="https://medium.com/..." />
                 </Field>
               </div>
