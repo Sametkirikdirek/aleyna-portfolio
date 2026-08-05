@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { useProfile } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
+import { uploadToCloudinary } from "../../lib/cloudinary";
 import {
   EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
 } from "../components/AdminUI";
@@ -11,6 +12,9 @@ export default function ProfileEditor() {
   const [form, setForm] = useState(null);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [openExp, setOpenExp] = useState(null);
+  const [uploading, setUploading] = useState({});
+  const fileInputRef = useRef();
+  const [pendingCardIdx, setPendingCardIdx] = useState(null);
 
   useEffect(() => {
     if (data && !form) {
@@ -27,6 +31,7 @@ export default function ProfileEditor() {
           linkedin: data.social?.linkedin || "",
           instagram: data.social?.instagram || "",
         },
+        heroCards: data.heroCards || [],
         extendedBio: data.extendedBio || [],
         roles: data.roles || [],
         experiences: data.experiences || [],
@@ -73,6 +78,44 @@ export default function ProfileEditor() {
       experiences: prev.experiences.filter((_, i) => i !== idx),
     }));
 
+  const updateHeroCard = (idx, key, value) => {
+    setForm((prev) => {
+      const heroCards = [...prev.heroCards];
+      heroCards[idx] = { ...heroCards[idx], [key]: value };
+      return { ...prev, heroCards };
+    });
+  };
+
+  const addHeroCard = () => {
+    setForm((prev) => ({
+      ...prev,
+      heroCards: [
+        ...prev.heroCards,
+        { imgUrl: "", title: "", linkUrl: "/gallery" },
+      ],
+    }));
+  };
+
+  const removeHeroCard = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      heroCards: prev.heroCards.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const uploadHeroImage = async (idx, file) => {
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [idx]: true }));
+    try {
+      const url = await uploadToCloudinary(file, "hero");
+      updateHeroCard(idx, "imgUrl", url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading((prev) => ({ ...prev, [idx]: false }));
+    }
+  };
+
   if (loading || !form) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -85,7 +128,7 @@ export default function ProfileEditor() {
     <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Anasayfa & Hakkımda"
-        subtitle="Profil bilgileri, biyografi ve deneyimler"
+        subtitle="Profil bilgileri, yelpaze görselleri, biyografi ve deneyimler"
         saveStatus={saveStatus}
         onSave={save}
       />
@@ -118,120 +161,132 @@ export default function ProfileEditor() {
         </div>
       </Card>
 
-      {/* Biyografi */}
-      <Card>
-        <SectionTitle>Biyografi</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Kısa Biyografi">
-            <TextArea value={form.bio} onChange={(v) => setField("bio", v)} rows={4} />
-          </Field>
-          <Field label="Felsefe / Alıntı">
-            <TextArea value={form.philosophy} onChange={(v) => setField("philosophy", v)} rows={3} />
-          </Field>
-        </div>
-        {form.extendedBio.map((section, idx) => (
-          <div key={idx} className="mt-4 space-y-2">
-            <Field label={`Genişletilmiş Biyografi — ${idx + 1}. Başlık`}>
-              <TextInput
-                value={section.title}
-                onChange={(v) => {
-                  const eb = [...form.extendedBio];
-                  eb[idx] = { ...eb[idx], title: v };
-                  setField("extendedBio", eb);
-                }}
-              />
-            </Field>
-            <Field label={`Genişletilmiş Biyografi — ${idx + 1}. İçerik`}>
-              <TextArea
-                value={section.content}
-                onChange={(v) => {
-                  const eb = [...form.extendedBio];
-                  eb[idx] = { ...eb[idx], content: v };
-                  setField("extendedBio", eb);
-                }}
-                rows={3}
-              />
-            </Field>
-          </div>
-        ))}
-      </Card>
-
-      {/* Sosyal Medya */}
-      <Card>
-        <SectionTitle>Sosyal Medya Linkleri</SectionTitle>
-        <div className="grid md:grid-cols-2 gap-4">
-          {Object.entries(form.social).map(([key, val]) => (
-            <Field key={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
-              <TextInput value={val} onChange={(v) => setSocial(key, v)} placeholder={`https://...`} />
-            </Field>
-          ))}
-        </div>
-      </Card>
-
-      {/* Deneyimler */}
+      {/* Anasayfa Yelpaze Görsel Kartları (Card Fan Carousel) */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <SectionTitle>İş Deneyimleri</SectionTitle>
+          <SectionTitle>Anasayfa Yelpaze Kartları (Hero Fan Carousel)</SectionTitle>
           <button
-            onClick={addExp}
-            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors"
+            onClick={addHeroCard}
+            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer"
           >
-            <Plus size={13} /> Yeni Ekle
+            <Plus size={13} /> Yeni Kart Ekle
           </button>
         </div>
-        <div className="space-y-3">
-          {form.experiences.map((exp, idx) => (
-            <div key={exp.id} className="bg-white/[0.03] border border-white/8 rounded-lg overflow-hidden">
-              <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.03]"
-                onClick={() => setOpenExp(openExp === idx ? null : idx)}
-              >
-                <span className="text-sm font-medium text-white/80">
-                  {exp.role || "Yeni Deneyim"} {exp.company ? `— ${exp.company}` : ""}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeExp(idx); }}
-                    className="text-white/30 hover:text-rose-400 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                  {openExp === idx ? <ChevronUp size={15} className="text-white/40" /> : <ChevronDown size={15} className="text-white/40" />}
+
+        <p className="text-white/40 text-xs mb-4">
+          Anasayfanın sağ tarafında 3D yelpaze animasyonuyla sergilenen kartlar.
+        </p>
+
+        <div className="space-y-4">
+          {form.heroCards.map((card, idx) => (
+            <div
+              key={idx}
+              className="bg-white/[0.03] border border-white/8 rounded-lg p-4 flex items-start gap-4"
+            >
+              {/* Resim Yükle / Önizleme */}
+              <div className="shrink-0">
+                <div
+                  className="w-20 h-24 rounded-lg border-2 border-dashed border-white/15 hover:border-rose-500/50 cursor-pointer overflow-hidden flex items-center justify-center bg-white/[0.03] transition-colors relative"
+                  onClick={() => {
+                    setPendingCardIdx(idx);
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  {card.imgUrl ? (
+                    <img
+                      src={card.imgUrl}
+                      alt={card.title || `Card ${idx}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Upload size={18} className="text-white/30" />
+                  )}
+                  {uploading[idx] && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
+                <p className="text-white/30 text-[10px] text-center mt-1">Görsel Yükle</p>
               </div>
-              {openExp === idx && (
-                <div className="px-4 pb-4 space-y-3 border-t border-white/8 pt-4">
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <Field label="Rol"><TextInput value={exp.role} onChange={(v) => updateExp(idx, "role", v)} /></Field>
-                    <Field label="Şirket"><TextInput value={exp.company} onChange={(v) => updateExp(idx, "company", v)} /></Field>
-                    <Field label="Konum"><TextInput value={exp.location} onChange={(v) => updateExp(idx, "location", v)} /></Field>
-                    <Field label="Dönem"><TextInput value={exp.period} onChange={(v) => updateExp(idx, "period", v)} placeholder="2024 — 2025" /></Field>
-                    <Field label="Tür"><TextInput value={exp.type} onChange={(v) => updateExp(idx, "type", v)} placeholder="Tam Zamanlı / Staj" /></Field>
-                  </div>
-                  <Field label="Açıklama">
-                    <TextArea value={exp.description} onChange={(v) => updateExp(idx, "description", v)} rows={4} />
-                  </Field>
-                  <Field label="Öne Çıkanlar (her satıra bir madde)">
-                    <TextArea
-                      value={(exp.highlights || []).join("\n")}
-                      onChange={(v) => updateExp(idx, "highlights", v.split("\n").filter(Boolean))}
-                      rows={3}
-                    />
-                  </Field>
-                  <Field label="Teknolojiler (virgülle ayırın)">
-                    <TextInput
-                      value={(exp.technologies || []).join(", ")}
-                      onChange={(v) => updateExp(idx, "technologies", v.split(",").map((t) => t.trim()))}
-                    />
-                  </Field>
-                </div>
-              )}
+
+              {/* Detaylar */}
+              <div className="flex-1 grid grid-cols-2 gap-3">
+                <Field label="Kart Başlığı / Alt">
+                  <TextInput
+                    value={card.title || ""}
+                    onChange={(v) => updateHeroCard(idx, "title", v)}
+                    placeholder="Atölye Günlüğü"
+                  />
+                </Field>
+                <Field label="Yönlendirme Linki">
+                  <TextInput
+                    value={card.linkUrl || ""}
+                    onChange={(v) => updateHeroCard(idx, "linkUrl", v)}
+                    placeholder="/gallery veya /ai-work"
+                  />
+                </Field>
+              </div>
+
+              {/* Sil */}
+              <button
+                onClick={() => removeHeroCard(idx)}
+                className="text-white/20 hover:text-rose-400 transition-colors mt-1"
+                title="Sil"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* Alt Kaydet */}
+      {/* Sosyal Medya */}
+      <Card>
+        <SectionTitle>Sosyal Medya Bağlantıları</SectionTitle>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Field label="Medium">
+            <TextInput value={form.social.medium} onChange={(v) => setSocial("medium", v)} />
+          </Field>
+          <Field label="GitHub">
+            <TextInput value={form.social.github} onChange={(v) => setSocial("github", v)} />
+          </Field>
+          <Field label="LinkedIn">
+            <TextInput value={form.social.linkedin} onChange={(v) => setSocial("linkedin", v)} />
+          </Field>
+          <Field label="Instagram">
+            <TextInput value={form.social.instagram} onChange={(v) => setSocial("instagram", v)} />
+          </Field>
+        </div>
+      </Card>
+
+      {/* Biyografi */}
+      <Card>
+        <SectionTitle>Biyografi & Felsefe</SectionTitle>
+        <div className="space-y-4">
+          <Field label="Kısa Biyografi (Özet)">
+            <TextArea value={form.bio} onChange={(v) => setField("bio", v)} rows={3} />
+          </Field>
+          <Field label="Felsefe (Cümle)">
+            <TextInput value={form.philosophy} onChange={(v) => setField("philosophy", v)} />
+          </Field>
+        </div>
+      </Card>
+
+      {/* Gizli file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          if (pendingCardIdx !== null && e.target.files[0]) {
+            uploadHeroImage(pendingCardIdx, e.target.files[0]);
+          }
+          e.target.value = "";
+        }}
+      />
+
       <div className="flex justify-end">
         <SaveButton status={saveStatus} onClick={save} />
       </div>
