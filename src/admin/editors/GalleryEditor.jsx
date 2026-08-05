@@ -79,7 +79,7 @@ export default function GalleryEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-3xl">
+    <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Galeri"
         subtitle="Tablolar ve sanat eserleri"

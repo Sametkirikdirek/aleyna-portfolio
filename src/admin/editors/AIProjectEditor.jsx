@@ -73,7 +73,7 @@ export default function AIProjectEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-3xl">
+    <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Yapay Zeka Projeleri"
         subtitle="GitHub projeleri ve öne çıkarılan çalışmalar"

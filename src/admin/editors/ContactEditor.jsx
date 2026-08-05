@@ -95,7 +95,7 @@ export default function ContactEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-3xl">
+    <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="İletişim Sayfası"
         subtitle="Başlıklar, metinler ve arka planda rastgele değişen görseller"

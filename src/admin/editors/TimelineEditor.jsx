@@ -74,7 +74,7 @@ export default function TimelineEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-3xl">
+    <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Zaman Yolculuğu"
         subtitle="Akış şeklinde görüntülenen kişisel fotoğraflar"
