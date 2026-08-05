@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, Feather, BookOpen, X, Sparkles, BookMarked, ExternalLink } from "lucide-react";
+import { ArrowUpRight, Feather, BookOpen, X, ArrowRight, BookMarked, ExternalLink } from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
 
@@ -39,8 +40,10 @@ async function loadMediumArticles() {
   return mediumWritingsFallback;
 }
 
-/** Pop-up Detay Modalı (Açılış & Kapanış Animasyonlu) */
+/** Pop-up Detay Modalı (Açılış & Kapanış Animasyonlu + Blur Fade + Tam Okuma Yönlendirmesi) */
 function WritingModal({ article, onClose }) {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -54,6 +57,9 @@ function WritingModal({ article, onClose }) {
   }, [onClose]);
 
   if (!article) return null;
+
+  const fullText = article.content || article.excerpt || "";
+  const isLongText = fullText.length > 250;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
@@ -73,13 +79,13 @@ function WritingModal({ article, onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 14 }}
         transition={{ type: "spring", stiffness: 320, damping: 26 }}
-        className="relative w-full max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[88vh] overflow-y-auto bg-paper text-ink rounded-3xl p-8 md:p-12 lg:p-14 shadow-2xl border border-ink/10 z-10 my-auto"
+        className="relative w-full max-w-2xl md:max-w-3xl max-h-[82vh] overflow-hidden bg-paper text-ink rounded-3xl p-6 md:p-10 shadow-2xl border border-ink/10 z-10 my-auto flex flex-col"
       >
         {/* Üst Bilgiler & Kapat Butonu */}
-        <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center justify-between gap-4 mb-5 shrink-0">
           <div className="flex items-center gap-3 flex-wrap">
             {article.tag && (
-              <span className="font-mono text-xs uppercase tracking-widest px-3.5 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
+              <span className="font-mono text-xs uppercase tracking-widest px-3 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
                 {article.tag}
               </span>
             )}
@@ -98,21 +104,41 @@ function WritingModal({ article, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-ink/5 hover:bg-ink/12 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-full bg-ink/5 hover:bg-ink/12 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
             aria-label="Kapat"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Yazı Başlığı */}
-        <h2 className="font-display text-3xl md:text-5xl text-ink leading-snug tracking-tight mb-8">
+        <h2 className="font-display text-2xl md:text-3xl text-ink leading-snug tracking-tight mb-4 shrink-0">
           {article.title}
         </h2>
 
-        {/* Yazı İçeriği */}
-        <div className="text-ink/85 font-sans text-base md:text-lg lg:text-xl leading-relaxed whitespace-pre-line space-y-6 border-t border-ink/10 pt-8">
-          {article.content || article.excerpt}
+        {/* Önizleme Metni & Bulanıklık Katmanı */}
+        <div className="relative flex-1 overflow-hidden border-t border-ink/10 pt-4">
+          <div className="text-ink/80 font-sans text-sm md:text-base leading-relaxed whitespace-pre-line space-y-4 pb-20">
+            {fullText}
+          </div>
+
+          {/* Blur Fade Effect & "Yazıyı Okumaya Devam Et" Button */}
+          {isLongText && (
+            <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-paper via-paper/95 to-transparent flex items-end justify-center pb-3 pt-12">
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  onClose();
+                  navigate(`/writings/${article.id}`);
+                }}
+                className="group flex items-center gap-2 px-6 py-3 rounded-full bg-brush text-paper font-sans text-sm font-medium shadow-xl hover:shadow-2xl hover:bg-brush-soft transition-all duration-300 cursor-pointer border border-paper/20"
+              >
+                Yazıyı Okumaya Devam Et
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
