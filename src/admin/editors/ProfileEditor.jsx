@@ -117,9 +117,6 @@ export default function ProfileEditor() {
     }
   };
 
-  const avatarInputRef = useRef();
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
   const uploadAvatar = async (file) => {
     if (!file) return;
     setUploadingAvatar(true);
@@ -150,41 +147,84 @@ export default function ProfileEditor() {
         onSave={save}
       />
 
+      {/* Image Adjust Modal */}
+      <ImageAdjustModal
+        isOpen={adjustState.isOpen}
+        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={adjustState.imageUrl}
+        aspectRatio={adjustState.aspectRatio}
+        title={adjustState.title}
+        onSave={(newCroppedUrl) => {
+          if (adjustState.targetType === "avatar") {
+            setField("avatar", newCroppedUrl);
+          } else if (adjustState.targetType === "heroCard" && adjustState.targetIdx !== null) {
+            updateHeroCard(adjustState.targetIdx, "imgUrl", newCroppedUrl);
+          }
+        }}
+      />
+
       {/* Temel Bilgiler & Profil Fotoğrafı */}
       <Card>
         <SectionTitle>Temel Bilgiler & Profil Fotoğrafı (Avatar)</SectionTitle>
         <div className="flex flex-col md:flex-row gap-6 items-start mb-6 pb-6 border-b border-white/8">
-          <div
-            className="w-24 h-36 rounded-full border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-white/[0.03] transition-colors relative shrink-0 shadow-lg"
-            onClick={() => avatarInputRef.current?.click()}
-          >
-            {form.avatar ? (
-              <img src={form.avatar} alt={form.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center text-white/40 text-center p-2">
-                <Upload size={20} />
-                <span className="text-[10px] mt-1">Fotoğraf Yükle</span>
-              </div>
-            )}
-            {uploadingAvatar && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
+          {/* Avatar Çerçevesi (Tıklanınca Fotoğraf Ayarlama Modalı Açılır) */}
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="group relative w-28 h-44 rounded-full border-2 border-rose-500/40 hover:border-rose-400 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-white/[0.03] transition-all shadow-xl hover:shadow-[0_0_25px_rgba(244,63,94,0.35)]"
+              onClick={() => {
+                if (form.avatar) {
+                  openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp");
+                } else {
+                  avatarInputRef.current?.click();
+                }
+              }}
+              title="Kırpmak ve hizalamak için çerçeveye tıklayın"
+            >
+              {form.avatar ? (
+                <>
+                  <img src={form.avatar} alt={form.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-mono gap-1">
+                    <span>✂️ Hizala & Kırp</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center text-white/40 text-center p-2">
+                  <Upload size={20} />
+                  <span className="text-[10px] mt-1">Yükle</span>
+                </div>
+              )}
+              {uploadingAvatar && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <span className="text-[10px] text-rose-300/80 font-mono">Çerçeveye Tıkla: Hizala ✂️</span>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="text-sm font-medium text-white/90">Anasayfa Profil Fotoğrafı (Rozet Avatar)</p>
             <p className="text-xs text-white/40 leading-relaxed max-w-md">
-              Anasayfada "Aleyna Altunsu" başlığının üstünde/yanında kapsül rozet animasyonu ile sergilenen profil vesikanız.
+              <strong className="text-white/80">"Görsel Yükle"</strong> butonuna basarak yeni bir fotoğraf seçebilir, yüklenen <strong className="text-white/80">fotoğraf çerçevesine tıklayarak</strong> fotoğrafı dilediğiniz gibi kırpıp dikey/yatay odak noktalarını ayarlayabilirsiniz!
             </p>
-            <button
-              type="button"
-              onClick={() => avatarInputRef.current?.click()}
-              className="mt-2 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <Upload size={13} /> Fotoğraf Değiştir
-            </button>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+              >
+                <Upload size={14} /> Görsel Yükle
+              </button>
+              {form.avatar && (
+                <button
+                  type="button"
+                  onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
+                  className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-lg px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                >
+                  ✂️ Fotoğrafı Hizala
+                </button>
+              )}
+            </div>
             <input
               ref={avatarInputRef}
               type="file"
