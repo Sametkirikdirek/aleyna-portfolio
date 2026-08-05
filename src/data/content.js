@@ -331,6 +331,7 @@ export const personalWritings = [
       "Bazı tabloları neden bitirmiyoruz? Belki de bitmemiş olmaları, üzerinde hâlâ düşünüyor olduğumuzun kanıtı. Tuvalde bırakılan boşluklar bazen en dürüst cümlelerdir.",
     content:
       "Bazı tabloları neden bitirmiyoruz?\n\nAtölyedeki şövalenin üzerinde aylardır bekleyen iki tuval var. Birinin sağ alt köşesinde fırça izi yarım kalmış, diğerinde arka plan lekesi tamamlanmamış. Ziyarete gelen dostlarım bazen 'Bunu ne zaman bitireceksin?' diye soruyorlar.\n\nFakat belki de bitmemiş olmaları, üzerinde hâlâ zihinsel bir diyalog yürütüyor olduğumuzun en güçlü kanıtıdır. Tamamlanmış bir eser rafa kalkar veya duvara asılır; süreci nihayete erer. Ama bitmemiş bir tuval, atölyenin havasında yaşayan canlı bir soru işareti gibidir.\n\nKod yazarken de benzer bir hisse kapılıyorum. Bazen refactor edilmemiş bir fonksiyon veya mimari tartışmaya açık kalmış bir boru hattı, sizi sürekli düşünmeye teşvik eder. Tuvalde bırakılan boşluklar ve tamamlanmamış kod blokları bazen en dürüst cümlelerdir.",
+    image: "/artworks/sanat_1.jpg",
     date: "Haz 2026",
     readTime: "4 dk",
     tag: "Atölye",
@@ -342,6 +343,7 @@ export const personalWritings = [
       "Tamamlayıcı renkler sadece göze hoş gelmiyor; aralarında ölçülebilir bir gerilim var. Fırçayı elime almadan önce zihnimde dönen o denklemleri anlatıyorum.",
     content:
       "Tamamlayıcı renkler sadece göze hoş gelmiyor; aralarında ölçülebilir, matematiksel bir gerilim var.\n\nBir palet oluştururken zihnimde farkında olmadan renk çemberindeki açıları ve dalga boylarını hesaplıyorum. Gece mavisi (#1e1b4b) ile sıcak pembenin (#fb7185) yan yana geldiğinde yarattığı o yüksek kontrast lekesi, optik bir titreşim doğuruyor.\n\nSanatta sezgisellik kadar oran ve denge de esastır. Tıpkı bir derin öğrenme modelinde hyperparameter ayarlarken aradığımız o hassas denge noktası gibi, paletteki pigment oranları da fırçanın vuruş şiddetiyle birleşince kompozisyonun ritmini belirler.",
+    image: "/artworks/sanat_2.jpg",
     date: "Mar 2026",
     readTime: "5 dk",
     tag: "Sanat",
@@ -353,6 +355,7 @@ export const personalWritings = [
       "Tuvaldeki altın oran ile ekrandaki grid sistemi arasında garip bir akrabalık var. İki disiplinin aynı soruya farklı dillerde cevap verdiğini düşünüyorum.",
     content:
       "Tuvaldeki altın oran ile ekrandaki grid sistemi ve kod mimarisi arasında kopmaz bir akrabalık var.\n\nTuval üzerine fırçayla ilk lekeyi koyduğunuz an, yüzeyi bölünmüş ve ilk odak noktasını yaratmış olursunuz. Kod yazarken de modülleri ve sınıfları ayırırken aynı kompozisyon duygusu devreye girer: Derli toplu bir dosya yapısı, okunabilir fonksiyon isimleri ve dengeli bir akış.\n\nİki disiplin de temelinde aynı soruya cevap arar: Karmaşıklığı nasıl düzenler, anlaşılır ve estetik bir bütüne dönüştürürüz?",
+    image: "/artworks/sanat_3.jpg",
     date: "Ock 2026",
     readTime: "6 dk",
     tag: "Düşünce",
@@ -364,6 +367,7 @@ export const personalWritings = [
       "Kod yazarken geçen gecelerin rengi ile tuvalde yakaladığım sabah ışığı birbirine benziyor mu? Atölye ile masam arasındaki o ince çizgide yürürken tuttuğum notlar.",
     content:
       "Gece saat 03:00. Ekrandaki koyu tema editörün mor ve pembe kod ışıkları masaya vuruyor. Bir modeli eğitiyor veya karmaşık bir algoritmik sorunu çözmeye çalışıyorsunuz.\n\nSaatler ilerleyip penceremden içeri ilk sabah ışığı süzüldüğünde, bilgisayarı kapatıp şövalenin başına geçiyorum. Tuvalin üzerindeki yağlı boya katmanları sabah ışığında bambaşka bir derinlik kazanıyor.\n\nGece vardiyasının analitik odaklanması ile sabah ışığının getirdiği sanatsal uyanış birbirini tamamlıyor. Kod ve tuval, hayatımın iki ayrı ama kesintisiz nehir yatağı.",
+    image: "/artworks/sanat_4.jpg",
     date: "Kas 2025",
     readTime: "3 dk",
     tag: "Atölye",

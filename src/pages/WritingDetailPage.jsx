@@ -51,7 +51,7 @@ export default function WritingDetailPage() {
           transition={{ duration: 0.4 }}
         >
           <Link
-            to="/writings"
+            to="/writings?tab=personal"
             className="inline-flex items-center gap-2 text-sm font-sans text-ink/60 hover:text-brush transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
@@ -135,7 +135,7 @@ export default function WritingDetailPage() {
           className="pt-12 border-t border-ink/10 flex items-center justify-between"
         >
           <Link
-            to="/writings"
+            to="/writings?tab=personal"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-ink/15 text-ink/70 hover:text-brush hover:border-brush/40 font-sans text-sm transition-all"
           >
             <ArrowLeft size={16} /> Tüm Yazılara Dön
