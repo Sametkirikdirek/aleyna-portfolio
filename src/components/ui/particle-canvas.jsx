@@ -106,21 +106,22 @@ export default function ParticleCanvas({
 
       /* draw particles */
       for (const p of particles) {
-        /* mouse repulsion */
+        /* mouse repulsion (particles scatter smoothly from cursor anywhere on screen) */
         const mx = mouse.current.x * w;
         const my = mouse.current.y * h;
         const dx = p.x - mx;
         const dy = p.y - my;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 120) {
-          const force = ((120 - dist) / 120) * 0.6;
+        const radius = 180;
+        if (dist < radius && dist > 0) {
+          const force = ((radius - dist) / radius) * 1.5;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
         }
 
         /* physics */
-        p.vx *= 0.98;
-        p.vy *= 0.98;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
         p.x += p.vx * spd;
         p.y += p.vy * spd;
 
@@ -180,26 +181,37 @@ export default function ParticleCanvas({
 
     raf.current = requestAnimationFrame(draw);
 
-    /* mouse tracking */
+    /* global mouse tracking across window */
     const onMove = (e) => {
       const rect = cvs.getBoundingClientRect();
       mouse.current.x = (e.clientX - rect.left) / rect.width;
       mouse.current.y = (e.clientY - rect.top) / rect.height;
     };
-    cvs.addEventListener("pointermove", onMove);
+    const onTouchMove = (e) => {
+      if (e.touches && e.touches[0]) {
+        const rect = cvs.getBoundingClientRect();
+        mouse.current.x = (e.touches[0].clientX - rect.left) / rect.width;
+        mouse.current.y = (e.touches[0].clientY - rect.top) / rect.height;
+      }
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf.current);
       window.removeEventListener("resize", resize);
-      cvs.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("touchmove", onTouchMove);
     };
   }, [particleCount]);
 
   return (
     <canvas
       ref={canvasRef}
-      className={`absolute inset-0 w-full h-full ${className}`}
-      style={{ pointerEvents: "auto" }}
+      className={`absolute inset-0 w-full h-full pointer-events-none ${className}`}
     />
   );
 }
