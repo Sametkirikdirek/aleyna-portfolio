@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import {
-  Home, Image, FileText, Cpu, Clock, BookOpen, LogOut, Menu, X,
+  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X,
 } from "lucide-react";
 import ProfileEditor from "./editors/ProfileEditor";
 import GalleryEditor from "./editors/GalleryEditor";
@@ -10,10 +10,12 @@ import CVEditor from "./editors/CVEditor";
 import AIProjectEditor from "./editors/AIProjectEditor";
 import TimelineEditor from "./editors/TimelineEditor";
 import WritingsEditor from "./editors/WritingsEditor";
+import ContactEditor from "./editors/ContactEditor";
 
 const NAV_ITEMS = [
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
+  { id: "contact", label: "İletişim Sayfası", icon: Mail },
   { id: "cv", label: "CV Yönetimi", icon: FileText },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },
@@ -23,6 +25,7 @@ const NAV_ITEMS = [
 const EDITORS = {
   profile: ProfileEditor,
   gallery: GalleryEditor,
+  contact: ContactEditor,
   cv: CVEditor,
   ai: AIProjectEditor,
   timeline: TimelineEditor,

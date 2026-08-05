@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/ui/hero-section-2";
-import { contactArtworks } from "../data/content";
-import { useProfile, useCv } from "../hooks/useContent";
+import { useProfile, useCv, useContact } from "../hooks/useContent";
 
 export default function ContactPage() {
   const { data: profile } = useProfile();
   const { data: cv } = useCv();
+  const { data: contact } = useContact();
+
+  const artworks = contact?.artworks || [];
 
   const socialLinks = [
     { label: "Medium", href: profile?.social?.medium || "#" },
@@ -19,22 +21,29 @@ export default function ContactPage() {
     en: cv?.en || profile?.cv?.en || "/docs/Aleyna_Altunsu_CV_EN.pdf",
   };
 
-  const [artwork, setArtwork] = useState(() => {
-    const randomIndex = Math.floor(Math.random() * contactArtworks.length);
-    return contactArtworks[randomIndex];
-  });
+  const [artwork, setArtwork] = useState(null);
 
-  // Her sayfa açılışında veya yenilendiğinde rastgele bir resim seçilsin
+  // Her sayfa açılışında veya artworks güncellendiğinde rastgele bir resim seçilsin
   useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * contactArtworks.length);
-    setArtwork(contactArtworks[randomIndex]);
-  }, []);
+    if (artworks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * artworks.length);
+      setArtwork(artworks[randomIndex]);
+    }
+  }, [artworks]);
 
   const handleRefreshArtwork = () => {
-    const available = contactArtworks.filter((a) => a.id !== artwork?.id);
+    if (artworks.length <= 1) return;
+    const available = artworks.filter((a) => a.id !== artwork?.id);
     const randomIndex = Math.floor(Math.random() * available.length);
     setArtwork(available[randomIndex]);
   };
+
+  const pageTitle = contact?.title || "Birlikte bir şey";
+  const pageTitleHighlight = contact?.titleHighlight || "inşa edelim.";
+  const pageSubtitle =
+    contact?.subtitle ||
+    "İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz.";
+  const ctaText = contact?.ctaText || "E-POSTA GÖNDER";
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,17 +56,17 @@ export default function ContactPage() {
         slogan={(profile?.roles || ["Yapay Zeka Mühendisi", "Ressam", "Yazar"]).join(" · ").toUpperCase()}
         title={
           <>
-            Birlikte bir şey <br />
-            <span className="text-primary">inşa edelim.</span>
+            {pageTitle} <br />
+            <span className="text-primary">{pageTitleHighlight}</span>
           </>
         }
-        subtitle="İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz."
+        subtitle={pageSubtitle}
         callToAction={{
-          text: "E-POSTA GÖNDER",
+          text: ctaText,
           href: `mailto:${profile?.email || "hello@aleynaaltunsu.com"}`,
         }}
-        backgroundImage={artwork.image}
-        artwork={artwork}
+        backgroundImage={artwork?.image || ""}
+        artwork={artwork || {}}
         onRefreshArtwork={handleRefreshArtwork}
         contactInfo={{
           website: "aleynaaltunsu.com",

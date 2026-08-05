@@ -9,6 +9,7 @@ import {
   personalWritings as fallbackWritings,
   experiences as fallbackExperiences,
   skills as fallbackSkills,
+  contactArtworks as fallbackContactArtworks,
 } from "../data/content";
 
 /**
@@ -70,5 +71,16 @@ export function useCv() {
   return useContent("cv", {
     tr: fallbackProfile.cv?.tr || "",
     en: fallbackProfile.cv?.en || "",
+  });
+}
+
+export function useContact() {
+  return useContent("contact", {
+    title: "Birlikte bir şey",
+    titleHighlight: "inşa edelim.",
+    subtitle:
+      "İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz.",
+    ctaText: "E-POSTA GÖNDER",
+    artworks: fallbackContactArtworks,
   });
 }
