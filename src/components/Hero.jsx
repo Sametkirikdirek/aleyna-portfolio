@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { profile } from "../data/content";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
 import { useColorMode } from "../context/ColorModeContext";
+import { useProfile } from "../hooks/useContent";
 
 /* Inline SVG social icons (lucide dropped brand icons in v1.x) */
 const GithubIcon = (props) => (
@@ -16,13 +16,6 @@ const LinkedinIcon = (props) => (
 const InstagramIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
 );
-
-const socialLinks = [
-  { icon: GithubIcon, href: profile.social.github, label: "GitHub" },
-  { icon: LinkedinIcon, href: profile.social.linkedin, label: "LinkedIn" },
-  { icon: BookOpen, href: profile.social.medium, label: "Medium" },
-  { icon: InstagramIcon, href: profile.social.instagram, label: "Instagram" },
-];
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 22 },
@@ -53,6 +46,14 @@ const roleColorStyles = [
 
 export default function Hero() {
   const { isColorActive } = useColorMode();
+  const { data: profile } = useProfile();
+
+  const socialLinks = [
+    { icon: GithubIcon, href: profile?.social?.github || "#", label: "GitHub" },
+    { icon: LinkedinIcon, href: profile?.social?.linkedin || "#", label: "LinkedIn" },
+    { icon: BookOpen, href: profile?.social?.medium || "#", label: "Medium" },
+    { icon: InstagramIcon, href: profile?.social?.instagram || "#", label: "Instagram" },
+  ];
 
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-ink">

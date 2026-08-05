@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { profile, skills, experiences } from "../data/content";
 import { MapPin, ArrowUpRight, FileText, Download, ExternalLink, Briefcase, Building2, Calendar, CheckCircle2 } from "lucide-react";
 import LottieAnimation from "./ui/LottieAnimation";
 import { useColorMode } from "../context/ColorModeContext";
+import { useProfile } from "../hooks/useContent";
 
 export default function About() {
   const { isColorActive, toggleColorMode } = useColorMode();
+  const { data: profile } = useProfile();
+  const experiences = profile?.experiences || [];
+  const skills = profile?.skills || [];
 
   return (
     <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-paper text-ink">
