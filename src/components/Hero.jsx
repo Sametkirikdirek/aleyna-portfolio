@@ -92,60 +92,53 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl w-full mx-auto px-6 md:px-10 py-12 lg:py-24">
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-10 lg:gap-12 items-center">
           {/* Sol Taraf: Metinler & Butonlar (Sola Hizalı) */}
-          <div className="flex flex-col items-start gap-7 text-left">
-            {/* Name & Roles Container with Overlapping Portrait Capsule */}
-            <div className="relative w-full">
-              {/* Roles pill row */}
-              <motion.div {...fadeUp(0)} className="flex flex-wrap gap-2 mb-3 relative z-10">
-                {profile.roles.map((role, idx) => {
-                  const activeStyle = roleColorStyles[idx % roleColorStyles.length];
-                  return (
-                    <span
-                      key={role}
-                      className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-1000 ease-in-out backdrop-blur-sm ${
-                        isColorActive
-                          ? `${activeStyle.activeBorder} ${activeStyle.activeText} ${activeStyle.activeBg} ${activeStyle.activeShadow}`
-                          : "border-paper/15 bg-paper/[0.04] text-paper/70"
-                      }`}
-                    >
-                      {role}
-                    </span>
-                  );
-                })}
-              </motion.div>
-
-              {/* Name Title */}
-              <motion.h1
-                {...fadeUp(0.12)}
-                className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out relative z-10 ${
-                  isColorActive
-                    ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
-                    : "text-paper"
-                }`}
+          <div className="flex flex-col items-start gap-6 text-left relative z-20">
+            {/* 1. Profil Fotoğrafı Kapsülü (Kullanıcının Sarı Daire ile İşaretlediği Tam Konum) */}
+            {profile.avatar && (
+              <motion.div
+                {...fadeUp(0)}
+                className="group relative cursor-pointer my-1"
               >
-                {profile.name}
-              </motion.h1>
+                <div className="w-[85px] h-[140px] sm:w-[105px] sm:h-[170px] lg:w-[125px] lg:h-[200px] rounded-full overflow-hidden border-2 border-white/25 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.4)] bg-ink">
+                  <img
+                    src={profile.avatar}
+                    alt={profile.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                </div>
+              </motion.div>
+            )}
 
-              {/* Floating Overlapping Portrait Capsule Avatar */}
-              {profile.avatar && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="absolute -top-4 left-[9rem] sm:left-[13rem] lg:left-[15rem] z-20 pointer-events-auto"
-                >
-                  <div className="group relative cursor-pointer">
-                    <div className="w-[70px] h-[115px] sm:w-[95px] sm:h-[155px] lg:w-[125px] lg:h-[205px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink">
-                      <img
-                        src={profile.avatar}
-                        alt={profile.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
+            {/* 2. Roles pill row */}
+            <motion.div {...fadeUp(0.08)} className="flex flex-wrap gap-2">
+              {profile.roles.map((role, idx) => {
+                const activeStyle = roleColorStyles[idx % roleColorStyles.length];
+                return (
+                  <span
+                    key={role}
+                    className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-1000 ease-in-out backdrop-blur-sm ${
+                      isColorActive
+                        ? `${activeStyle.activeBorder} ${activeStyle.activeText} ${activeStyle.activeBg} ${activeStyle.activeShadow}`
+                        : "border-paper/15 bg-paper/[0.04] text-paper/70"
+                    }`}
+                  >
+                    {role}
+                  </span>
+                );
+              })}
+            </motion.div>
+
+            {/* 3. Name Title */}
+            <motion.h1
+              {...fadeUp(0.16)}
+              className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out ${
+                isColorActive
+                  ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
+                  : "text-paper"
+              }`}
+            >
+              {profile.name}
+            </motion.h1>
 
             {/* Tagline */}
             <motion.p
