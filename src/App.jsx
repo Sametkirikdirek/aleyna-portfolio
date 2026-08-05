@@ -11,6 +11,7 @@ import AIWorkPage from "./pages/AIWorkPage";
 import ContactPage from "./pages/ContactPage";
 
 // Admin
+import { Analytics } from "@vercel/analytics/react";
 import LoginPage from "./admin/LoginPage";
 import Dashboard from "./admin/Dashboard";
 import ProtectedRoute from "./admin/ProtectedRoute";
@@ -18,6 +19,7 @@ import ProtectedRoute from "./admin/ProtectedRoute";
 function App() {
   return (
     <AuthProvider>
+      <Analytics />
       <ColorModeProvider>
         <BrowserRouter>
           <Routes>
