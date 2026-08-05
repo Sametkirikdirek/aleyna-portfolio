@@ -44,11 +44,19 @@ export function useContent(docId, fallback) {
 // ---- Özel hook'lar (her içerik tipi için) ----
 
 export function useProfile() {
-  return useContent("profile", {
+  const { data, loading, refresh } = useContent("profile", {
     ...fallbackProfile,
     experiences: fallbackExperiences,
     skills: fallbackSkills,
   });
+
+  const mergedData = {
+    ...fallbackProfile,
+    ...data,
+    avatar: data?.avatar || fallbackProfile.avatar,
+  };
+
+  return { data: mergedData, loading, refresh };
 }
 
 export function useGallery() {
