@@ -15,11 +15,11 @@ import ContactEditor from "./editors/ContactEditor";
 const NAV_ITEMS = [
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
-  { id: "contact", label: "İletişim Sayfası", icon: Mail },
-  { id: "cv", label: "CV Yönetimi", icon: FileText },
+  { id: "writings", label: "Kişisel Yazılar", icon: BookOpen },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },
-  { id: "writings", label: "Kişisel Yazılar", icon: BookOpen },
+  { id: "cv", label: "CV Yönetimi", icon: FileText },
+  { id: "contact", label: "İletişim Sayfası", icon: Mail },
 ];
 
 const EDITORS = {
