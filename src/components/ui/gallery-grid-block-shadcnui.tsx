@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Grid, X, ZoomIn, History } from "lucide-reac
 import { KeyboardEvent, useMemo, useState } from "react";
 import InfiniteGallery from "./infinite-gallery";
 
+import { useTimeline } from "@/hooks/useContent";
+
 const unsplashImages = [
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800",
   "https://images.unsplash.com/photo-1618556450994-a6a128ef0d9d?w=800",
@@ -44,6 +46,9 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
   const [filter, setFilter] = useState<string>("Tümü");
   const [activeTab, setActiveTab] = useState<"galeri" | "zaman-yolculugu">("galeri");
 
+  const { data: timelineData } = useTimeline();
+  const timelineImagesList = timelineData?.images || [];
+
   const categories = useMemo(
     () => ["Tümü", ...new Set(images.map((img) => img.category))],
     [images]
@@ -79,22 +84,27 @@ export function GalleryGridBlock({ images = defaultGalleryImages }: GalleryGridB
   };
 
   const infiniteGalleryImages = useMemo(() => {
+    if (timelineImagesList && timelineImagesList.length > 0) {
+      return timelineImagesList
+        .filter((img: any) => img.url)
+        .map((img: any, idx: number) => ({
+          src: img.url,
+          alt: img.caption || `Zaman Yolculuğu ${idx + 1}`,
+        }));
+    }
     return [
-      { src: "/gallery/art-1.png", alt: "Art 1" },
-      { src: "/gallery/zaman_1_1785423563633.png", alt: "Zaman Yolculuğu 1" },
-      { src: "/gallery/art-2.png", alt: "Art 2" },
-      { src: "/gallery/zaman_2_1785423572766.png", alt: "Zaman Yolculuğu 2" },
-      { src: "/gallery/art-3.png", alt: "Art 3" },
-      { src: "/gallery/zaman_3_1785423582323.png", alt: "Zaman Yolculuğu 3" },
-      { src: "/gallery/art-4.png", alt: "Art 4" },
-      { src: "/gallery/zaman_4_1785423591404.png", alt: "Zaman Yolculuğu 4" },
-      { src: "/gallery/art-5.png", alt: "Art 5" },
-      { src: "/gallery/zaman_5_1785423607333.png", alt: "Zaman Yolculuğu 5" },
-      { src: "/gallery/art-6.png", alt: "Art 6" },
-      { src: "/gallery/zaman_6_1785423615961.png", alt: "Zaman Yolculuğu 6" },
-      { src: "/images/contact-bg.png", alt: "Contact Art" },
+      { src: "/gallery/zaman_1.png", alt: "Zaman Yolculuğu 1" },
+      { src: "/gallery/zaman_2.png", alt: "Zaman Yolculuğu 2" },
+      { src: "/gallery/zaman_3.png", alt: "Zaman Yolculuğu 3" },
+      { src: "/gallery/zaman_4.png", alt: "Zaman Yolculuğu 4" },
+      { src: "/gallery/zaman_5.png", alt: "Zaman Yolculuğu 5" },
+      { src: "/gallery/zaman_6.png", alt: "Zaman Yolculuğu 6" },
+      { src: "/gallery/zaman_7.png", alt: "Zaman Yolculuğu 7" },
+      { src: "/gallery/zaman_8.png", alt: "Zaman Yolculuğu 8" },
+      { src: "/gallery/zaman_9.png", alt: "Zaman Yolculuğu 9" },
+      { src: "/gallery/zaman_10.png", alt: "Zaman Yolculuğu 10" },
     ];
-  }, []);
+  }, [timelineImagesList]);
 
   return (
     <>

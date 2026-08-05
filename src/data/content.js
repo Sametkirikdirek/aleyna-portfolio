@@ -499,3 +499,17 @@ export const skills = [
   { group: "Mühendislik", items: ["Python", "React", "FastAPI", "Docker", "AWS"] },
   { group: "Sanat", items: ["Akrilik & Yağlı Boya", "Suluboya", "Dijital İllüstrasyon", "Kompozisyon"] },
 ];
+
+export const timelineImages = [
+  { id: "tl-1", url: "/gallery/zaman_1.png", year: "2026", caption: "Atölye Çalışmaları & Yağlı Boya Doku Denemeleri" },
+  { id: "tl-2", url: "/gallery/zaman_2.png", year: "2026", caption: "Yapay Zeka & Derin Öğrenme Kodlama Ekranı" },
+  { id: "tl-3", url: "/gallery/zaman_3.png", year: "2025", caption: "Soyut Akrilik Kompozisyon Katmanları" },
+  { id: "tl-4", url: "/gallery/zaman_4.png", year: "2025", caption: "Atölye Penceresi & Işık İncelemeleri" },
+  { id: "tl-5", url: "/gallery/zaman_5.png", year: "2025", caption: "Gece Vardiyası & Fikir Taslakları" },
+  { id: "tl-6", url: "/gallery/zaman_6.png", year: "2024", caption: "Dijital Tablet İllüstrasyon Çizimleri" },
+  { id: "tl-7", url: "/gallery/zaman_7.png", year: "2024", caption: "Büyük Ölçekli Tuval Çalışması" },
+  { id: "tl-8", url: "/gallery/zaman_8.png", year: "2024", caption: "Nöral Ağlar & Yapay Zeka Desen Haritalama" },
+  { id: "tl-9", url: "/gallery/zaman_9.png", year: "2023", caption: "Sanat & Mühendislik Kütüphanesi Notları" },
+  { id: "tl-10", url: "/gallery/zaman_10.png", year: "2023", caption: "Galeri Sergisi & Işıklandırma Seçkileri" },
+];
+

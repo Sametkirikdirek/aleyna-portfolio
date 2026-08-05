@@ -10,6 +10,7 @@ import {
   experiences as fallbackExperiences,
   skills as fallbackSkills,
   contactArtworks as fallbackContactArtworks,
+  timelineImages as fallbackTimelineImages,
 } from "../data/content";
 
 /**
@@ -98,7 +99,7 @@ export function useCv() {
 }
 
 export function useTimeline() {
-  return useContent("timeline", { experiences: fallbackExperiences });
+  return useContent("timeline", { images: fallbackTimelineImages, experiences: fallbackExperiences });
 }
 
 export function useContact() {
