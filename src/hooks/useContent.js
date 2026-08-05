@@ -13,15 +13,28 @@ import {
 } from "../data/content";
 
 /**
- * Firestore'dan içerik çeken hook.
- * Firestore'da veri yoksa veya bağlantı başarısızsa, content.js fallback'ini kullanır.
+ * Firestore'dan içerik çeken ve localStorage önbelleği kullanan hook.
+ * İlk açılışta önceden kaydedilmiş veriyi anında gösterir, görsel sıçramalarını (flash of content) önler.
  *
  * @param {string} docId - Firestore doküman kimliği
  * @param {*} fallback - Firestore boşsa kullanılacak statik veri
  * @returns {{ data: any, loading: boolean, refresh: Function }}
  */
 export function useContent(docId, fallback) {
-  const [data, setData] = useState(fallback);
+  const cacheKey = `portfolio_cache_${docId}`;
+
+  const [data, setData] = useState(() => {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {
+      console.warn("Cache read error:", e);
+    }
+    return fallback;
+  });
+
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -29,6 +42,11 @@ export function useContent(docId, fallback) {
     const result = await getContent(docId);
     if (result !== null) {
       setData(result);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(result));
+      } catch (e) {
+        console.warn("Cache write error:", e);
+      }
     }
     setLoading(false);
   };
@@ -53,7 +71,7 @@ export function useProfile() {
   const mergedData = {
     ...fallbackProfile,
     ...data,
-    avatar: data?.avatar || fallbackProfile.avatar,
+    avatar: data?.avatar !== undefined ? data.avatar : fallbackProfile.avatar,
   };
 
   return { data: mergedData, loading, refresh };
@@ -71,24 +89,22 @@ export function useWritings() {
   return useContent("writings", { personalWritings: fallbackWritings });
 }
 
-export function useTimeline() {
-  return useContent("timeline", { images: [] });
-}
-
 export function useCv() {
   return useContent("cv", {
-    tr: fallbackProfile.cv?.tr || "",
-    en: fallbackProfile.cv?.en || "",
+    experiences: fallbackExperiences,
+    skills: fallbackSkills,
+    cvUrl: fallbackProfile.cv?.pdfUrl || "",
   });
+}
+
+export function useTimeline() {
+  return useContent("timeline", { experiences: fallbackExperiences });
 }
 
 export function useContact() {
   return useContent("contact", {
-    title: "Birlikte bir şey",
-    titleHighlight: "inşa edelim.",
-    subtitle:
-      "İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz.",
-    ctaText: "E-POSTA GÖNDER",
+    email: fallbackProfile.email,
+    location: fallbackProfile.location,
     artworks: fallbackContactArtworks,
   });
 }
