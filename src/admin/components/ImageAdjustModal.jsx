@@ -1,227 +1,369 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn, Move, Check, RefreshCw, Scissors, Sparkles } from "lucide-react";
+import { X, Check, RefreshCw, Crop, Scissors } from "lucide-react";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 
+/**
+ * Serbest Kırpma Aracı (Free-form Cropper)
+ *
+ * Fotoğraf pop-up'ta tam görünür.
+ * Üzerinde turuncu bir kırpma dikdörtgeni vardır.
+ * Kullanıcı dikdörtgeni:
+ *   - Ortasından sürükleyerek taşır
+ *   - Köşelerinden ve kenarlarından sürükleyerek boyutlandırır
+ *   - Kare, dikdörtgen, yatay, dikey istediği boyuta çeker
+ * "Kırp ve Kaydet" → Canvas ile kırpıp Cloudinary'ye yükler.
+ */
 export default function ImageAdjustModal({
   isOpen,
   onClose,
   imageUrl,
   onSave,
-  aspectRatio = "capsule", // "capsule" | "card" | "square"
-  title = "Görsel Hizalama ve Kırpma"
+  title = "Görsel Kırpma",
 }) {
-  const [zoom, setZoom] = useState(1);
-  const [posX, setPosX] = useState(50); // 0% - 100%
-  const [posY, setPosY] = useState(30); // 0% - 100%
-  const [saving, setSaving] = useState(false);
+  const containerRef = useRef(null);
+  const imgRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Reset controls when new image opens
+  // Displayed image dimensions (fitted to container)
+  const [imgDisplay, setImgDisplay] = useState({ w: 0, h: 0, natW: 0, natH: 0 });
+
+  // Crop rectangle (relative to displayed image, in px)
+  const [crop, setCrop] = useState({ x: 0, y: 0, w: 0, h: 0 });
+
+  const [saving, setSaving] = useState(false);
+  const [dragging, setDragging] = useState(null); // null | "move" | "nw" | "ne" | "sw" | "se" | "n" | "s" | "e" | "w"
+  const dragStart = useRef({ mx: 0, my: 0, cx: 0, cy: 0, cw: 0, ch: 0 });
+
+  // Measure displayed image size after load
+  const measureImage = useCallback(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
+    setImgDisplay({ w: rect.width, h: rect.height, natW, natH });
+
+    // Default crop: 70% centered
+    const cw = rect.width * 0.7;
+    const ch = rect.height * 0.7;
+    setCrop({
+      x: (rect.width - cw) / 2,
+      y: (rect.height - ch) / 2,
+      w: cw,
+      h: ch,
+    });
+  }, []);
+
+  // Re-measure on window resize
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = () => setTimeout(measureImage, 50);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [isOpen, measureImage]);
+
+  // Reset when opening
   useEffect(() => {
     if (isOpen) {
-      setZoom(1);
-      setPosX(50);
-      setPosY(30);
+      setSaving(false);
+      setDragging(null);
     }
   }, [isOpen, imageUrl]);
 
-  if (!isOpen || !imageUrl) return null;
+  // ─── Drag logic ───────────────────────────────────────
+  const MIN_SIZE = 30;
 
-  // Frame container dimensions preview
-  const frameClasses =
-    aspectRatio === "capsule"
-      ? "w-36 h-56 rounded-full"
-      : aspectRatio === "card"
-      ? "w-44 h-60 rounded-2xl"
-      : "w-48 h-48 rounded-2xl";
+  const clampCrop = useCallback((c) => {
+    const { w: iw, h: ih } = imgDisplay;
+    let { x, y, w, h } = c;
+    w = Math.max(MIN_SIZE, Math.min(w, iw));
+    h = Math.max(MIN_SIZE, Math.min(h, ih));
+    x = Math.max(0, Math.min(x, iw - w));
+    y = Math.max(0, Math.min(y, ih - h));
+    return { x, y, w, h };
+  }, [imgDisplay]);
 
-  const handleSaveCropped = async () => {
+  const onPointerDown = useCallback((e, handle) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(handle);
+    dragStart.current = {
+      mx: e.clientX,
+      my: e.clientY,
+      cx: crop.x,
+      cy: crop.y,
+      cw: crop.w,
+      ch: crop.h,
+    };
+  }, [crop]);
+
+  const onPointerMove = useCallback((e) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragStart.current.mx;
+    const dy = e.clientY - dragStart.current.my;
+    const { cx, cy, cw, ch } = dragStart.current;
+
+    let next;
+    switch (dragging) {
+      case "move":
+        next = { x: cx + dx, y: cy + dy, w: cw, h: ch };
+        break;
+      case "se":
+        next = { x: cx, y: cy, w: cw + dx, h: ch + dy };
+        break;
+      case "sw":
+        next = { x: cx + dx, y: cy, w: cw - dx, h: ch + dy };
+        break;
+      case "ne":
+        next = { x: cx, y: cy + dy, w: cw + dx, h: ch - dy };
+        break;
+      case "nw":
+        next = { x: cx + dx, y: cy + dy, w: cw - dx, h: ch - dy };
+        break;
+      case "n":
+        next = { x: cx, y: cy + dy, w: cw, h: ch - dy };
+        break;
+      case "s":
+        next = { x: cx, y: cy, w: cw, h: ch + dy };
+        break;
+      case "e":
+        next = { x: cx, y: cy, w: cw + dx, h: ch };
+        break;
+      case "w":
+        next = { x: cx + dx, y: cy, w: cw - dx, h: ch };
+        break;
+      default:
+        return;
+    }
+    setCrop(clampCrop(next));
+  }, [dragging, clampCrop]);
+
+  const onPointerUp = useCallback(() => {
+    setDragging(null);
+  }, []);
+
+  useEffect(() => {
+    if (!dragging) return;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [dragging, onPointerMove, onPointerUp]);
+
+  // ─── Crop & Save ─────────────────────────────────────
+  const handleSave = async () => {
     setSaving(true);
     try {
-      // Create cropped image using HTML5 Canvas
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.src = imageUrl;
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
 
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
+      const scaleX = img.naturalWidth / imgDisplay.w;
+      const scaleY = img.naturalHeight / imgDisplay.h;
+
+      const sx = crop.x * scaleX;
+      const sy = crop.y * scaleY;
+      const sw = crop.w * scaleX;
+      const sh = crop.h * scaleY;
 
       const canvas = canvasRef.current || document.createElement("canvas");
+      canvas.width = Math.round(sw);
+      canvas.height = Math.round(sh);
       const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-      // Set target crop resolution
-      const targetW = aspectRatio === "capsule" ? 600 : aspectRatio === "card" ? 600 : 600;
-      const targetH = aspectRatio === "capsule" ? 960 : aspectRatio === "card" ? 850 : 600;
-
-      canvas.width = targetW;
-      canvas.height = targetH;
-
-      ctx.clearRect(0, 0, targetW, targetH);
-
-      // Source scaling math based on zoom and offsets
-      const imgAspect = img.width / img.height;
-      const targetAspect = targetW / targetH;
-
-      let drawW, drawH;
-      if (imgAspect > targetAspect) {
-        drawH = targetH * zoom;
-        drawW = drawH * imgAspect;
-      } else {
-        drawW = targetW * zoom;
-        drawH = drawW / imgAspect;
-      }
-
-      // Position math based on percentages
-      const maxOffsetX = drawW - targetW;
-      const maxOffsetY = drawH - targetH;
-
-      const offsetX = -(maxOffsetX * (posX / 100));
-      const offsetY = -(maxOffsetY * (posY / 100));
-
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-
-      // Convert canvas to blob and upload to Cloudinary
       canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setSaving(false);
-          return;
-        }
-        const file = new File([blob], "cropped_image.png", { type: "image/png" });
-        const newUrl = await uploadToCloudinary(file, "cropped");
-        onSave(newUrl);
+        if (!blob) { setSaving(false); return; }
+        const file = new File([blob], "cropped.png", { type: "image/png" });
+        const url = await uploadToCloudinary(file, "cropped");
+        onSave(url);
         setSaving(false);
         onClose();
-      }, "image/png", 0.95);
+      }, "image/png", 0.92);
     } catch (err) {
-      console.error("Cropping error:", err);
-      // Fallback: save CSS object position
+      console.error("Crop error:", err);
       onSave(imageUrl);
       setSaving(false);
       onClose();
     }
   };
 
+  const resetCrop = () => {
+    const cw = imgDisplay.w * 0.7;
+    const ch = imgDisplay.h * 0.7;
+    setCrop({
+      x: (imgDisplay.w - cw) / 2,
+      y: (imgDisplay.h - ch) / 2,
+      w: cw,
+      h: ch,
+    });
+  };
+
+  // Corner handle component
+  const Handle = ({ pos, cursor }) => {
+    const style = {};
+    if (pos.includes("n")) style.top = -5;
+    if (pos.includes("s")) style.bottom = -5;
+    if (pos.includes("w")) style.left = -5;
+    if (pos.includes("e")) style.right = -5;
+
+    // Center handles for edges
+    if (pos === "n" || pos === "s") { style.left = "50%"; style.transform = "translateX(-50%)"; }
+    if (pos === "w" || pos === "e") { style.top = "50%"; style.transform = "translateY(-50%)"; }
+
+    const isCorner = pos.length === 2;
+    const size = isCorner ? "w-3.5 h-3.5" : pos === "n" || pos === "s" ? "w-6 h-2.5" : "w-2.5 h-6";
+
+    return (
+      <div
+        className={`absolute ${size} bg-rose-500 border border-rose-300 rounded-sm z-30 shadow-md hover:bg-rose-400 transition-colors`}
+        style={{ ...style, cursor }}
+        onPointerDown={(e) => onPointerDown(e, pos)}
+      />
+    );
+  };
+
+  if (!isOpen || !imageUrl) return null;
+
+  // Crop dimensions info
+  const cropNatW = imgDisplay.natW > 0 ? Math.round(crop.w * (imgDisplay.natW / imgDisplay.w)) : 0;
+  const cropNatH = imgDisplay.natH > 0 ? Math.round(crop.h * (imgDisplay.natH / imgDisplay.h)) : 0;
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-lg">
         <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 15 }}
+          initial={{ opacity: 0, scale: 0.93, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 15 }}
-          className="relative w-full max-w-lg bg-[#12121a] border border-white/15 rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden text-white"
+          exit={{ opacity: 0, scale: 0.93, y: 12 }}
+          className="relative w-full max-w-3xl bg-[#111118] border border-white/12 rounded-2xl shadow-2xl overflow-hidden text-white flex flex-col max-h-[95vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <Scissors size={20} className="text-rose-400" />
-              <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <Crop size={18} className="text-rose-400" />
+              <h3 className="text-base font-semibold tracking-tight">{title}</h3>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Subtitle */}
-          <p className="text-xs text-white/50 mt-3 mb-6">
-            Kaydırıcıları kullanarak fotoğrafı çerçevenin ortasına tam istediğiniz açıyla hizalayın.
-          </p>
+          {/* Info */}
+          <div className="px-5 py-2 text-[11px] text-white/45 border-b border-white/5 shrink-0 flex items-center justify-between">
+            <span>Dikdörtgeni <strong className="text-white/70">sürükleyin</strong>, köşelerinden <strong className="text-white/70">boyutlandırın</strong></span>
+            {cropNatW > 0 && (
+              <span className="font-mono text-rose-300/70">{cropNatW} × {cropNatH} px</span>
+            )}
+          </div>
 
-          {/* Preview Canvas Area */}
-          <div className="flex justify-center items-center py-6 bg-black/40 rounded-2xl border border-white/5 relative overflow-hidden">
-            <div
-              className={`relative overflow-hidden border-2 border-rose-500/80 shadow-[0_0_30px_rgba(244,63,94,0.3)] bg-ink ${frameClasses}`}
-            >
+          {/* Image + Crop Area */}
+          <div
+            ref={containerRef}
+            className="flex-1 overflow-auto flex items-center justify-center bg-black/60 p-4 md:p-6 min-h-0"
+          >
+            <div className="relative inline-block select-none" style={{ touchAction: "none" }}>
+              {/* The image itself */}
               <img
+                ref={imgRef}
                 src={imageUrl}
-                alt="Adjust preview"
-                className="w-full h-full object-cover transition-all duration-75 select-none pointer-events-none"
-                style={{
-                  transform: `scale(${zoom})`,
-                  objectPosition: `${posX}% ${posY}%`,
-                }}
+                alt="Crop preview"
+                onLoad={measureImage}
+                className="block max-w-full max-h-[60vh] w-auto h-auto rounded-lg"
+                draggable={false}
+                style={{ userSelect: "none" }}
               />
-              <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[inherit]" />
-            </div>
 
-            {/* Hidden canvas for exporting */}
-            <canvas ref={canvasRef} className="hidden" />
+              {/* Dark overlay outside crop area (4 dark rectangles) */}
+              {imgDisplay.w > 0 && (
+                <>
+                  {/* Top */}
+                  <div
+                    className="absolute left-0 top-0 bg-black/60 pointer-events-none"
+                    style={{ width: imgDisplay.w, height: crop.y }}
+                  />
+                  {/* Bottom */}
+                  <div
+                    className="absolute left-0 bg-black/60 pointer-events-none"
+                    style={{
+                      width: imgDisplay.w,
+                      top: crop.y + crop.h,
+                      height: imgDisplay.h - crop.y - crop.h,
+                    }}
+                  />
+                  {/* Left */}
+                  <div
+                    className="absolute left-0 bg-black/60 pointer-events-none"
+                    style={{
+                      top: crop.y,
+                      width: crop.x,
+                      height: crop.h,
+                    }}
+                  />
+                  {/* Right */}
+                  <div
+                    className="absolute bg-black/60 pointer-events-none"
+                    style={{
+                      top: crop.y,
+                      left: crop.x + crop.w,
+                      width: imgDisplay.w - crop.x - crop.w,
+                      height: crop.h,
+                    }}
+                  />
+
+                  {/* Crop Rectangle Border */}
+                  <div
+                    className="absolute border-2 border-rose-500 z-20"
+                    style={{
+                      left: crop.x,
+                      top: crop.y,
+                      width: crop.w,
+                      height: crop.h,
+                      cursor: dragging === "move" ? "grabbing" : "grab",
+                      boxShadow: "0 0 0 1px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.08)",
+                    }}
+                    onPointerDown={(e) => onPointerDown(e, "move")}
+                  >
+                    {/* Rule of thirds grid lines */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/15" />
+                      <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/15" />
+                      <div className="absolute top-1/3 left-0 right-0 h-px bg-white/15" />
+                      <div className="absolute top-2/3 left-0 right-0 h-px bg-white/15" />
+                    </div>
+
+                    {/* Corner handles */}
+                    <Handle pos="nw" cursor="nw-resize" />
+                    <Handle pos="ne" cursor="ne-resize" />
+                    <Handle pos="sw" cursor="sw-resize" />
+                    <Handle pos="se" cursor="se-resize" />
+
+                    {/* Edge handles */}
+                    <Handle pos="n" cursor="n-resize" />
+                    <Handle pos="s" cursor="s-resize" />
+                    <Handle pos="w" cursor="w-resize" />
+                    <Handle pos="e" cursor="e-resize" />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Sliders Controls */}
-          <div className="space-y-4 mt-6">
-            {/* Zoom Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-mono text-white/70">
-                <span className="flex items-center gap-1.5">
-                  <ZoomIn size={14} className="text-rose-400" /> Yakınlaştırma (Zoom)
-                </span>
-                <span className="text-rose-300 font-semibold">%{Math.round(zoom * 100)}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="2.5"
-                step="0.05"
-                value={zoom}
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-rose-500"
-              />
-            </div>
-
-            {/* Vertical Position Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-mono text-white/70">
-                <span className="flex items-center gap-1.5">
-                  <Move size={14} className="text-amber-400" /> Dikey Odak (Y-Ekseni)
-                </span>
-                <span className="text-amber-300 font-semibold">{posY === 0 ? "Üst" : posY === 100 ? "Alt" : `%${posY}`}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={posY}
-                onChange={(e) => setPosY(parseInt(e.target.value, 10))}
-                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
-              />
-            </div>
-
-            {/* Horizontal Position Slider */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-mono text-white/70">
-                <span className="flex items-center gap-1.5">
-                  <Move size={14} className="text-cyan-400" /> Yatay Odak (X-Ekseni)
-                </span>
-                <span className="text-cyan-300 font-semibold">{posX === 0 ? "Sol" : posX === 100 ? "Sağ" : `%${posX}`}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={posX}
-                onChange={(e) => setPosX(parseInt(e.target.value, 10))}
-                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
-            </div>
-          </div>
+          {/* Hidden canvas */}
+          <canvas ref={canvasRef} className="hidden" />
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between gap-3 mt-8 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-white/10 shrink-0">
             <button
-              onClick={() => {
-                setZoom(1);
-                setPosX(50);
-                setPosY(30);
-              }}
-              className="px-4 py-2.5 rounded-xl border border-white/15 text-white/60 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+              onClick={resetCrop}
+              className="px-3.5 py-2 rounded-xl border border-white/15 text-white/60 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw size={13} /> Sıfırla
             </button>
@@ -229,24 +371,23 @@ export default function ImageAdjustModal({
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-white/15 text-white/70 hover:text-white text-xs font-medium transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-white/15 text-white/60 hover:text-white text-xs font-medium transition-colors cursor-pointer"
               >
                 İptal
               </button>
-
               <button
-                onClick={handleSaveCropped}
+                onClick={handleSave}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-sans text-xs font-semibold shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-semibold shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Kırpılıyor & Kaydediliyor...
+                    Kırpılıyor...
                   </>
                 ) : (
                   <>
-                    <Check size={15} /> Kırp ve Kaydet
+                    <Scissors size={14} /> Kırp ve Kaydet
                   </>
                 )}
               </button>
