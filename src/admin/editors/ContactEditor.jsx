@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Trash2, Upload, Scissors } from "lucide-react";
 import { useContact } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
+import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
   EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
 } from "../components/AdminUI";
@@ -14,6 +15,13 @@ export default function ContactEditor() {
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [addingIdx, setAddingIdx] = useState(null);
+
+  // Image adjust modal state
+  const [adjustState, setAdjustState] = useState({
+    isOpen: false,
+    imageUrl: "",
+    targetIdx: null,
+  });
 
   useEffect(() => {
     if (data && !form) {
@@ -95,12 +103,39 @@ export default function ContactEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-5xl mx-auto">
+    <div className="space-y-7 max-w-5xl mx-auto text-white">
       <EditorHeader
         title="İletişim Sayfası"
         subtitle="Başlıklar, metinler ve arka planda rastgele değişen görseller"
         saveStatus={saveStatus}
         onSave={save}
+      />
+
+      {/* Image Adjust Modal */}
+      <ImageAdjustModal
+        isOpen={adjustState.isOpen}
+        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={adjustState.imageUrl}
+        title="İletişim Görseli Kırp & Büyüt"
+        onSave={(newUrl) => {
+          if (adjustState.targetIdx !== null) {
+            updateArtwork(adjustState.targetIdx, "image", newUrl);
+          }
+        }}
+      />
+
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          if (addingIdx !== null && e.target.files[0]) {
+            uploadImage(addingIdx, e.target.files[0]);
+          }
+          e.target.value = "";
+        }}
       />
 
       {/* Sayfa Metinleri */}
@@ -146,35 +181,53 @@ export default function ContactEditor() {
           <SectionTitle>Rastgele Arka Plan Görselleri (Contact Artworks)</SectionTitle>
           <button
             onClick={addArtwork}
-            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer"
           >
             <Plus size={13} /> Yeni Görsel Ekle
           </button>
         </div>
 
+        <p className="text-xs text-white/50 mb-4">
+          <strong className="text-white/80">"Görsel Yükle"</strong> ile yeni resim ekleyin, <strong className="text-white/80">çerçeveye tıklayarak</strong> görseli kırpın ve yakınlaştırın!
+        </p>
+
         <div className="space-y-4">
           {form.artworks.map((art, idx) => (
             <div
               key={art.id || idx}
-              className="bg-white/[0.03] border border-white/8 rounded-lg p-4 flex items-start gap-4"
+              className="bg-white/[0.03] border border-white/8 rounded-lg p-4 flex items-start gap-5"
             >
-              {/* Resim Yükle / Önizleme */}
-              <div className="shrink-0">
+              {/* Resim Yükle / Önizleme / Kırpma Çerçevesi */}
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
                 <div
-                  className="w-20 h-20 rounded-lg border-2 border-dashed border-white/15 hover:border-rose-500/50 cursor-pointer overflow-hidden flex items-center justify-center bg-white/[0.03] transition-colors relative"
+                  className="group/frame relative w-24 h-24 rounded-xl border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex items-center justify-center bg-white/[0.03] transition-all shadow-md"
                   onClick={() => {
-                    setAddingIdx(idx);
-                    fileInputRef.current?.click();
+                    if (art.image) {
+                      setAdjustState({ isOpen: true, imageUrl: art.image, targetIdx: idx });
+                    } else {
+                      setAddingIdx(idx);
+                      fileInputRef.current?.click();
+                    }
                   }}
+                  title="Görseli kırpmak ve büyütmek için çerçeveye tıklayın"
                 >
                   {art.image ? (
-                    <img
-                      src={art.image}
-                      alt={art.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <img
+                        src={art.image}
+                        alt={art.title}
+                        className="w-full h-full object-cover group-hover/frame:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-black/55 opacity-0 group-hover/frame:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-mono gap-1">
+                        <Scissors size={14} className="text-rose-400" />
+                        <span>Kırp & Büyüt</span>
+                      </div>
+                    </>
                   ) : (
-                    <Upload size={18} className="text-white/30" />
+                    <div className="flex flex-col items-center text-white/40">
+                      <Upload size={20} />
+                      <span className="text-[9px] mt-1">Görsel</span>
+                    </div>
                   )}
                   {uploading[idx] && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -182,7 +235,26 @@ export default function ContactEditor() {
                     </div>
                   )}
                 </div>
-                <p className="text-white/30 text-[10px] text-center mt-1">Tıkla & yükle</p>
+
+                {/* Yükle / Kırp Butonları */}
+                <div className="flex flex-col gap-1 items-center">
+                  <button
+                    type="button"
+                    onClick={() => { setAddingIdx(idx); fileInputRef.current?.click(); }}
+                    className="text-[10px] text-rose-300 hover:text-rose-200 bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded transition-colors cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <Upload size={10} /> Görsel Yükle
+                  </button>
+                  {art.image && (
+                    <button
+                      type="button"
+                      onClick={() => setAdjustState({ isOpen: true, imageUrl: art.image, targetIdx: idx })}
+                      className="text-[9px] text-white/50 hover:text-white transition-colors cursor-pointer"
+                    >
+                      ✂️ Kırp / Büyüt
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Detaylar */}
@@ -198,7 +270,7 @@ export default function ContactEditor() {
                   <TextInput
                     value={art.year}
                     onChange={(v) => updateArtwork(idx, "year", v)}
-                    placeholder="2024"
+                    placeholder="2026"
                   />
                 </Field>
                 <div className="col-span-2">
@@ -206,42 +278,23 @@ export default function ContactEditor() {
                     <TextInput
                       value={art.medium}
                       onChange={(v) => updateArtwork(idx, "medium", v)}
-                      placeholder="Yağlı Boya & Siber Desen"
+                      placeholder="Tuval üzerine akrilik ve dijital müdahale"
                     />
                   </Field>
                 </div>
               </div>
 
-              {/* Sil */}
               <button
                 onClick={() => removeArtwork(idx)}
-                className="text-white/20 hover:text-rose-400 transition-colors mt-1"
-                title="Sil"
+                className="text-white/20 hover:text-rose-400 p-2 transition-colors cursor-pointer"
+                title="Görseli Sil"
               >
-                <Trash2 size={16} />
+                <Trash2 size={18} />
               </button>
             </div>
           ))}
         </div>
       </Card>
-
-      {/* Gizli file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          if (addingIdx !== null && e.target.files[0]) {
-            uploadImage(addingIdx, e.target.files[0]);
-          }
-          e.target.value = "";
-        }}
-      />
-
-      <div className="flex justify-end">
-        <SaveButton status={saveStatus} onClick={save} />
-      </div>
     </div>
   );
 }
