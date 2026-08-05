@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, ExternalLink, Feather, BookOpen } from "lucide-react";
+import { ArrowUpRight, Feather, BookOpen, X, Sparkles, BookMarked } from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
 
@@ -8,7 +8,7 @@ const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
 
 const TABS = [
   { id: "medium", label: "Medium", icon: BookOpen },
-  { id: "personal", label: "Kendi Yazılarım", icon: Feather },
+  { id: "personal", label: "Yazılarım", icon: Feather },
 ];
 
 async function fetchWithTimeout(url, ms = 8000) {
@@ -39,7 +39,87 @@ async function loadMediumArticles() {
   return mediumWritingsFallback;
 }
 
-function ArticleList({ articles, ready, external = true }) {
+/** Pop-up Detay Modalı (Açılış & Kapanış Animasyonlu) */
+function WritingModal({ article, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "auto";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  if (!article) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+      {/* Arka Plan Karartması */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-black/70 backdrop-blur-md"
+        onClick={onClose}
+      />
+
+      {/* Pop-Up Penceresi */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 16 }}
+        transition={{ type: "spring", stiffness: 320, damping: 26 }}
+        className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-paper text-ink rounded-2xl p-6 md:p-10 shadow-2xl border border-ink/10 z-10 my-auto"
+      >
+        {/* Üst Bilgiler & Kapat Butonu */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {article.tag && (
+              <span className="font-mono text-xs uppercase tracking-wider px-3 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
+                {article.tag}
+              </span>
+            )}
+            {article.date && (
+              <span className="font-mono text-xs text-ink/50">
+                {article.date}
+              </span>
+            )}
+            {article.readTime && (
+              <span className="font-mono text-xs text-ink/50">
+                • {article.readTime} okuma
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
+            aria-label="Kapat"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Yazı Başlığı */}
+        <h2 className="font-display text-2xl md:text-4xl text-ink leading-snug tracking-tight mb-6">
+          {article.title}
+        </h2>
+
+        {/* Yazı İçeriği */}
+        <div className="text-ink/80 font-sans text-base md:text-lg leading-relaxed whitespace-pre-line space-y-4 border-t border-ink/10 pt-6">
+          {article.content || article.excerpt}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function ArticleList({ articles, external = true, onSelectArticle }) {
   if (articles.length === 0) {
     return (
       <p className="py-12 text-center font-sans text-sm text-ink/50">
@@ -52,7 +132,7 @@ function ArticleList({ articles, ready, external = true }) {
     <div className="flex flex-col divide-y divide-ink/10 border-t border-b border-ink/10">
       {articles.map((w, i) => {
         const className =
-          "group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start hover:bg-ink/[0.02] -mx-2 px-2 rounded-lg transition-colors";
+          "group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start hover:bg-ink/[0.02] -mx-2 px-2 rounded-lg transition-colors cursor-pointer";
 
         const content = (
           <>
@@ -82,11 +162,15 @@ function ArticleList({ articles, ready, external = true }) {
                   {w.readTime}
                 </span>
               )}
-              {external && (
+              {external ? (
                 <ArrowUpRight
                   size={18}
                   className="text-ink/40 group-hover:text-ink group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
                 />
+              ) : (
+                <span className="font-sans text-xs text-amber-700 dark:text-amber-300 font-medium group-hover:underline flex items-center gap-1">
+                  Oku <BookMarked size={14} />
+                </span>
               )}
             </div>
           </>
@@ -112,6 +196,7 @@ function ArticleList({ articles, ready, external = true }) {
         return (
           <motion.article
             key={w.id || i}
+            onClick={() => onSelectArticle && onSelectArticle(w)}
             className={className}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,6 +218,7 @@ export default function Writings() {
   const [activeTab, setActiveTab] = useState("medium");
   const [mediumArticles, setMediumArticles] = useState(mediumWritingsFallback);
   const [mediumReady, setMediumReady] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -256,23 +342,32 @@ export default function Writings() {
             >
               <div className="mb-6">
                 <h3 className="font-display text-xl md:text-2xl text-ink">
-                  Kendi yazılarım
+                  Yazılarım
                 </h3>
                 <p className="mt-1 font-sans text-sm text-ink/55">
-                  Atölyeden, defterden — Medium dışında kalan kişisel notlar ve
-                  düşünceler.
+                  Atölyeden, defterden — Medium dışında kalan kişisel notlar ve düşünceler. Yazılara tıklayarak detayını okuyabilirsiniz.
                 </p>
               </div>
 
               <ArticleList
                 articles={personalWritings}
-                ready
                 external={false}
+                onSelectArticle={(article) => setSelectedArticle(article)}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pop-Up Yazı Detayı Modalı */}
+      <AnimatePresence>
+        {selectedArticle && (
+          <WritingModal
+            article={selectedArticle}
+            onClose={() => setSelectedArticle(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

@@ -15,7 +15,7 @@ import ContactEditor from "./editors/ContactEditor";
 const NAV_ITEMS = [
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
-  { id: "writings", label: "Kişisel Yazılar", icon: BookOpen },
+  { id: "writings", label: "Yazılarım", icon: BookOpen },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },
   { id: "cv", label: "CV Yönetimi", icon: FileText },
