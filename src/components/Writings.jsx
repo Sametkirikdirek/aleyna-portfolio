@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, Feather, BookOpen, X, Sparkles, BookMarked } from "lucide-react";
+import { ArrowUpRight, Feather, BookOpen, X, Sparkles, BookMarked, ExternalLink } from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
 
