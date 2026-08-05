@@ -6,6 +6,7 @@
 
 export const profile = {
   name: "Aleyna Altunsu",
+  avatar: "/artworks/aleyna_avatar.png",
   roles: ["Yapay Zeka Mühendisi", "Ressam", "Yazar"],
   tagline: "Fırçayla başlayan çizgi, kodda devam ediyor.",
   bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı sanatsal üretim sürecinin iki tamamlayıcı yüzü olarak görüyorum — biri duyguyu ve kavramı yakalar, diğeri onu yaşayan sistemlere dönüştürür.`,
