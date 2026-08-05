@@ -93,49 +93,59 @@ export default function Hero() {
         <div className="grid lg:grid-cols-[1fr_0.9fr] gap-10 lg:gap-12 items-center">
           {/* Sol Taraf: Metinler & Butonlar (Sola Hizalı) */}
           <div className="flex flex-col items-start gap-7 text-left">
-            {/* Roles pill row */}
-            <motion.div {...fadeUp(0)} className="flex flex-wrap gap-2">
-              {profile.roles.map((role, idx) => {
-                const activeStyle = roleColorStyles[idx % roleColorStyles.length];
-                return (
-                  <span
-                    key={role}
-                    className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-1000 ease-in-out backdrop-blur-sm ${
-                      isColorActive
-                        ? `${activeStyle.activeBorder} ${activeStyle.activeText} ${activeStyle.activeBg} ${activeStyle.activeShadow}`
-                        : "border-paper/15 bg-paper/[0.04] text-paper/70"
-                    }`}
-                  >
-                    {role}
-                  </span>
-                );
-              })}
-            </motion.div>
+            {/* Name & Roles Container with Overlapping Portrait Capsule */}
+            <div className="relative w-full">
+              {/* Roles pill row */}
+              <motion.div {...fadeUp(0)} className="flex flex-wrap gap-2 mb-3 relative z-10">
+                {profile.roles.map((role, idx) => {
+                  const activeStyle = roleColorStyles[idx % roleColorStyles.length];
+                  return (
+                    <span
+                      key={role}
+                      className={`px-3.5 py-1.5 rounded-full border font-mono text-[11px] tracking-[0.15em] uppercase transition-all duration-1000 ease-in-out backdrop-blur-sm ${
+                        isColorActive
+                          ? `${activeStyle.activeBorder} ${activeStyle.activeText} ${activeStyle.activeBg} ${activeStyle.activeShadow}`
+                          : "border-paper/15 bg-paper/[0.04] text-paper/70"
+                      }`}
+                    >
+                      {role}
+                    </span>
+                  );
+                })}
+              </motion.div>
 
-            {/* Profile Avatar Capsule & Name */}
-            <motion.div {...fadeUp(0.12)} className="flex flex-col items-start gap-4">
-              {profile.avatar && (
-                <div className="group relative cursor-pointer">
-                  <div className="w-[58px] h-[92px] sm:w-[72px] sm:h-[115px] lg:w-[82px] lg:h-[130px] rounded-full overflow-hidden border-2 border-white/20 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-rose-400/80 group-hover:shadow-[0_0_30px_rgba(244,63,94,0.4)]">
-                    <img
-                      src={profile.avatar}
-                      alt={profile.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <h1
-                className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out ${
+              {/* Name Title */}
+              <motion.h1
+                {...fadeUp(0.12)}
+                className={`font-display text-[clamp(2.6rem,7vw,5.5rem)] leading-[0.95] tracking-tight transition-all duration-1000 ease-in-out relative z-10 ${
                   isColorActive
                     ? "text-gradient-animated drop-shadow-[0_0_30px_rgba(230,197,148,0.25)]"
                     : "text-paper"
                 }`}
               >
                 {profile.name}
-              </h1>
-            </motion.div>
+              </motion.h1>
+
+              {/* Floating Overlapping Portrait Capsule Avatar */}
+              {profile.avatar && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="absolute -top-4 left-[9rem] sm:left-[13rem] lg:left-[15rem] z-20 pointer-events-auto"
+                >
+                  <div className="group relative cursor-pointer">
+                    <div className="w-[70px] h-[115px] sm:w-[95px] sm:h-[155px] lg:w-[125px] lg:h-[205px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink">
+                      <img
+                        src={profile.avatar}
+                        alt={profile.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
             {/* Tagline */}
             <motion.p
