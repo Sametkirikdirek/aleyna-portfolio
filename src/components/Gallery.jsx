@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Maximize2, ChevronLeft, ChevronRight, Palette,
-  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar, Heart
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar, Heart, Trophy
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
@@ -68,6 +68,130 @@ function CanvasIcon({ className = "w-5 h-5", ...props }) {
       <path d="M7 8c2-2 4 1 6-1s4 1 4 1" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
       <circle cx="15" cy="7" r="1" fill="#fb7185" />
     </svg>
+  );
+}
+
+// ─── 3D Spotlight Showcase Carousel (Atölyenin Enleri) ─────────
+function SpotlightCarousel({ artworks = [], onSelect }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  if (!artworks || artworks.length === 0) return null;
+
+  const current = artworks[activeIdx] || artworks[0];
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
+      {/* Ambient Glow Orbs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
+
+      {/* Header Info */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[11px] tracking-wider uppercase mb-2">
+            <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
+          </div>
+          <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
+            Öne Çıkan En İyiler <span className="text-brush-soft text-sm md:text-base font-mono font-normal">({artworks.length} Eser)</span>
+          </h3>
+          <p className="font-sans text-xs sm:text-sm text-paper/60 mt-1 max-w-xl">
+            Sanatseverlerin ve ziyaretçilerin kalbine dokunan ikonik atölye serileri.
+          </p>
+        </div>
+
+        {/* Carousel Prev/Next Controls */}
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => setActiveIdx((prev) => (prev - 1 + artworks.length) % artworks.length)}
+            className="p-2.5 rounded-full bg-paper/10 hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            aria-label="Önceki Eser"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <span className="font-mono text-xs text-paper/50 px-2">
+            {activeIdx + 1} / {artworks.length}
+          </span>
+          <button
+            onClick={() => setActiveIdx((prev) => (prev + 1) % artworks.length)}
+            className="p-2.5 rounded-full bg-paper/10 hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            aria-label="Sonraki Eser"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* 3D Spotlight Cards Row */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        {/* Active Hero Spotlight Image */}
+        <motion.div
+          key={current.id || activeIdx}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          onClick={() => onSelect(current)}
+          className="md:col-span-7 group relative rounded-2xl overflow-hidden bg-ink border border-paper/15 cursor-pointer shadow-2xl aspect-[4/3] sm:aspect-[16/10]"
+        >
+          {current.image ? (
+            <img
+              src={current.image}
+              alt={current.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : (
+            <PaintingCanvas seed={current.seed} palette={current.palette} className="w-full h-full" />
+          )}
+
+          {/* Badge */}
+          <div className="absolute top-4 left-4 z-10">
+            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-amber-500/90 text-ink shadow-lg flex items-center gap-1.5">
+              <Trophy size={12} /> En Çok Beğenilen Eser
+            </span>
+          </div>
+
+          {/* Overlay info */}
+          <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink via-ink/80 to-transparent">
+            <h4 className="font-display text-xl sm:text-2xl text-paper font-bold group-hover:text-amber-300 transition-colors">
+              {current.title}
+            </h4>
+            <p className="font-mono text-xs text-paper/60 mt-1">
+              {current.medium} · {current.year}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Thumbnail Selector Cards */}
+        <div className="md:col-span-5 flex md:flex-col gap-3 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+          {artworks.map((item, idx) => (
+            <button
+              key={item.id || idx}
+              onClick={() => setActiveIdx(idx)}
+              className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer shrink-0 w-44 md:w-full ${
+                activeIdx === idx
+                  ? "bg-amber-500/15 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)] scale-[1.02]"
+                  : "bg-paper/5 border-paper/10 hover:bg-paper/10 hover:border-paper/25 opacity-70 hover:opacity-100"
+              }`}
+            >
+              <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
+                {item.image ? (
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                ) : (
+                  <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h5 className="font-display text-xs text-paper font-semibold truncate">
+                  {item.title}
+                </h5>
+                <p className="font-mono text-[10px] text-paper/50 truncate mt-0.5">
+                  {item.medium}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -206,6 +330,12 @@ export default function Gallery() {
     return ["Tümü", ...Array.from(meds)];
   }, [artworks]);
 
+  // Compute "Enler" Top Artworks for Spotlight Carousel
+  const topEnlerArtworks = useMemo(() => {
+    if (!items || items.length === 0) return [];
+    return [...items].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+  }, [items]);
+
   // Compute Monthly Showcase Artworks dynamically from Admin featured or Top Liked
   const monthlyArtworks = useMemo(() => {
     if (!items || items.length === 0) return [];
@@ -222,7 +352,7 @@ export default function Gallery() {
     return [...featured, ...remaining].slice(0, 4);
   }, [items]);
 
-  // Filter & Sort Pipeline
+  // Filter & Sort Pipeline for Main Pinterest Grid (Contains ALL artworks)
   const processedItems = useMemo(() => {
     let list = [...items];
 
@@ -516,7 +646,21 @@ export default function Gallery() {
           </AnimatePresence>
         </header>
 
-        {/* ─── AYIN TUVALLERİ / ATÖLYE HASADI & ZİYARETÇİ FAVORİLERİ ─── */}
+        {/* ─── OPTION 1: "ENLER & ÖNE ÇIKAN ESERLER" SPOTLIGHT CAROUSEL ─── */}
+        {activeTab === "galeri" && topEnlerArtworks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <SpotlightCarousel
+              artworks={topEnlerArtworks}
+              onSelect={(item) => setLightboxCustomItem(item)}
+            />
+          </motion.div>
+        )}
+
+        {/* ─── OPTION 3: AYIN TUVALLERİ / ATÖLYE HASADI ─── */}
         {activeTab === "galeri" && monthlyArtworks.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -549,7 +693,7 @@ export default function Gallery() {
               </div>
             </div>
 
-            {/* 4 Cards Grid (Clean preview, no like button here) */}
+            {/* 4 Cards Grid (Clean preview, no duplicate heart button) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
               {monthlyArtworks.map((item) => (
                 <motion.div
@@ -600,7 +744,7 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* ─── Pinterest Masonry Grid ─── */}
+        {/* ─── PINTEREST MASONRY GRID (CONTAINS ALL ARTWORKS INCLUDING GENERATED HARVEST PAINTINGS) ─── */}
         <div
           className="pinterest-grid"
           style={{
