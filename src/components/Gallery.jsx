@@ -2,51 +2,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Maximize2, ChevronLeft, ChevronRight, Palette,
-  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar, Heart
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
+import { setContent } from "../lib/firestore";
 import InfiniteGallery from "./ui/infinite-gallery";
-
-// ─── Monthly Harvest (Ağustos Atölye Hasadı) ────────────────
-const monthlyHarvestArtworks = [
-  {
-    id: "hasat-1",
-    title: "Ağustos Rüzgarı",
-    image: "/gallery/aylik_hasat_1.png",
-    medium: "Yağlı Boya & Altın Varak",
-    year: "2026",
-    size: "80x100 cm",
-    note: "Sıcak kırmızılar, altın varak detayları ve tuval üzerinde derin dokulu fırça darbeleriyle Ağustos ayının ilk atölye çalışması.",
-  },
-  {
-    id: "hasat-2",
-    title: "Gece Bahçesi",
-    image: "/gallery/aylik_hasat_2.png",
-    medium: "Karışık Teknik & Spatula",
-    year: "2026",
-    size: "70x120 cm",
-    note: "Zümrüt yeşili ve kobalt mavisi katmanların altın dokularla buluştuğu dikey kompozisyonlu yeni dönem çalışması.",
-  },
-  {
-    id: "hasat-3",
-    title: "Işık Teorisi",
-    image: "/gallery/aylik_hasat_3.png",
-    medium: "Akrilik & Pigment Dokusu",
-    year: "2026",
-    size: "90x90 cm",
-    note: "Yumuşak mercan tonları, ışıldayan siyan hatlar ve modern galeri estetiğini yansıtan tuval üzeri akrilik.",
-  },
-  {
-    id: "hasat-4",
-    title: "Toprak ve Altın",
-    image: "/gallery/aylik_hasat_4.png",
-    medium: "Ahşap Üzeri Yağlı Boya & Bronz",
-    year: "2026",
-    size: "100x100 cm",
-    note: "Kehribar tonları, bronz yaldız ve kömür kalemi darbelerinin ahşap panel üzerinde birleştiği müze kalitesinde eser.",
-  },
-];
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -66,7 +27,6 @@ function PortalIcon({ className = "w-5 h-5", ...props }) {
         </linearGradient>
       </defs>
 
-      {/* Spiral Arms */}
       <path
         d="M50 15 C 72 15, 86 30, 86 50 C 86 72, 72 86, 50 86 C 28 86, 14 72, 14 50 C 14 34, 26 20, 42 17 C 58 14, 73 26, 73 44 C 73 60, 59 73, 43 73 C 28 73, 21 59, 26 44 C 30 30, 45 26, 57 33 C 65 37, 64 49, 54 55 C 44 61, 36 51, 44 43"
         stroke="url(#portalGrad)"
@@ -83,7 +43,6 @@ function PortalIcon({ className = "w-5 h-5", ...props }) {
         opacity="0.9"
       />
 
-      {/* Four 4-Point Gold Stars around the Portal (Matching User Reference) */}
       <path d="M 22 14 Q 22 20 16 20 Q 22 20 22 26 Q 22 20 28 20 Q 22 20 22 14 Z" fill="#ffd166" />
       <path d="M 82 22 Q 82 28 76 28 Q 82 28 82 34 Q 82 28 88 28 Q 82 28 82 22 Z" fill="#ffd166" />
       <path d="M 75 77 Q 75 83 69 83 Q 75 83 75 89 Q 75 83 81 83 Q 75 83 75 77 Z" fill="#ffd166" />
@@ -181,6 +140,16 @@ export default function Gallery() {
   const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
   const [items, setItems] = useState([]);
 
+  // Local Storage Visitor Likes Tracker
+  const [userLikes, setUserLikes] = useState(() => {
+    try {
+      const saved = localStorage.getItem("user_liked_artworks");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Accordion Filter State
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Tümü");
@@ -194,10 +163,66 @@ export default function Gallery() {
     }
   }, [artworks]);
 
+  // Visitor Like Action
+  const toggleLike = useCallback((artId, e) => {
+    if (e) e.stopPropagation();
+
+    setUserLikes((prev) => {
+      const isLiked = prev.includes(artId);
+      const nextLikes = isLiked ? prev.filter((id) => id !== artId) : [...prev, artId];
+      try {
+        localStorage.setItem("user_liked_artworks", JSON.stringify(nextLikes));
+      } catch (err) {
+        console.warn("Likes cache save error:", err);
+      }
+
+      setItems((prevItems) => {
+        const updated = prevItems.map((item) => {
+          if (item.id === artId) {
+            const currentCount = item.likes || 0;
+            return {
+              ...item,
+              likes: isLiked ? Math.max(0, currentCount - 1) : currentCount + 1,
+            };
+          }
+          return item;
+        });
+
+        // Sync back to cache & Firestore
+        try {
+          localStorage.setItem("portfolio_cache_gallery", JSON.stringify({ artworks: updated }));
+          setContent("gallery", { artworks: updated }).catch(() => {});
+        } catch {}
+
+        return updated;
+      });
+
+      return nextLikes;
+    });
+  }, []);
+
   const categories = useMemo(() => {
     const meds = new Set(artworks.map((a) => a.medium).filter(Boolean));
     return ["Tümü", ...Array.from(meds)];
   }, [artworks]);
+
+  // Compute Monthly Showcase Artworks dynamically from Admin featured or Top Liked
+  const monthlyArtworks = useMemo(() => {
+    if (!items || items.length === 0) return [];
+    
+    // Explicitly featured by Admin
+    const featured = items.filter((item) => item.featuredInMonthly);
+    if (featured.length >= 4) {
+      return featured.slice(0, 4);
+    }
+    
+    // Fill remaining slots with top most-liked artworks
+    const remaining = [...items]
+      .filter((item) => !featured.some((f) => f.id === item.id))
+      .sort((a, b) => (b.likes || 0) - (a.likes || 0));
+
+    return [...featured, ...remaining].slice(0, 4);
+  }, [items]);
 
   // Filter & Sort Pipeline
   const processedItems = useMemo(() => {
@@ -222,6 +247,8 @@ export default function Gallery() {
       list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     } else if (sortBy === "oldest") {
       list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
+    } else if (sortBy === "likes") {
+      list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
     }
 
     return list;
@@ -327,7 +354,7 @@ export default function Gallery() {
             >
               <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
                 Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
-                Ok tuşlarıyla eserler arasında gezinin.
+                Kalp ikonuna dokunarak favorilerinize ekleyin.
               </p>
 
               <div className="flex items-center gap-3">
@@ -344,7 +371,6 @@ export default function Gallery() {
                   >
                     <CanvasIcon className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" />
                   </button>
-                  {/* Tooltip */}
                   <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap bg-ink-soft/95 text-paper text-[11px] font-mono px-2.5 py-1 rounded-md border border-paper/15 shadow-lg z-30">
                     Galeri (Tuval Seçkileri)
                   </div>
@@ -363,7 +389,6 @@ export default function Gallery() {
                   >
                     <PortalIcon className="w-5 h-5 animate-[spin_10s_linear_infinite] group-hover:animate-[spin_2.5s_linear_infinite] transition-transform" />
                   </button>
-                  {/* Tooltip */}
                   <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap bg-ink-soft/95 text-paper text-[11px] font-mono px-2.5 py-1 rounded-md border border-paper/15 shadow-lg z-30">
                     Zaman Yolculuğu
                   </div>
@@ -429,6 +454,7 @@ export default function Gallery() {
                       <div className="flex flex-wrap gap-1.5 flex-1">
                         {[
                           { id: "default", label: "Varsayılan" },
+                          { id: "likes", label: "❤️ En Çok Beğenilen" },
                           { id: "newest", label: "Yeniye Göre" },
                           { id: "oldest", label: "Eskiye Göre" },
                         ].map((s) => (
@@ -493,8 +519,8 @@ export default function Gallery() {
           </AnimatePresence>
         </header>
 
-        {/* ─── AĞUSTOS ATÖLYE HASADI / AYIN TUVAL GÜNLÜĞÜ (Option 3) ─── */}
-        {activeTab === "galeri" && (
+        {/* ─── AYIN TUVALLERİ / ATÖLYE HASADI & ZİYARETÇİ FAVORİLERİ ─── */}
+        {activeTab === "galeri" && monthlyArtworks.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -509,65 +535,87 @@ export default function Gallery() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-mono text-[11px] tracking-wider uppercase mb-2">
-                  <Calendar size={12} /> AĞUSTOS 2026 HASADI · ATÖLYEDEN YENİ ÇIKTI
+                  <Calendar size={12} /> AYIN TUVALLERİ · ZİYARETÇİ FAVORİLERİ
                 </div>
                 <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
-                  Ayın Tuval Günlüğü <span className="text-brush-soft text-sm md:text-base font-mono font-normal">(/4 Yeni Eser)</span>
+                  Ayın Tuval Günlüğü <span className="text-brush-soft text-sm md:text-base font-mono font-normal">({monthlyArtworks.length} Seçkisi)</span>
                 </h3>
                 <p className="font-sans text-xs sm:text-sm text-paper/60 mt-1 max-w-xl">
-                  Bu ay atölyede tamamlanan taze çalışmalar ve ilk kez sergilenen seçkiler.
+                  En çok beğeni toplayan ziyaretçi favorileri ve atölyede bu ay öne çıkarılan tuvaller.
                 </p>
               </div>
 
               <div className="shrink-0 flex items-center gap-2">
-                <span className="font-mono text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20">
-                  🔥 Son Güncelleme: Ağustos 2026
+                <span className="font-mono text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20 flex items-center gap-1.5">
+                  <Heart size={13} className="fill-rose-400 text-rose-400" /> Beğenilere Göre Güncellenir
                 </span>
               </div>
             </div>
 
             {/* 4 Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
-              {monthlyHarvestArtworks.map((item) => (
-                <motion.div
-                  key={item.id}
-                  whileHover={{ y: -6 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={() => setLightboxCustomItem(item)}
-                  className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
-                >
-                  {/* Image */}
-                  <div className="aspect-[4/5] w-full overflow-hidden relative">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    {/* New Badge */}
-                    <div className="absolute top-3 right-3 z-10">
-                      <span className="font-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-full backdrop-blur-md bg-rose-600/90 text-white shadow-md">
-                        Taze Hasat
-                      </span>
-                    </div>
-                    {/* Zoom Icon */}
-                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
-                        <Maximize2 size={13} />
-                      </span>
-                    </div>
-                  </div>
+              {monthlyArtworks.map((item) => {
+                const isLiked = userLikes.includes(item.id);
+                return (
+                  <motion.div
+                    key={item.id}
+                    whileHover={{ y: -6 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() => setLightboxCustomItem(item)}
+                    className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
+                  >
+                    {/* Image */}
+                    <div className="aspect-[4/5] w-full overflow-hidden relative">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                      ) : (
+                        <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
+                      )}
 
-                  {/* Details */}
-                  <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
-                    <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
-                      {item.title}
-                    </h4>
-                    <p className="font-mono text-[11px] text-paper/50 mt-0.5 truncate">
-                      {item.medium}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+                      {/* Heart / Like Button */}
+                      <button
+                        onClick={(e) => toggleLike(item.id, e)}
+                        className={`absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
+                          isLiked
+                            ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)] scale-105"
+                            : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40"
+                        }`}
+                        title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
+                      >
+                        <Heart size={12} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
+                        <span className="font-mono text-[10px] font-bold">{item.likes || 0}</span>
+                      </button>
+
+                      {/* Zoom Icon */}
+                      <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
+                          <Maximize2 size={13} />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
+                      <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
+                        {item.title || "İsimsiz Eser"}
+                      </h4>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="font-mono text-[11px] text-paper/50 truncate">
+                          {item.medium || "Tuval Çalışması"}
+                        </p>
+                        <span className="font-mono text-[10px] text-rose-400/80 shrink-0">
+                          {item.year}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -594,79 +642,94 @@ export default function Gallery() {
           `}</style>
 
           <AnimatePresence mode="popLayout">
-            {processedItems.map((p, i) => (
-              <motion.div
-                key={p.id || i}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
-                className="break-inside-avoid mb-4 md:mb-5"
-              >
-                <TiltCard
-                  className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
-                  onClick={() => setActiveIdx(i)}
+            {processedItems.map((p, i) => {
+              const isLiked = userLikes.includes(p.id);
+              return (
+                <motion.div
+                  key={p.id || i}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
+                  className="break-inside-avoid mb-4 md:mb-5"
                 >
-                  {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
-                  {p.image ? (
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      loading="lazy"
-                      className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
-                      onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    />
-                  ) : (
-                    <div className="aspect-[4/5] w-full">
-                      <PaintingCanvas
-                        seed={p.seed}
-                        palette={p.palette}
-                        className="w-full h-full"
+                  <TiltCard
+                    className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
+                    onClick={() => setActiveIdx(i)}
+                  >
+                    {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        loading="lazy"
+                        className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="aspect-[4/5] w-full">
+                        <PaintingCanvas
+                          seed={p.seed}
+                          palette={p.palette}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
 
-                  {/* Yıl Rozeti */}
-                  {p.year && (
-                    <div className="absolute top-3 right-3 z-10">
-                      <span className="font-mono text-[11px] px-2.5 py-1 rounded-full backdrop-blur-md bg-ink/70 text-brush-soft border border-paper/12 shadow-sm">
-                        {p.year}
+                    {/* Heart / Like Button */}
+                    <button
+                      onClick={(e) => toggleLike(p.id, e)}
+                      className={`absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
+                        isLiked
+                          ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)] scale-105"
+                          : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40"
+                      }`}
+                      title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
+                    >
+                      <Heart size={12} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
+                      <span className="font-mono text-[10px] font-bold">{p.likes || 0}</span>
+                    </button>
+
+                    {/* Büyüt İkonu */}
+                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
+                        <Maximize2 size={13} />
                       </span>
                     </div>
-                  )}
 
-                  {/* Büyüt İkonu */}
-                  <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
-                      <Maximize2 size={13} />
-                    </span>
-                  </div>
+                    {/* Animasyonlu Çerçeve Glow */}
+                    <div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
+                      style={{
+                        boxShadow: "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
+                      }}
+                    />
 
-                  {/* Animasyonlu Çerçeve Glow */}
-                  <div
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
-                    style={{
-                      boxShadow: "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
-                    }}
-                  />
-
-                  {/* Alt Bilgi Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
-                    <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90">
-                      <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
-                        {p.title || "İsimsiz Eser"}
-                      </h3>
-                      {p.medium && (
-                        <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
-                          {p.medium}
-                        </p>
-                      )}
+                    {/* Alt Bilgi Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
+                      <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90 flex items-center justify-between">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
+                            {p.title || "İsimsiz Eser"}
+                          </h3>
+                          {p.medium && (
+                            <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
+                              {p.medium}
+                            </p>
+                          )}
+                        </div>
+                        {p.year && (
+                          <span className="font-mono text-[10px] text-paper/40 shrink-0">
+                            {p.year}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            ))}
+                  </TiltCard>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
@@ -691,7 +754,7 @@ export default function Gallery() {
         )}
       </div>
 
-      {/* ─── Full-Screen Cinematic Zaman Yolculuğu Overlay (Original 100vw/100vh 3D Wheel) ─── */}
+      {/* ─── Full-Screen Cinematic Zaman Yolculuğu Overlay ─── */}
       <AnimatePresence>
         {activeTab === "zaman-yolculugu" && (
           <motion.div
@@ -879,16 +942,24 @@ export default function Gallery() {
                   <div className="flex-1 min-w-0">
                     <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft mb-2 flex items-center gap-2">
                       <span>{active.year}</span> · <span>Seçki</span>
-                      {lightboxCustomItem && (
-                        <span className="bg-rose-600/90 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
-                          Ağustos Hasadı
-                        </span>
-                      )}
                     </p>
                     <h3 className="font-display text-xl md:text-2xl text-paper font-bold leading-tight">
                       {active.title || "İsimsiz Eser"}
                     </h3>
                   </div>
+
+                  {/* Lightbox Heart Like Button */}
+                  <button
+                    onClick={(e) => toggleLike(active.id, e)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shrink-0 ${
+                      userLikes.includes(active.id)
+                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]"
+                        : "bg-paper/10 text-paper/80 border-paper/15 hover:text-rose-400 hover:border-rose-500/40"
+                    }`}
+                  >
+                    <Heart size={14} className={userLikes.includes(active.id) ? "fill-white text-white" : "text-rose-400"} />
+                    <span className="font-mono text-xs font-bold">{active.likes || 0} Beğeni</span>
+                  </button>
                 </div>
 
                 {active.note && (
