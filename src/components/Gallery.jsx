@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
+import { paintings as defaultPaintings } from "../data/content";
 import { setContent } from "../lib/firestore";
 import InfiniteGallery from "./ui/infinite-gallery";
 
@@ -81,7 +82,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
 
   return (
     <div className="relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
-      {/* Ambient Glow Orbs */}
+      {/* Ambient Orbs */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
 
@@ -264,6 +265,17 @@ export default function Gallery() {
   const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
   const [items, setItems] = useState([]);
 
+  // Merge cached/Firestore artworks with defaultPaintings so new default items (hasat-1..4) are never lost due to old browser localStorage cache
+  const mergedArtworks = useMemo(() => {
+    if (!artworks || artworks.length === 0) return defaultPaintings;
+    const existingIds = new Set(artworks.map((a) => a.id || a.title));
+    const missingDefaults = defaultPaintings.filter(
+      (p) => !existingIds.has(p.id) && !existingIds.has(p.title)
+    );
+    if (missingDefaults.length === 0) return artworks;
+    return [...missingDefaults, ...artworks];
+  }, [artworks]);
+
   // Local Storage Visitor Likes Tracker
   const [userLikes, setUserLikes] = useState(() => {
     try {
@@ -280,12 +292,12 @@ export default function Gallery() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
 
-  // Sync items state whenever Firestore/localStorage artworks updates
+  // Sync items state whenever mergedArtworks updates
   useEffect(() => {
-    if (artworks && artworks.length > 0) {
-      setItems(artworks);
+    if (mergedArtworks && mergedArtworks.length > 0) {
+      setItems(mergedArtworks);
     }
-  }, [artworks]);
+  }, [mergedArtworks]);
 
   // Visitor Like Action (Stores like state persistently)
   const toggleLike = useCallback((artId, e) => {
@@ -326,9 +338,9 @@ export default function Gallery() {
   }, []);
 
   const categories = useMemo(() => {
-    const meds = new Set(artworks.map((a) => a.medium).filter(Boolean));
+    const meds = new Set(mergedArtworks.map((a) => a.medium).filter(Boolean));
     return ["Tümü", ...Array.from(meds)];
-  }, [artworks]);
+  }, [mergedArtworks]);
 
   // Compute "Enler" Top Artworks for Spotlight Carousel
   const topEnlerArtworks = useMemo(() => {
@@ -352,7 +364,7 @@ export default function Gallery() {
     return [...featured, ...remaining].slice(0, 4);
   }, [items]);
 
-  // Filter & Sort Pipeline for Main Pinterest Grid (Contains ALL artworks)
+  // Filter & Sort Pipeline for Main Pinterest Grid (Contains ALL artworks including generated harvest paintings)
   const processedItems = useMemo(() => {
     let list = [...items];
 
@@ -693,7 +705,7 @@ export default function Gallery() {
               </div>
             </div>
 
-            {/* 4 Cards Grid (Clean preview, no duplicate heart button) */}
+            {/* 4 Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
               {monthlyArtworks.map((item) => (
                 <motion.div
