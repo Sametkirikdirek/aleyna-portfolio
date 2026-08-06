@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Maximize2, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import {
+  X, RefreshCw, Maximize2, ChevronLeft, ChevronRight, Sparkles,
+  Filter, Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar
+} from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery } from "../hooks/useContent";
 
@@ -52,7 +55,7 @@ function TiltCard({ children, className = "", onClick, style }) {
         willChange: "transform",
       }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => { handleMouseLeave(); }}
+      onMouseLeave={handleMouseLeave}
       onMouseEnter={() => setIsHovering(true)}
       onClick={onClick}
     >
@@ -70,40 +73,24 @@ function TiltCard({ children, className = "", onClick, style }) {
   );
 }
 
-// ─── Filtre Sekmeleri ───────────────────────────────────────
-function FilterTabs({ categories, active, onChange }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {categories.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => onChange(cat)}
-          className={`
-            font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
-            ${active === cat
-              ? "bg-brush-soft/20 text-brush-soft border-brush-soft/50 shadow-[0_0_14px_rgba(217,112,79,0.2)]"
-              : "bg-paper/5 text-paper/60 border-paper/12 hover:text-paper hover:border-paper/30 hover:bg-paper/8"
-            }
-          `}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // ─── Ana Galeri ─────────────────────────────────────────────
 export default function Gallery() {
   const { data: galleryData } = useGallery();
   const artworks = galleryData?.artworks || [];
+
   const [activeIdx, setActiveIdx] = useState(null);
   const [items, setItems] = useState([]);
-  const [activeFilter, setActiveFilter] = useState("Tümü");
 
+  // Accordion Filter State
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("Tümü");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("default"); // "default" | "newest" | "oldest" | "random"
+
+  // Sync state whenever Firestore/localStorage updates (Fixes Admin update sync bug)
   useEffect(() => {
-    if (artworks.length > 0 && items.length === 0) {
-      setItems(shuffleArray(artworks));
+    if (artworks && artworks.length > 0) {
+      setItems(artworks);
     }
   }, [artworks]);
 
@@ -112,23 +99,54 @@ export default function Gallery() {
     return ["Tümü", ...Array.from(meds)];
   }, [artworks]);
 
-  const filteredItems = useMemo(() => {
-    if (activeFilter === "Tümü") return items;
-    return items.filter((item) => item.medium === activeFilter);
-  }, [items, activeFilter]);
+  // Filter & Sort Pipeline
+  const processedItems = useMemo(() => {
+    let list = [...items];
 
-  const handleShuffle = () => setItems(shuffleArray(artworks));
+    // 1. Technique Filter
+    if (activeFilter !== "Tümü") {
+      list = list.filter((item) => item.medium === activeFilter);
+    }
 
-  const active = activeIdx !== null ? filteredItems[activeIdx] : null;
+    // 2. Search Query
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (item) =>
+          (item.title && item.title.toLowerCase().includes(q)) ||
+          (item.medium && item.medium.toLowerCase().includes(q)) ||
+          (item.year && item.year.toString().includes(q)) ||
+          (item.note && item.note.toLowerCase().includes(q))
+      );
+    }
+
+    // 3. Sorting
+    if (sortBy === "newest") {
+      list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
+    } else if (sortBy === "oldest") {
+      list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
+    } else if (sortBy === "random") {
+      list = shuffleArray(list);
+    }
+
+    return list;
+  }, [items, activeFilter, searchQuery, sortBy]);
+
+  const handleShuffle = () => {
+    setSortBy("random");
+    setItems((prev) => shuffleArray(prev));
+  };
+
+  const active = activeIdx !== null ? processedItems[activeIdx] : null;
 
   const goNext = () => {
-    if (activeIdx !== null && activeIdx < filteredItems.length - 1) setActiveIdx(activeIdx + 1);
+    if (activeIdx !== null && activeIdx < processedItems.length - 1) setActiveIdx(activeIdx + 1);
   };
   const goPrev = () => {
     if (activeIdx !== null && activeIdx > 0) setActiveIdx(activeIdx - 1);
   };
 
-  // Klavye navigasyonu
+  // Keyboard navigation
   useEffect(() => {
     if (activeIdx === null) return;
     const handler = (e) => {
@@ -138,22 +156,22 @@ export default function Gallery() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [activeIdx, filteredItems.length]);
+  }, [activeIdx, processedItems.length]);
 
   return (
-    <section className="min-h-screen px-4 sm:px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink">
+    <section className="min-h-screen px-4 sm:px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
         {/* ─── Header ─── */}
-        <header className="mb-10 md:mb-14">
+        <header className="mb-8 md:mb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-4"
+                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-4 flex items-center gap-2"
               >
-                Galeri & Seçkiler
+                <Sparkles size={14} /> Galeri & Seçkiler
               </motion.p>
               <motion.h2
                 initial={{ opacity: 0, y: 16 }}
@@ -176,34 +194,148 @@ export default function Gallery() {
                 Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
                 Ok tuşlarıyla eserler arasında gezinin.
               </p>
-              <button
-                onClick={handleShuffle}
-                className="group inline-flex items-center gap-2 font-mono text-xs text-brush-soft hover:text-paper transition-all py-2 px-4 rounded-full border border-paper/15 bg-paper/5 hover:bg-paper/10 hover:border-brush-soft/50 shadow-sm cursor-pointer"
-              >
-                <RefreshCw size={13} className="group-hover:rotate-180 transition-transform duration-500" />
-                Sergiyi Karıştır
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAccordionOpen((prev) => !prev)}
+                  className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2 px-4 rounded-full border shadow-sm cursor-pointer ${
+                    isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
+                      : "bg-paper/5 text-paper/70 border-paper/15 hover:bg-paper/10 hover:border-paper/30"
+                  }`}
+                >
+                  <SlidersHorizontal size={13} />
+                  <span>Filtrele & Ara</span>
+                  {activeFilter !== "Tümü" && (
+                    <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
+                  )}
+                  {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+
+                <button
+                  onClick={handleShuffle}
+                  className="group inline-flex items-center gap-2 font-mono text-xs text-brush-soft hover:text-paper transition-all py-2 px-4 rounded-full border border-paper/15 bg-paper/5 hover:bg-paper/10 hover:border-brush-soft/50 shadow-sm cursor-pointer"
+                  title="Sergiyi Karıştır"
+                >
+                  <RefreshCw size={13} className="group-hover:rotate-180 transition-transform duration-500" />
+                  Karıştır
+                </button>
+              </div>
             </motion.div>
           </div>
 
-          {categories.length > 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-8"
-            >
-              <FilterTabs categories={categories} active={activeFilter} onChange={setActiveFilter} />
-            </motion.div>
-          )}
+          {/* ─── Accordion Filter Bar ─── */}
+          <AnimatePresence>
+            {isAccordionOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: "auto", marginTop: 24 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="overflow-hidden bg-ink-soft/90 border border-paper/12 rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+              >
+                <div className="flex flex-col gap-5">
+                  {/* Top Bar: Search & Sort */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {/* Search Input */}
+                    <div className="relative flex items-center">
+                      <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Eser adı, teknik veya yılda ara..."
+                        className="w-full bg-paper/5 border border-paper/15 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-rose-500/50 transition-colors"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-3 text-paper/40 hover:text-paper"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sort Options */}
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-paper/40 shrink-0">Sırala:</span>
+                      <div className="flex flex-wrap gap-1.5 flex-1">
+                        {[
+                          { id: "default", label: "Varsayılan" },
+                          { id: "newest", label: "Yeniye Göre" },
+                          { id: "oldest", label: "Eskiye Göre" },
+                          { id: "random", label: "Rastgele" },
+                        ].map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => {
+                              if (s.id === "random") handleShuffle();
+                              else setSortBy(s.id);
+                            }}
+                            className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                              sortBy === s.id
+                                ? "bg-rose-500/20 text-rose-300 border-rose-500/40 font-semibold"
+                                : "bg-paper/5 text-paper/60 border-paper/10 hover:bg-paper/10"
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Technique Categories */}
+                  <div>
+                    <p className="font-mono text-xs text-paper/40 mb-2.5 flex items-center gap-1.5">
+                      <Layers size={13} className="text-brush-soft" /> Teknik & Materyal Filtresi
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveFilter(cat)}
+                          className={`
+                            font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
+                            ${activeFilter === cat
+                              ? "bg-rose-600/25 text-rose-300 border-rose-500/50 shadow-[0_0_14px_rgba(244,63,94,0.25)] font-semibold"
+                              : "bg-paper/5 text-paper/60 border-paper/12 hover:text-paper hover:border-paper/30 hover:bg-paper/8"
+                            }
+                          `}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Reset Filters */}
+                  {(activeFilter !== "Tümü" || searchQuery !== "" || sortBy !== "default") && (
+                    <div className="flex justify-end border-t border-paper/10 pt-3">
+                      <button
+                        onClick={() => {
+                          setActiveFilter("Tümü");
+                          setSearchQuery("");
+                          setSortBy("default");
+                        }}
+                        className="font-mono text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw size={12} /> Filtreleri Sıfırla
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </header>
 
-        {/* ─── Pinterest Masonry Grid ─── */}
+        {/* ─── Pinterest Masonry Grid (Infinitely Extending Downward) ─── */}
         <div
-          className="gap-4 md:gap-5"
+          className="pinterest-grid"
           style={{
             columns: "1",
-            columnGap: "1rem",
+            columnGap: "1.25rem",
           }}
         >
           {/* Responsive columns via CSS */}
@@ -218,21 +350,23 @@ export default function Gallery() {
               .pinterest-grid { columns: 4 !important; column-gap: 1.25rem !important; }
             }
           `}</style>
-          <div className="pinterest-grid" style={{ columns: 1, columnGap: "1rem" }}>
-            {filteredItems.map((p, i) => (
+
+          <AnimatePresence mode="popLayout">
+            {processedItems.map((p, i) => (
               <motion.div
-                key={p.id}
+                key={p.id || i}
+                layout
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.1 }}
-                transition={{ duration: 0.4, delay: (i % 4) * 0.06 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
                 className="break-inside-avoid mb-4 md:mb-5"
               >
                 <TiltCard
                   className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
                   onClick={() => setActiveIdx(i)}
                 >
-                  {/* Fotoğraf — doğal boyutunda (intrinsic aspect ratio) */}
+                  {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
                   {p.image ? (
                     <img
                       src={p.image}
@@ -242,7 +376,7 @@ export default function Gallery() {
                       onError={(e) => { e.currentTarget.style.display = "none"; }}
                     />
                   ) : (
-                    <div className="aspect-[4/5]">
+                    <div className="aspect-[4/5] w-full">
                       <PaintingCanvas
                         seed={p.seed}
                         palette={p.palette}
@@ -252,11 +386,13 @@ export default function Gallery() {
                   )}
 
                   {/* Yıl Rozeti */}
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="font-mono text-[11px] px-2.5 py-1 rounded-full backdrop-blur-md bg-ink/70 text-brush-soft border border-paper/12 shadow-sm">
-                      {p.year}
-                    </span>
-                  </div>
+                  {p.year && (
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className="font-mono text-[11px] px-2.5 py-1 rounded-full backdrop-blur-md bg-ink/70 text-brush-soft border border-paper/12 shadow-sm">
+                        {p.year}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Büyüt İkonu */}
                   <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -277,7 +413,7 @@ export default function Gallery() {
                   <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
                     <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90">
                       <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
-                        {p.title}
+                        {p.title || "İsimsiz Eser"}
                       </h3>
                       {p.medium && (
                         <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
@@ -289,14 +425,26 @@ export default function Gallery() {
                 </TiltCard>
               </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
         </div>
 
         {/* Boş durum */}
-        {filteredItems.length === 0 && (
-          <div className="text-center py-20">
+        {processedItems.length === 0 && (
+          <div className="text-center py-20 bg-ink-soft/30 rounded-2xl border border-paper/10 mt-6">
             <Sparkles size={32} className="text-brush-soft/50 mx-auto mb-4" />
-            <p className="font-sans text-paper/50 text-sm">Bu kategoride henüz eser bulunmuyor.</p>
+            <p className="font-sans text-paper/60 text-sm">
+              Aradığınız kriterlere uygun eser bulunamadı.
+            </p>
+            <button
+              onClick={() => {
+                setActiveFilter("Tümü");
+                setSearchQuery("");
+                setSortBy("default");
+              }}
+              className="mt-4 font-mono text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 px-4 py-2 rounded-lg cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <RefreshCw size={13} /> Tüm Eserleri Göster
+            </button>
           </div>
         )}
       </div>
@@ -322,7 +470,7 @@ export default function Gallery() {
               </button>
             )}
             {/* Sağ Ok */}
-            {activeIdx < filteredItems.length - 1 && (
+            {activeIdx < processedItems.length - 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); goNext(); }}
                 className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-[70] p-3 rounded-full bg-paper/10 hover:bg-paper/20 text-paper border border-paper/15 backdrop-blur-md transition-all hover:scale-110 cursor-pointer shadow-lg"
@@ -333,7 +481,7 @@ export default function Gallery() {
 
             {/* Sayaç */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[70] font-mono text-xs text-paper/40">
-              {activeIdx + 1} / {filteredItems.length}
+              {activeIdx + 1} / {processedItems.length}
             </div>
 
             {/* Kapat */}
@@ -346,7 +494,7 @@ export default function Gallery() {
 
             {/* İçerik Kartı */}
             <motion.div
-              key={active.id}
+              key={active.id || activeIdx}
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -377,7 +525,7 @@ export default function Gallery() {
                       {active.year} · Seçki
                     </p>
                     <h3 className="font-display text-xl md:text-2xl text-paper font-bold leading-tight">
-                      {active.title}
+                      {active.title || "İsimsiz Eser"}
                     </h3>
                   </div>
                 </div>
@@ -414,11 +562,11 @@ export default function Gallery() {
                     <ChevronLeft size={14} /> Önceki
                   </button>
                   <span className="font-mono text-[10px] text-paper/30">
-                    {activeIdx + 1} / {filteredItems.length}
+                    {activeIdx + 1} / {processedItems.length}
                   </span>
                   <button
                     onClick={goNext}
-                    disabled={activeIdx === filteredItems.length - 1}
+                    disabled={activeIdx === processedItems.length - 1}
                     className="font-mono text-xs text-paper/50 hover:text-paper disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
                   >
                     Sonraki <ChevronRight size={14} />
