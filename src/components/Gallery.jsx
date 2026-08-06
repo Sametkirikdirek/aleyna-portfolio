@@ -1,21 +1,75 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, RefreshCw, Maximize2, ChevronLeft, ChevronRight, Sparkles,
-  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Grid, History
+  X, Maximize2, ChevronLeft, ChevronRight, Sparkles,
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
 import InfiniteGallery from "./ui/infinite-gallery";
 
-// Fisher-Yates shuffle
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
+// ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
+function PortalIcon({ className = "w-5 h-5", ...props }) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <defs>
+        <linearGradient id="portalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#c084fc" />
+          <stop offset="50%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#7e22ce" />
+        </linearGradient>
+      </defs>
+
+      {/* Spiral Arms */}
+      <path
+        d="M50 15 C 72 15, 86 30, 86 50 C 86 72, 72 86, 50 86 C 28 86, 14 72, 14 50 C 14 34, 26 20, 42 17 C 58 14, 73 26, 73 44 C 73 60, 59 73, 43 73 C 28 73, 21 59, 26 44 C 30 30, 45 26, 57 33 C 65 37, 64 49, 54 55 C 44 61, 36 51, 44 43"
+        stroke="url(#portalGrad)"
+        strokeWidth="9"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M50 23 C 66 23, 77 34, 77 50 C 77 66, 66 77, 50 77 C 34 77, 23 66, 23 50 C 23 39, 31 29, 43 26"
+        stroke="#f3e8ff"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.9"
+      />
+
+      {/* Four 4-Point Gold Stars around the Portal (Matching User Reference) */}
+      <path d="M 22 14 Q 22 20 16 20 Q 22 20 22 26 Q 22 20 28 20 Q 22 20 22 14 Z" fill="#ffd166" />
+      <path d="M 82 22 Q 82 28 76 28 Q 82 28 82 34 Q 82 28 88 28 Q 82 28 82 22 Z" fill="#ffd166" />
+      <path d="M 75 77 Q 75 83 69 83 Q 75 83 75 89 Q 75 83 81 83 Q 75 83 75 77 Z" fill="#ffd166" />
+      <path d="M 18 73 Q 18 79 12 79 Q 18 79 18 85 Q 18 79 24 79 Q 18 79 18 73 Z" fill="#ffd166" />
+    </svg>
+  );
+}
+
+// ─── Custom Canvas Easel Icon for Galeri ───────────────────────
+function CanvasIcon({ className = "w-5 h-5", ...props }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path d="M12 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M7 21l3-7M17 21l-3-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M4 14h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="4" y="4" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" fill="rgba(244,63,94,0.18)" />
+      <path d="M7 8c2-2 4 1 6-1s4 1 4 1" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="15" cy="7" r="1" fill="#fb7185" />
+    </svg>
+  );
 }
 
 // ─── 3D Tilt Card ───────────────────────────────────────────
@@ -127,17 +181,10 @@ export default function Gallery() {
       list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     } else if (sortBy === "oldest") {
       list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
-    } else if (sortBy === "random") {
-      list = shuffleArray(list);
     }
 
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
-
-  const handleShuffle = () => {
-    setSortBy("random");
-    setItems((prev) => shuffleArray(prev));
-  };
 
   const active = activeIdx !== null ? processedItems[activeIdx] : null;
 
@@ -187,34 +234,18 @@ export default function Gallery() {
   return (
     <section className="min-h-screen px-4 sm:px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
-        {/* ─── Header & Tab Selector ─── */}
+        {/* ─── Header & Controls ─── */}
         <header className="mb-8 md:mb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              {/* Tab Selector Badges */}
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setActiveTab("galeri")}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
-                    activeTab === "galeri"
-                      ? "bg-rose-600 text-white font-semibold shadow-[0_0_15px_rgba(225,29,72,0.4)]"
-                      : "bg-paper/10 text-paper/60 hover:text-paper hover:bg-paper/15 border border-paper/10"
-                  }`}
-                >
-                  <Grid size={13} /> Galeri
-                </button>
-                <button
-                  onClick={() => setActiveTab("zaman-yolculugu")}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
-                    activeTab === "zaman-yolculugu"
-                      ? "bg-rose-600 text-white font-semibold shadow-[0_0_15px_rgba(225,29,72,0.4)]"
-                      : "bg-paper/10 text-paper/60 hover:text-paper hover:bg-paper/15 border border-paper/10"
-                  }`}
-                >
-                  <History size={13} /> Zaman Yolculuğu
-                </button>
-              </div>
-
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-3 flex items-center gap-2"
+              >
+                <Sparkles size={14} /> Galeri & Seçkiler
+              </motion.p>
               <motion.h2
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -235,21 +266,65 @@ export default function Gallery() {
               </motion.h2>
             </div>
 
-            {activeTab === "galeri" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col items-start md:items-end gap-3"
-              >
-                <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
-                  Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
-                  Ok tuşlarıyla eserler arasında gezinin.
-                </p>
-                <div className="flex items-center gap-2">
+            {/* Right Controls: Emblems + Filtrele & Ara */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col items-start md:items-end gap-3"
+            >
+              <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
+                Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
+                Ok tuşlarıyla eserler arasında gezinin.
+              </p>
+
+              <div className="flex items-center gap-3">
+                {/* Galeri Emblem */}
+                <div className="relative group">
+                  <button
+                    onClick={() => setActiveTab("galeri")}
+                    aria-label="Galeri (Tuval Seçkileri)"
+                    className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
+                      activeTab === "galeri"
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_16px_rgba(244,63,94,0.35)] scale-105"
+                        : "bg-paper/5 text-paper/60 border-paper/15 hover:text-paper hover:bg-paper/10 hover:border-paper/30"
+                    }`}
+                  >
+                    <CanvasIcon className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" />
+                  </button>
+                  {/* Tooltip */}
+                  <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap bg-ink-soft/95 text-paper text-[11px] font-mono px-2.5 py-1 rounded-md border border-paper/15 shadow-lg z-30">
+                    Galeri (Tuval Seçkileri)
+                  </div>
+                </div>
+
+                {/* Zaman Yolculuğu Emblem (Portal) */}
+                <div className="relative group">
+                  <button
+                    onClick={() => setActiveTab("zaman-yolculugu")}
+                    aria-label="Zaman Yolculuğu"
+                    className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
+                      activeTab === "zaman-yolculugu"
+                        ? "bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-[0_0_16px_rgba(168,85,247,0.35)] scale-105"
+                        : "bg-paper/5 text-paper/60 border-paper/15 hover:text-paper hover:bg-paper/10 hover:border-paper/30"
+                    }`}
+                  >
+                    <PortalIcon className="w-5 h-5 animate-[spin_10s_linear_infinite] group-hover:animate-[spin_2.5s_linear_infinite] transition-transform" />
+                  </button>
+                  {/* Tooltip */}
+                  <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap bg-ink-soft/95 text-paper text-[11px] font-mono px-2.5 py-1 rounded-md border border-paper/15 shadow-lg z-30">
+                    Zaman Yolculuğu
+                  </div>
+                </div>
+
+                {/* Subtle Divider */}
+                <div className="w-px h-6 bg-paper/15 mx-0.5" />
+
+                {/* Filtrele & Ara Accordion Button */}
+                {activeTab === "galeri" && (
                   <button
                     onClick={() => setIsAccordionOpen((prev) => !prev)}
-                    className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2 px-4 rounded-full border shadow-sm cursor-pointer ${
+                    className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2.5 px-4 rounded-full border shadow-sm cursor-pointer ${
                       isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
                         ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
                         : "bg-paper/5 text-paper/70 border-paper/15 hover:bg-paper/10 hover:border-paper/30"
@@ -262,18 +337,9 @@ export default function Gallery() {
                     )}
                     {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
-
-                  <button
-                    onClick={handleShuffle}
-                    className="group inline-flex items-center gap-2 font-mono text-xs text-brush-soft hover:text-paper transition-all py-2 px-4 rounded-full border border-paper/15 bg-paper/5 hover:bg-paper/10 hover:border-brush-soft/50 shadow-sm cursor-pointer"
-                    title="Sergiyi Karıştır"
-                  >
-                    <RefreshCw size={13} className="group-hover:rotate-180 transition-transform duration-500" />
-                    Karıştır
-                  </button>
-                </div>
-              </motion.div>
-            )}
+                )}
+              </div>
+            </motion.div>
           </div>
 
           {/* ─── Accordion Filter Bar ─── */}
@@ -315,14 +381,10 @@ export default function Gallery() {
                           { id: "default", label: "Varsayılan" },
                           { id: "newest", label: "Yeniye Göre" },
                           { id: "oldest", label: "Eskiye Göre" },
-                          { id: "random", label: "Rastgele" },
                         ].map((s) => (
                           <button
                             key={s.id}
-                            onClick={() => {
-                              if (s.id === "random") handleShuffle();
-                              else setSortBy(s.id);
-                            }}
+                            onClick={() => setSortBy(s.id)}
                             className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                               sortBy === s.id
                                 ? "bg-rose-500/20 text-rose-300 border-rose-500/40 font-semibold"
@@ -371,7 +433,7 @@ export default function Gallery() {
                         }}
                         className="font-mono text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
                       >
-                        <RefreshCw size={12} /> Filtreleri Sıfırla
+                        Filtreleri Sıfırla
                       </button>
                     </div>
                   )}
@@ -506,7 +568,7 @@ export default function Gallery() {
               }}
               className="mt-4 font-mono text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 px-4 py-2 rounded-lg cursor-pointer inline-flex items-center gap-1.5"
             >
-              <RefreshCw size={13} /> Tüm Eserleri Göster
+              Tüm Eserleri Göster
             </button>
           </div>
         )}
