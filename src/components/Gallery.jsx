@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Maximize2, ChevronLeft, ChevronRight, Sparkles,
+  X, Maximize2, ChevronLeft, ChevronRight, Palette,
   Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
@@ -244,7 +244,7 @@ export default function Gallery() {
                 transition={{ duration: 0.5 }}
                 className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-3 flex items-center gap-2"
               >
-                <Sparkles size={14} /> Galeri & Seçkiler
+                <Palette size={14} /> Galeri & Seçkiler
               </motion.p>
               <motion.h2
                 initial={{ opacity: 0, y: 16 }}
@@ -533,7 +533,7 @@ export default function Gallery() {
         {/* Boş durum */}
         {processedItems.length === 0 && (
           <div className="text-center py-20 bg-ink-soft/30 rounded-2xl border border-paper/10 mt-6">
-            <Sparkles size={32} className="text-brush-soft/50 mx-auto mb-4" />
+            <Palette size={32} className="text-brush-soft/50 mx-auto mb-4" />
             <p className="font-sans text-paper/60 text-sm">
               Aradığınız kriterlere uygun eser bulunamadı.
             </p>
