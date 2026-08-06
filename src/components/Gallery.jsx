@@ -2,11 +2,51 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Maximize2, ChevronLeft, ChevronRight, Palette,
-  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
 import InfiniteGallery from "./ui/infinite-gallery";
+
+// ─── Monthly Harvest (Ağustos Atölye Hasadı) ────────────────
+const monthlyHarvestArtworks = [
+  {
+    id: "hasat-1",
+    title: "Ağustos Rüzgarı",
+    image: "/gallery/aylik_hasat_1.png",
+    medium: "Yağlı Boya & Altın Varak",
+    year: "2026",
+    size: "80x100 cm",
+    note: "Sıcak kırmızılar, altın varak detayları ve tuval üzerinde derin dokulu fırça darbeleriyle Ağustos ayının ilk atölye çalışması.",
+  },
+  {
+    id: "hasat-2",
+    title: "Gece Bahçesi",
+    image: "/gallery/aylik_hasat_2.png",
+    medium: "Karışık Teknik & Spatula",
+    year: "2026",
+    size: "70x120 cm",
+    note: "Zümrüt yeşili ve kobalt mavisi katmanların altın dokularla buluştuğu dikey kompozisyonlu yeni dönem çalışması.",
+  },
+  {
+    id: "hasat-3",
+    title: "Işık Teorisi",
+    image: "/gallery/aylik_hasat_3.png",
+    medium: "Akrilik & Pigment Dokusu",
+    year: "2026",
+    size: "90x90 cm",
+    note: "Yumuşak mercan tonları, ışıldayan siyan hatlar ve modern galeri estetiğini yansıtan tuval üzeri akrilik.",
+  },
+  {
+    id: "hasat-4",
+    title: "Toprak ve Altın",
+    image: "/gallery/aylik_hasat_4.png",
+    medium: "Ahşap Üzeri Yağlı Boya & Bronz",
+    year: "2026",
+    size: "100x100 cm",
+    note: "Kehribar tonları, bronz yaldız ve kömür kalemi darbelerinin ahşap panel üzerinde birleştiği müze kalitesinde eser.",
+  },
+];
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -138,6 +178,7 @@ export default function Gallery() {
 
   const [activeTab, setActiveTab] = useState("galeri"); // "galeri" | "zaman-yolculugu"
   const [activeIdx, setActiveIdx] = useState(null);
+  const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
   const [items, setItems] = useState([]);
 
   // Accordion Filter State
@@ -186,26 +227,37 @@ export default function Gallery() {
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
 
-  const active = activeIdx !== null ? processedItems[activeIdx] : null;
+  const active = lightboxCustomItem
+    ? lightboxCustomItem
+    : activeIdx !== null
+    ? processedItems[activeIdx]
+    : null;
+
+  const closeLightbox = () => {
+    setActiveIdx(null);
+    setLightboxCustomItem(null);
+  };
 
   const goNext = () => {
+    if (lightboxCustomItem) return;
     if (activeIdx !== null && activeIdx < processedItems.length - 1) setActiveIdx(activeIdx + 1);
   };
   const goPrev = () => {
+    if (lightboxCustomItem) return;
     if (activeIdx !== null && activeIdx > 0) setActiveIdx(activeIdx - 1);
   };
 
   // Keyboard navigation
   useEffect(() => {
-    if (activeIdx === null) return;
+    if (activeIdx === null && !lightboxCustomItem) return;
     const handler = (e) => {
       if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
-      else if (e.key === "Escape") setActiveIdx(null);
+      else if (e.key === "Escape") closeLightbox();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [activeIdx, processedItems.length]);
+  }, [activeIdx, lightboxCustomItem, processedItems.length]);
 
   // Format images for Zaman Yolculuğu Infinite Gallery
   const infiniteGalleryImages = useMemo(() => {
@@ -252,8 +304,17 @@ export default function Gallery() {
                 transition={{ duration: 0.6 }}
                 className="font-display text-3xl md:text-5xl lg:text-6xl text-paper leading-tight text-balance"
               >
-                Tuval ve Kodun <br className="hidden sm:block" />
-                <span className="text-gradient-animated">Kesişimi</span>
+                {activeTab === "galeri" ? (
+                  <>
+                    Tuval ve Kodun <br className="hidden sm:block" />
+                    <span className="text-gradient-animated">Kesişimi</span>
+                  </>
+                ) : (
+                  <>
+                    Zaman Yolculuğu <br className="hidden sm:block" />
+                    <span className="text-gradient-animated">Atölye Seçkileri</span>
+                  </>
+                )}
               </motion.h2>
             </div>
 
@@ -431,6 +492,85 @@ export default function Gallery() {
             )}
           </AnimatePresence>
         </header>
+
+        {/* ─── AĞUSTOS ATÖLYE HASADI / AYIN TUVAL GÜNLÜĞÜ (Option 3) ─── */}
+        {activeTab === "galeri" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 p-6 md:p-8 backdrop-blur-xl shadow-2xl"
+          >
+            {/* Ambient Glow Orbs */}
+            <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+
+            {/* Header Info */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-mono text-[11px] tracking-wider uppercase mb-2">
+                  <Calendar size={12} /> AĞUSTOS 2026 HASADI · ATÖLYEDEN YENİ ÇIKTI
+                </div>
+                <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
+                  Ayın Tuval Günlüğü <span className="text-brush-soft text-sm md:text-base font-mono font-normal">(/4 Yeni Eser)</span>
+                </h3>
+                <p className="font-sans text-xs sm:text-sm text-paper/60 mt-1 max-w-xl">
+                  Bu ay atölyede tamamlanan taze çalışmalar ve ilk kez sergilenen seçkiler.
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2">
+                <span className="font-mono text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20">
+                  🔥 Son Güncelleme: Ağustos 2026
+                </span>
+              </div>
+            </div>
+
+            {/* 4 Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
+              {monthlyHarvestArtworks.map((item) => (
+                <motion.div
+                  key={item.id}
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => setLightboxCustomItem(item)}
+                  className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
+                >
+                  {/* Image */}
+                  <div className="aspect-[4/5] w-full overflow-hidden relative">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    {/* New Badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className="font-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-full backdrop-blur-md bg-rose-600/90 text-white shadow-md">
+                        Taze Hasat
+                      </span>
+                    </div>
+                    {/* Zoom Icon */}
+                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
+                        <Maximize2 size={13} />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
+                    <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
+                      {item.title}
+                    </h4>
+                    <p className="font-mono text-[11px] text-paper/50 mt-0.5 truncate">
+                      {item.medium}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* ─── Pinterest Masonry Grid ─── */}
         <div
@@ -672,10 +812,10 @@ export default function Gallery() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             className="fixed inset-0 z-[60] bg-ink/97 backdrop-blur-xl flex items-center justify-center p-4 md:p-8"
-            onClick={() => setActiveIdx(null)}
+            onClick={closeLightbox}
           >
             {/* Sol Ok */}
-            {activeIdx > 0 && (
+            {!lightboxCustomItem && activeIdx > 0 && (
               <button
                 onClick={(e) => { e.stopPropagation(); goPrev(); }}
                 className="absolute left-2 md:left-5 top-1/2 -translate-y-1/2 z-[70] p-3 rounded-full bg-paper/10 hover:bg-paper/20 text-paper border border-paper/15 backdrop-blur-md transition-all hover:scale-110 cursor-pointer shadow-lg"
@@ -684,7 +824,7 @@ export default function Gallery() {
               </button>
             )}
             {/* Sağ Ok */}
-            {activeIdx < processedItems.length - 1 && (
+            {!lightboxCustomItem && activeIdx < processedItems.length - 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); goNext(); }}
                 className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-[70] p-3 rounded-full bg-paper/10 hover:bg-paper/20 text-paper border border-paper/15 backdrop-blur-md transition-all hover:scale-110 cursor-pointer shadow-lg"
@@ -694,13 +834,15 @@ export default function Gallery() {
             )}
 
             {/* Sayaç */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[70] font-mono text-xs text-paper/40">
-              {activeIdx + 1} / {processedItems.length}
-            </div>
+            {!lightboxCustomItem && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[70] font-mono text-xs text-paper/40">
+                {activeIdx + 1} / {processedItems.length}
+              </div>
+            )}
 
             {/* Kapat */}
             <button
-              onClick={() => setActiveIdx(null)}
+              onClick={closeLightbox}
               className="absolute top-4 right-4 z-[70] p-2.5 rounded-full bg-paper/10 hover:bg-paper/20 text-paper border border-paper/15 backdrop-blur-md transition-all cursor-pointer"
             >
               <X size={18} />
@@ -735,8 +877,13 @@ export default function Gallery() {
               <div className="p-5 md:p-7">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft mb-2">
-                      {active.year} · Seçki
+                    <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft mb-2 flex items-center gap-2">
+                      <span>{active.year}</span> · <span>Seçki</span>
+                      {lightboxCustomItem && (
+                        <span className="bg-rose-600/90 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
+                          Ağustos Hasadı
+                        </span>
+                      )}
                     </p>
                     <h3 className="font-display text-xl md:text-2xl text-paper font-bold leading-tight">
                       {active.title || "İsimsiz Eser"}
@@ -767,25 +914,27 @@ export default function Gallery() {
                 </dl>
 
                 {/* Alt Navigasyon */}
-                <div className="flex items-center justify-between mt-5 pt-4 border-t border-paper/8">
-                  <button
-                    onClick={goPrev}
-                    disabled={activeIdx === 0}
-                    className="font-mono text-xs text-paper/50 hover:text-paper disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    <ChevronLeft size={14} /> Önceki
-                  </button>
-                  <span className="font-mono text-[10px] text-paper/30">
-                    {activeIdx + 1} / {processedItems.length}
-                  </span>
-                  <button
-                    onClick={goNext}
-                    disabled={activeIdx === processedItems.length - 1}
-                    className="font-mono text-xs text-paper/50 hover:text-paper disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    Sonraki <ChevronRight size={14} />
-                  </button>
-                </div>
+                {!lightboxCustomItem && (
+                  <div className="flex items-center justify-between mt-5 pt-4 border-t border-paper/8">
+                    <button
+                      onClick={goPrev}
+                      disabled={activeIdx === 0}
+                      className="font-mono text-xs text-paper/50 hover:text-paper disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ChevronLeft size={14} /> Önceki
+                    </button>
+                    <span className="font-mono text-[10px] text-paper/30">
+                      {activeIdx + 1} / {processedItems.length}
+                    </span>
+                    <button
+                      onClick={goNext}
+                      disabled={activeIdx === processedItems.length - 1}
+                      className="font-mono text-xs text-paper/50 hover:text-paper disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      Sonraki <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
