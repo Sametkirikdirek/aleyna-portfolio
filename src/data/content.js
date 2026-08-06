@@ -136,6 +136,50 @@ export const experiences = [
 
 export const paintings = [
   {
+    id: "hasat-1",
+    title: "Ağustos Rüzgarı",
+    year: "2026",
+    medium: "Yağlı Boya & Altın Varak",
+    image: "/gallery/aylik_hasat_1.png",
+    size: "80x100 cm",
+    note: "Sıcak kırmızılar, altın varak detayları ve tuval üzerinde derin dokulu fırça darbeleriyle Ağustos ayının ilk atölye çalışması.",
+    likes: 42,
+    featuredInMonthly: true,
+  },
+  {
+    id: "hasat-2",
+    title: "Gece Bahçesi",
+    year: "2026",
+    medium: "Karışık Teknik & Spatula",
+    image: "/gallery/aylik_hasat_2.png",
+    size: "70x120 cm",
+    note: "Zümrüt yeşili ve kobalt mavisi katmanların altın dokularla buluştuğu dikey kompozisyonlu yeni dönem çalışması.",
+    likes: 38,
+    featuredInMonthly: true,
+  },
+  {
+    id: "hasat-3",
+    title: "Işık Teorisi",
+    year: "2026",
+    medium: "Akrilik & Pigment Dokusu",
+    image: "/gallery/aylik_hasat_3.png",
+    size: "90x90 cm",
+    note: "Yumuşak mercan tonları, ışıldayan siyan hatlar ve modern galeri estetiğini yansıtan tuval üzeri akrilik.",
+    likes: 31,
+    featuredInMonthly: true,
+  },
+  {
+    id: "hasat-4",
+    title: "Toprak ve Altın",
+    year: "2026",
+    medium: "Ahşap Üzeri Yağlı Boya & Bronz",
+    image: "/gallery/aylik_hasat_4.png",
+    size: "100x100 cm",
+    note: "Kehribar tonları, bronz yaldız ve kömür kalemi darbelerinin ahşap panel üzerinde birleştiği müze kalitesinde eser.",
+    likes: 27,
+    featuredInMonthly: true,
+  },
+  {
     id: "eser-1",
     title: "Derin Öğrenme Katmanları",
     year: "2024",
@@ -143,6 +187,8 @@ export const paintings = [
     seed: 142,
     image: "/gallery/art-1.png",
     note: "Yapay sinir ağlarındaki veri akışının katmanlı renk geçişleriyle tuvale aktarılması.",
+    likes: 19,
+    featuredInMonthly: false,
   },
   {
     id: "eser-2",
@@ -152,6 +198,8 @@ export const paintings = [
     seed: 88,
     image: "/gallery/art-2.png",
     note: "Üretimsel modellerin latent uzayındaki biçim arayışının fırça darbeleriyle somutlaşması.",
+    likes: 24,
+    featuredInMonthly: false,
   },
   {
     id: "eser-3",
@@ -161,6 +209,8 @@ export const paintings = [
     seed: 205,
     image: "/gallery/art-3.png",
     note: "Mühendislik titizliği ile sanatsal serbestliğin tuval yüzeyindeki dengesi.",
+    likes: 15,
+    featuredInMonthly: false,
   },
   {
     id: "eser-4",
@@ -170,6 +220,8 @@ export const paintings = [
     seed: 310,
     image: "/gallery/art-4.png",
     note: "Dijital ekranlardaki piksel yapısının tuvaldeki boya katmanlarıyla diyaloğu.",
+    likes: 18,
+    featuredInMonthly: false,
   },
   {
     id: "eser-5",
@@ -179,6 +231,8 @@ export const paintings = [
     seed: 512,
     image: "/gallery/art-5.png",
     note: "Çok boyutlu veri uzaylarının iki boyutlu yüzeyde renk kümeleri olarak izdüşümü.",
+    likes: 12,
+    featuredInMonthly: false,
   },
   {
     id: "eser-6",
@@ -188,6 +242,8 @@ export const paintings = [
     seed: 740,
     image: "/gallery/art-6.png",
     note: "Kod döngülerinin getirdiği zihinsel odaklanmanın kağıt üzerindeki şeffaf izleri.",
+    likes: 22,
+    featuredInMonthly: false,
   },
 ];
 
