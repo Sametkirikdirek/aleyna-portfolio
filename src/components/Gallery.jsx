@@ -163,7 +163,7 @@ export default function Gallery() {
     }
   }, [artworks]);
 
-  // Visitor Like Action
+  // Visitor Like Action (Stores like state persistently)
   const toggleLike = useCallback((artId, e) => {
     if (e) e.stopPropagation();
 
@@ -210,13 +210,11 @@ export default function Gallery() {
   const monthlyArtworks = useMemo(() => {
     if (!items || items.length === 0) return [];
     
-    // Explicitly featured by Admin
     const featured = items.filter((item) => item.featuredInMonthly);
     if (featured.length >= 4) {
       return featured.slice(0, 4);
     }
     
-    // Fill remaining slots with top most-liked artworks
     const remaining = [...items]
       .filter((item) => !featured.some((f) => f.id === item.id))
       .sort((a, b) => (b.likes || 0) - (a.likes || 0));
@@ -354,7 +352,7 @@ export default function Gallery() {
             >
               <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
                 Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
-                Kalp ikonuna dokunarak favorilerinize ekleyin.
+                Kalp ikonuna dokunarak beğeninizi iletin.
               </p>
 
               <div className="flex items-center gap-3">
@@ -454,7 +452,6 @@ export default function Gallery() {
                       <div className="flex flex-wrap gap-1.5 flex-1">
                         {[
                           { id: "default", label: "Varsayılan" },
-                          { id: "likes", label: "❤️ En Çok Beğenilen" },
                           { id: "newest", label: "Yeniye Göre" },
                           { id: "oldest", label: "Eskiye Göre" },
                         ].map((s) => (
@@ -547,75 +544,58 @@ export default function Gallery() {
 
               <div className="shrink-0 flex items-center gap-2">
                 <span className="font-mono text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20 flex items-center gap-1.5">
-                  <Heart size={13} className="fill-rose-400 text-rose-400" /> Beğenilere Göre Güncellenir
+                  🔥 Öne Çıkan Seçkiler
                 </span>
               </div>
             </div>
 
-            {/* 4 Cards Grid */}
+            {/* 4 Cards Grid (Clean preview, no like button here) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
-              {monthlyArtworks.map((item) => {
-                const isLiked = userLikes.includes(item.id);
-                return (
-                  <motion.div
-                    key={item.id}
-                    whileHover={{ y: -6 }}
-                    transition={{ duration: 0.3 }}
-                    onClick={() => setLightboxCustomItem(item)}
-                    className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
-                  >
-                    {/* Image */}
-                    <div className="aspect-[4/5] w-full overflow-hidden relative">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          onError={(e) => { e.currentTarget.style.display = "none"; }}
-                        />
-                      ) : (
-                        <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
-                      )}
+              {monthlyArtworks.map((item) => (
+                <motion.div
+                  key={item.id}
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.3 }}
+                  onClick={() => setLightboxCustomItem(item)}
+                  className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
+                >
+                  {/* Image */}
+                  <div className="aspect-[4/5] w-full overflow-hidden relative">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
+                    )}
 
-                      {/* Heart / Like Button */}
-                      <button
-                        onClick={(e) => toggleLike(item.id, e)}
-                        className={`absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
-                          isLiked
-                            ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)] scale-105"
-                            : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40"
-                        }`}
-                        title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
-                      >
-                        <Heart size={12} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
-                        <span className="font-mono text-[10px] font-bold">{item.likes || 0}</span>
-                      </button>
-
-                      {/* Zoom Icon */}
-                      <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
-                          <Maximize2 size={13} />
-                        </span>
-                      </div>
+                    {/* Zoom Icon */}
+                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
+                        <Maximize2 size={13} />
+                      </span>
                     </div>
+                  </div>
 
-                    {/* Details */}
-                    <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
-                      <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
-                        {item.title || "İsimsiz Eser"}
-                      </h4>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <p className="font-mono text-[11px] text-paper/50 truncate">
-                          {item.medium || "Tuval Çalışması"}
-                        </p>
-                        <span className="font-mono text-[10px] text-rose-400/80 shrink-0">
-                          {item.year}
-                        </span>
-                      </div>
+                  {/* Details */}
+                  <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
+                    <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
+                      {item.title || "İsimsiz Eser"}
+                    </h4>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="font-mono text-[11px] text-paper/50 truncate">
+                        {item.medium || "Tuval Çalışması"}
+                      </p>
+                      <span className="font-mono text-[10px] text-rose-400/80 shrink-0">
+                        {item.year}
+                      </span>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
@@ -677,18 +657,17 @@ export default function Gallery() {
                       </div>
                     )}
 
-                    {/* Heart / Like Button */}
+                    {/* Heart / Like Button (Icon only, no like count number shown to visitors) */}
                     <button
                       onClick={(e) => toggleLike(p.id, e)}
-                      className={`absolute top-3 right-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
+                      className={`absolute top-3 right-3 z-20 p-2.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md flex items-center justify-center ${
                         isLiked
-                          ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)] scale-105"
-                          : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40"
+                          ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.6)] scale-110"
+                          : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:scale-105"
                       }`}
                       title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
                     >
-                      <Heart size={12} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
-                      <span className="font-mono text-[10px] font-bold">{p.likes || 0}</span>
+                      <Heart size={14} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
                     </button>
 
                     {/* Büyüt İkonu */}
@@ -948,17 +927,17 @@ export default function Gallery() {
                     </h3>
                   </div>
 
-                  {/* Lightbox Heart Like Button */}
+                  {/* Lightbox Heart Like Button (Icon only, no number shown) */}
                   <button
                     onClick={(e) => toggleLike(active.id, e)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shrink-0 ${
+                    className={`p-2.5 rounded-full border transition-all cursor-pointer shrink-0 flex items-center justify-center ${
                       userLikes.includes(active.id)
-                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]"
+                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)] scale-110"
                         : "bg-paper/10 text-paper/80 border-paper/15 hover:text-rose-400 hover:border-rose-500/40"
                     }`}
+                    title={userLikes.includes(active.id) ? "Beğeniyi Kaldır" : "Eseri Beğen"}
                   >
-                    <Heart size={14} className={userLikes.includes(active.id) ? "fill-white text-white" : "text-rose-400"} />
-                    <span className="font-mono text-xs font-bold">{active.likes || 0} Beğeni</span>
+                    <Heart size={16} className={userLikes.includes(active.id) ? "fill-white text-white" : "text-rose-400"} />
                   </button>
                 </div>
 
