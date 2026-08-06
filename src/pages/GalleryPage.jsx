@@ -1,9 +1,5 @@
-import { GalleryGridBlock } from "@/components/ui/gallery-grid-block-shadcnui";
+import Gallery from "../components/Gallery";
 
 export default function GalleryPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <GalleryGridBlock />
-    </div>
-  );
+  return <Gallery />;
 }

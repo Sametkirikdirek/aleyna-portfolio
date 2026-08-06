@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, RefreshCw, Maximize2, ChevronLeft, ChevronRight, Sparkles,
-  Filter, Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Grid, History
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
-import { useGallery } from "../hooks/useContent";
+import { useGallery, useTimeline } from "../hooks/useContent";
+import InfiniteGallery from "./ui/infinite-gallery";
 
 // Fisher-Yates shuffle
 function shuffleArray(array) {
@@ -76,8 +77,12 @@ function TiltCard({ children, className = "", onClick, style }) {
 // ─── Ana Galeri ─────────────────────────────────────────────
 export default function Gallery() {
   const { data: galleryData } = useGallery();
-  const artworks = galleryData?.artworks || [];
+  const { data: timelineData } = useTimeline();
 
+  const artworks = galleryData?.artworks || [];
+  const timelineImagesList = timelineData?.images || [];
+
+  const [activeTab, setActiveTab] = useState("galeri"); // "galeri" | "zaman-yolculugu"
   const [activeIdx, setActiveIdx] = useState(null);
   const [items, setItems] = useState([]);
 
@@ -85,9 +90,9 @@ export default function Gallery() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("default"); // "default" | "newest" | "oldest" | "random"
+  const [sortBy, setSortBy] = useState("default");
 
-  // Sync state whenever Firestore/localStorage updates (Fixes Admin update sync bug)
+  // Sync items state whenever Firestore/localStorage artworks updates
   useEffect(() => {
     if (artworks && artworks.length > 0) {
       setItems(artworks);
@@ -103,12 +108,10 @@ export default function Gallery() {
   const processedItems = useMemo(() => {
     let list = [...items];
 
-    // 1. Technique Filter
     if (activeFilter !== "Tümü") {
       list = list.filter((item) => item.medium === activeFilter);
     }
 
-    // 2. Search Query
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -120,7 +123,6 @@ export default function Gallery() {
       );
     }
 
-    // 3. Sorting
     if (sortBy === "newest") {
       list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     } else if (sortBy === "oldest") {
@@ -158,74 +160,125 @@ export default function Gallery() {
     return () => window.removeEventListener("keydown", handler);
   }, [activeIdx, processedItems.length]);
 
+  // Format images for Zaman Yolculuğu Infinite Gallery
+  const infiniteGalleryImages = useMemo(() => {
+    if (timelineImagesList && timelineImagesList.length > 0) {
+      return timelineImagesList
+        .filter((img) => img.url)
+        .map((img, idx) => ({
+          src: img.url,
+          alt: img.caption || `Zaman Yolculuğu ${idx + 1}`,
+        }));
+    }
+    return [
+      { src: "/gallery/zaman_1.png", alt: "Zaman Yolculuğu 1" },
+      { src: "/gallery/zaman_2.png", alt: "Zaman Yolculuğu 2" },
+      { src: "/gallery/zaman_3.png", alt: "Zaman Yolculuğu 3" },
+      { src: "/gallery/zaman_4.png", alt: "Zaman Yolculuğu 4" },
+      { src: "/gallery/zaman_5.png", alt: "Zaman Yolculuğu 5" },
+      { src: "/gallery/zaman_6.png", alt: "Zaman Yolculuğu 6" },
+      { src: "/gallery/zaman_7.png", alt: "Zaman Yolculuğu 7" },
+      { src: "/gallery/zaman_8.png", alt: "Zaman Yolculuğu 8" },
+      { src: "/gallery/zaman_9.png", alt: "Zaman Yolculuğu 9" },
+      { src: "/gallery/zaman_10.png", alt: "Zaman Yolculuğu 10" },
+    ];
+  }, [timelineImagesList]);
+
   return (
     <section className="min-h-screen px-4 sm:px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
-        {/* ─── Header ─── */}
+        {/* ─── Header & Tab Selector ─── */}
         <header className="mb-8 md:mb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-4 flex items-center gap-2"
-              >
-                <Sparkles size={14} /> Galeri & Seçkiler
-              </motion.p>
+              {/* Tab Selector Badges */}
+              <div className="flex items-center gap-3 mb-4">
+                <button
+                  onClick={() => setActiveTab("galeri")}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
+                    activeTab === "galeri"
+                      ? "bg-rose-600 text-white font-semibold shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+                      : "bg-paper/10 text-paper/60 hover:text-paper hover:bg-paper/15 border border-paper/10"
+                  }`}
+                >
+                  <Grid size={13} /> Galeri
+                </button>
+                <button
+                  onClick={() => setActiveTab("zaman-yolculugu")}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
+                    activeTab === "zaman-yolculugu"
+                      ? "bg-rose-600 text-white font-semibold shadow-[0_0_15px_rgba(225,29,72,0.4)]"
+                      : "bg-paper/10 text-paper/60 hover:text-paper hover:bg-paper/15 border border-paper/10"
+                  }`}
+                >
+                  <History size={13} /> Zaman Yolculuğu
+                </button>
+              </div>
+
               <motion.h2
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                transition={{ duration: 0.6 }}
                 className="font-display text-3xl md:text-5xl lg:text-6xl text-paper leading-tight text-balance"
               >
-                Tuval ve Kodun <br className="hidden sm:block" />
-                <span className="text-gradient-animated">Kesişimi</span>
+                {activeTab === "galeri" ? (
+                  <>
+                    Tuval ve Kodun <br className="hidden sm:block" />
+                    <span className="text-gradient-animated">Kesişimi</span>
+                  </>
+                ) : (
+                  <>
+                    Zaman Yolculuğu <br className="hidden sm:block" />
+                    <span className="text-gradient-animated">Atölye Seçkileri</span>
+                  </>
+                )}
               </motion.h2>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-col items-start md:items-end gap-3"
-            >
-              <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
-                Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
-                Ok tuşlarıyla eserler arasında gezinin.
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsAccordionOpen((prev) => !prev)}
-                  className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2 px-4 rounded-full border shadow-sm cursor-pointer ${
-                    isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
-                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
-                      : "bg-paper/5 text-paper/70 border-paper/15 hover:bg-paper/10 hover:border-paper/30"
-                  }`}
-                >
-                  <SlidersHorizontal size={13} />
-                  <span>Filtrele & Ara</span>
-                  {activeFilter !== "Tümü" && (
-                    <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
-                  )}
-                  {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
+            {activeTab === "galeri" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-start md:items-end gap-3"
+              >
+                <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
+                  Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
+                  Ok tuşlarıyla eserler arasında gezinin.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsAccordionOpen((prev) => !prev)}
+                    className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2 px-4 rounded-full border shadow-sm cursor-pointer ${
+                      isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
+                        : "bg-paper/5 text-paper/70 border-paper/15 hover:bg-paper/10 hover:border-paper/30"
+                    }`}
+                  >
+                    <SlidersHorizontal size={13} />
+                    <span>Filtrele & Ara</span>
+                    {activeFilter !== "Tümü" && (
+                      <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
+                    )}
+                    {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
 
-                <button
-                  onClick={handleShuffle}
-                  className="group inline-flex items-center gap-2 font-mono text-xs text-brush-soft hover:text-paper transition-all py-2 px-4 rounded-full border border-paper/15 bg-paper/5 hover:bg-paper/10 hover:border-brush-soft/50 shadow-sm cursor-pointer"
-                  title="Sergiyi Karıştır"
-                >
-                  <RefreshCw size={13} className="group-hover:rotate-180 transition-transform duration-500" />
-                  Karıştır
-                </button>
-              </div>
-            </motion.div>
+                  <button
+                    onClick={handleShuffle}
+                    className="group inline-flex items-center gap-2 font-mono text-xs text-brush-soft hover:text-paper transition-all py-2 px-4 rounded-full border border-paper/15 bg-paper/5 hover:bg-paper/10 hover:border-brush-soft/50 shadow-sm cursor-pointer"
+                    title="Sergiyi Karıştır"
+                  >
+                    <RefreshCw size={13} className="group-hover:rotate-180 transition-transform duration-500" />
+                    Karıştır
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* ─── Accordion Filter Bar ─── */}
           <AnimatePresence>
-            {isAccordionOpen && (
+            {activeTab === "galeri" && isAccordionOpen && (
               <motion.div
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}
                 animate={{ opacity: 1, height: "auto", marginTop: 24 }}
@@ -234,9 +287,8 @@ export default function Gallery() {
                 className="overflow-hidden bg-ink-soft/90 border border-paper/12 rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
               >
                 <div className="flex flex-col gap-5">
-                  {/* Top Bar: Search & Sort */}
+                  {/* Search & Sort */}
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {/* Search Input */}
                     <div className="relative flex items-center">
                       <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
                       <input
@@ -256,7 +308,6 @@ export default function Gallery() {
                       )}
                     </div>
 
-                    {/* Sort Options */}
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-paper/40 shrink-0">Sırala:</span>
                       <div className="flex flex-wrap gap-1.5 flex-1">
@@ -330,106 +381,118 @@ export default function Gallery() {
           </AnimatePresence>
         </header>
 
-        {/* ─── Pinterest Masonry Grid (Infinitely Extending Downward) ─── */}
-        <div
-          className="pinterest-grid"
-          style={{
-            columns: "1",
-            columnGap: "1.25rem",
-          }}
-        >
-          {/* Responsive columns via CSS */}
-          <style>{`
-            @media (min-width: 640px) {
-              .pinterest-grid { columns: 2 !important; column-gap: 1.25rem !important; }
-            }
-            @media (min-width: 1024px) {
-              .pinterest-grid { columns: 3 !important; column-gap: 1.25rem !important; }
-            }
-            @media (min-width: 1280px) {
-              .pinterest-grid { columns: 4 !important; column-gap: 1.25rem !important; }
-            }
-          `}</style>
+        {/* ─── TAB 1: Pinterest Masonry Grid (Infinitely Extending Downward) ─── */}
+        {activeTab === "galeri" && (
+          <div
+            className="pinterest-grid"
+            style={{
+              columns: "1",
+              columnGap: "1.25rem",
+            }}
+          >
+            {/* Responsive columns via CSS */}
+            <style>{`
+              @media (min-width: 640px) {
+                .pinterest-grid { columns: 2 !important; column-gap: 1.25rem !important; }
+              }
+              @media (min-width: 1024px) {
+                .pinterest-grid { columns: 3 !important; column-gap: 1.25rem !important; }
+              }
+              @media (min-width: 1280px) {
+                .pinterest-grid { columns: 4 !important; column-gap: 1.25rem !important; }
+              }
+            `}</style>
 
-          <AnimatePresence mode="popLayout">
-            {processedItems.map((p, i) => (
-              <motion.div
-                key={p.id || i}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
-                className="break-inside-avoid mb-4 md:mb-5"
-              >
-                <TiltCard
-                  className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
-                  onClick={() => setActiveIdx(i)}
+            <AnimatePresence mode="popLayout">
+              {processedItems.map((p, i) => (
+                <motion.div
+                  key={p.id || i}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
+                  className="break-inside-avoid mb-4 md:mb-5"
                 >
-                  {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
-                  {p.image ? (
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      loading="lazy"
-                      className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
-                      onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    />
-                  ) : (
-                    <div className="aspect-[4/5] w-full">
-                      <PaintingCanvas
-                        seed={p.seed}
-                        palette={p.palette}
-                        className="w-full h-full"
+                  <TiltCard
+                    className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
+                    onClick={() => setActiveIdx(i)}
+                  >
+                    {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        loading="lazy"
+                        className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="aspect-[4/5] w-full">
+                        <PaintingCanvas
+                          seed={p.seed}
+                          palette={p.palette}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
 
-                  {/* Yıl Rozeti */}
-                  {p.year && (
-                    <div className="absolute top-3 right-3 z-10">
-                      <span className="font-mono text-[11px] px-2.5 py-1 rounded-full backdrop-blur-md bg-ink/70 text-brush-soft border border-paper/12 shadow-sm">
-                        {p.year}
+                    {/* Yıl Rozeti */}
+                    {p.year && (
+                      <div className="absolute top-3 right-3 z-10">
+                        <span className="font-mono text-[11px] px-2.5 py-1 rounded-full backdrop-blur-md bg-ink/70 text-brush-soft border border-paper/12 shadow-sm">
+                          {p.year}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Büyüt İkonu */}
+                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
+                        <Maximize2 size={13} />
                       </span>
                     </div>
-                  )}
 
-                  {/* Büyüt İkonu */}
-                  <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
-                      <Maximize2 size={13} />
-                    </span>
-                  </div>
+                    {/* Animasyonlu Çerçeve Glow */}
+                    <div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
+                      style={{
+                        boxShadow: "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
+                      }}
+                    />
 
-                  {/* Animasyonlu Çerçeve Glow */}
-                  <div
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
-                    style={{
-                      boxShadow: "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
-                    }}
-                  />
-
-                  {/* Alt Bilgi Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
-                    <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90">
-                      <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
-                        {p.title || "İsimsiz Eser"}
-                      </h3>
-                      {p.medium && (
-                        <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
-                          {p.medium}
-                        </p>
-                      )}
+                    {/* Alt Bilgi Overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
+                      <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90">
+                        <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
+                          {p.title || "İsimsiz Eser"}
+                        </h3>
+                        {p.medium && (
+                          <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
+                            {p.medium}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                  </TiltCard>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* ─── TAB 2: Zaman Yolculuğu Overlay / 3D Infinite Gallery ─── */}
+        {activeTab === "zaman-yolculugu" && (
+          <div className="relative w-full h-[70vh] min-h-[500px] rounded-2xl overflow-hidden border border-paper/12 bg-ink-soft/40 shadow-2xl">
+            <InfiniteGallery images={infiniteGalleryImages} />
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 font-mono text-xs text-paper/50 bg-ink/80 backdrop-blur-md px-4 py-2 rounded-full border border-paper/10 pointer-events-none">
+              Mouse tekerleği, yön tuşları veya dokunarak zamanda yolculuk yapın.
+            </div>
+          </div>
+        )}
 
         {/* Boş durum */}
-        {processedItems.length === 0 && (
+        {activeTab === "galeri" && processedItems.length === 0 && (
           <div className="text-center py-20 bg-ink-soft/30 rounded-2xl border border-paper/10 mt-6">
             <Sparkles size={32} className="text-brush-soft/50 mx-auto mb-4" />
             <p className="font-sans text-paper/60 text-sm">
