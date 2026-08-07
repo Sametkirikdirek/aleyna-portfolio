@@ -62,6 +62,15 @@ export default function DragScrollStrip({ children, className = "", showControls
     applyForce(bounceForce);
   };
 
+  // Calculate single card step width
+  const getCardStepWidth = useCallback(() => {
+    if (!trackRef.current || !trackRef.current.firstElementChild) return 272;
+    const cardEl = trackRef.current.firstElementChild;
+    const style = window.getComputedStyle(trackRef.current);
+    const gap = parseFloat(style.gap) || 16;
+    return cardEl.getBoundingClientRect().width + gap;
+  }, []);
+
   const getLeftBound = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return -2000;
     const containerWidth = containerRef.current.clientWidth;
