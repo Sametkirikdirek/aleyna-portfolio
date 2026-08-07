@@ -387,8 +387,6 @@ export default function Gallery() {
       list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     } else if (sortBy === "oldest") {
       list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
-    } else if (sortBy === "likes") {
-      list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
     }
 
     return list;
@@ -451,7 +449,7 @@ export default function Gallery() {
   }, [timelineImagesList]);
 
   return (
-    <section className="min-h-screen px-4 sm:px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink text-paper">
+    <section className="min-h-screen px-3 sm:px-6 md:px-10 pt-24 sm:pt-28 pb-20 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
         {/* ─── Header & Controls ─── */}
         <header className="mb-8 md:mb-12">
@@ -611,6 +609,7 @@ export default function Gallery() {
                         ))}
                       </div>
                     </div>
+                    {/* NOTE: Beğeniye göre sıralama sadece admin panelinde görünür */}
                   </div>
 
                   {/* Technique Categories */}
@@ -672,51 +671,55 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* ─── OPTION 3: AYIN TUVALLERİ / ATÖLYE HASADI ─── */}
+        {/* ─── AYIN TUVALLERİ – Yatay Kaydırılabilir Şerit ─── */}
         {activeTab === "galeri" && monthlyArtworks.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 p-6 md:p-8 backdrop-blur-xl shadow-2xl"
+            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 px-5 pt-6 pb-7 md:px-8 md:pt-7 md:pb-8 backdrop-blur-xl shadow-2xl"
           >
             {/* Ambient Glow Orbs */}
             <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
 
             {/* Header Info */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+            <div className="flex items-center justify-between gap-3 mb-5 relative z-10">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-mono text-[11px] tracking-wider uppercase mb-2">
-                  <Calendar size={12} /> AYIN TUVALLERİ · ZİYARETÇİ FAVORİLERİ
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-mono text-[10px] tracking-wider uppercase mb-1.5">
+                  <Calendar size={11} /> AYIN TUVALLERİ
                 </div>
-                <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
-                  Ayın Tuval Günlüğü <span className="text-brush-soft text-sm md:text-base font-mono font-normal">({monthlyArtworks.length} Seçkisi)</span>
+                <h3 className="font-display text-xl sm:text-2xl md:text-3xl text-paper font-bold">
+                  Ayın Tuval Günlüğü
                 </h3>
-                <p className="font-sans text-xs sm:text-sm text-paper/60 mt-1 max-w-xl">
-                  En çok beğeni toplayan ziyaretçi favorileri ve atölyede bu ay öne çıkarılan tuvaller.
+                <p className="font-sans text-[11px] sm:text-xs text-paper/55 mt-0.5">
+                  Kaydırarak tüm seçkileri görün
                 </p>
               </div>
-
-              <div className="shrink-0 flex items-center gap-2">
-                <span className="font-mono text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20 flex items-center gap-1.5">
-                  🔥 Öne Çıkan Seçkiler
-                </span>
-              </div>
+              <span className="shrink-0 font-mono text-[10px] text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-xl border border-rose-500/20 flex items-center gap-1.5">
+                🔥 {monthlyArtworks.length} Seçki
+              </span>
             </div>
 
-            {/* 4 Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 relative z-10">
+            {/* ─── Yatay Kaydırılabilir Şerit ─── */}
+            <div
+              className="relative z-10 flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {/* Fade edges */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-10 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-2xl" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-10 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-2xl" />
+
               {monthlyArtworks.map((item) => (
                 <motion.div
                   key={item.id}
-                  whileHover={{ y: -6 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  transition={{ duration: 0.25 }}
                   onClick={() => setLightboxCustomItem(item)}
-                  className="group relative rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500"
+                  className="group relative flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(244,63,94,0.2)] transition-all duration-400 snap-start"
                 >
                   {/* Image */}
-                  <div className="aspect-[4/5] w-full overflow-hidden relative">
+                  <div className="aspect-[3/4] w-full overflow-hidden relative">
                     {item.image ? (
                       <img
                         src={item.image}
@@ -729,20 +732,20 @@ export default function Gallery() {
                     )}
 
                     {/* Zoom Icon */}
-                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
-                        <Maximize2 size={13} />
+                    <div className="absolute top-2.5 left-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="p-1.5 rounded-full backdrop-blur-md bg-ink/80 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg">
+                        <Maximize2 size={12} />
                       </span>
                     </div>
                   </div>
 
                   {/* Details */}
-                  <div className="p-3.5 bg-gradient-to-t from-ink via-ink/90 to-transparent">
-                    <h4 className="font-display text-base text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
+                  <div className="p-3 bg-gradient-to-t from-ink via-ink/90 to-transparent">
+                    <h4 className="font-display text-sm text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
                       {item.title || "İsimsiz Eser"}
                     </h4>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="font-mono text-[11px] text-paper/50 truncate">
+                      <p className="font-mono text-[10px] text-paper/50 truncate">
                         {item.medium || "Tuval Çalışması"}
                       </p>
                       <span className="font-mono text-[10px] text-rose-400/80 shrink-0">
