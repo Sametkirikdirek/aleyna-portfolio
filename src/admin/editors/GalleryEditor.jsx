@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Upload, Scissors, Heart, Sparkles } from "lucide-react";
+import { Plus, Trash2, Upload, Scissors, Heart, Flame, Trophy } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
@@ -28,6 +28,17 @@ export default function GalleryEditor() {
       setArtworks(data.artworks || []);
     }
   }, [data]);
+
+  // Compute top-liked artworks for quick-select
+  const topLiked = [...(artworks)]
+    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+    .slice(0, 5);
+
+  const toggleFeatured = (id) => {
+    setArtworks((prev) =>
+      prev.map((a) => a.id === id ? { ...a, featuredInMonthly: !a.featuredInMonthly } : a)
+    );
+  };
 
   const save = async () => {
     setSaveStatus("saving");
@@ -128,7 +139,8 @@ export default function GalleryEditor() {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <p className="text-xs text-white/50">
-          <strong className="text-white/80">"Yeni Eser Ekle"</strong> ile galerinize resim yükleyin. <strong className="text-rose-400 font-semibold">"Ayın Tuvalinde Göster"</strong> işaretleyerek vitrine taşıyın!
+          <strong className="text-white/80">"Yeni Eser Ekle"</strong> ile galerinize resim yükleyin.{" "}
+          <strong className="text-rose-400 font-semibold">"Ayın Tuvalinde Göster"</strong> işaretleyerek vitrine taşıyın!
         </p>
 
         <button
@@ -137,6 +149,33 @@ export default function GalleryEditor() {
         >
           <Plus size={15} /> Yeni Eser Ekle
         </button>
+      </div>
+
+      {/* ─── En Çok Beğenilen Hızlı Seçim Paneli ─── */}
+      <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Trophy size={15} className="text-amber-400" />
+          <h4 className="font-mono text-sm font-semibold text-amber-300">Hızlı Seçim — En Çok Beğenilen Eserler</h4>
+          <span className="text-[10px] font-mono text-white/40 ml-1">(Tıklayınca ayın tuvaline ekle/kaldır)</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {topLiked.map((art) => (
+            <button
+              key={art.id}
+              onClick={() => toggleFeatured(art.id)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+                art.featuredInMonthly
+                  ? "bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.2)]"
+                  : "bg-white/[0.04] border-white/15 text-white/60 hover:border-amber-500/50 hover:text-amber-300"
+              }`}
+            >
+              <Heart size={11} className={art.featuredInMonthly ? "fill-rose-400 text-rose-400" : "text-white/40"} />
+              <span className="truncate max-w-[120px]">{art.title || "İsimsiz"}</span>
+              <span className="text-[10px] text-amber-400/80 font-bold">{art.likes || 0} ♥</span>
+              {art.featuredInMonthly && <Flame size={11} className="text-rose-400 shrink-0" />}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4">
