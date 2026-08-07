@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 /**
  * DragScrollStrip
  * David DeSandro (practical-ui-physics / Flickity) photo-scroller physics engine.
- * Uses 1:1 exact DeSandro bound attraction, friction momentum, and GPU translate3d rendering.
+ * Fully supports desktop mouse drag & mobile touch swipe with instant 1-card arrow navigation (no boundary lock bug).
  */
 export default function DragScrollStrip({ children, className = "", showControls = true }) {
   const containerRef = useRef(null);
@@ -14,7 +14,7 @@ export default function DragScrollStrip({ children, className = "", showControls
   const positionX = useRef(0);
   const dragPositionX = useRef(0);
   const velocityX = useRef(0);
-  const friction = 0.92;
+  const friction = 0.91;
   const isDragging = useRef(false);
 
   const dragStartX = useRef(0);
@@ -29,7 +29,7 @@ export default function DragScrollStrip({ children, className = "", showControls
   const applyDragForce = () => {
     if (!isDragging.current) return;
     const dragVelocity = dragPositionX.current - positionX.current;
-    const dragForce = (dragVelocity - velocityX.current) * 0.35;
+    const dragForce = (dragVelocity - velocityX.current) * 0.38;
     applyForce(dragForce);
   };
 
@@ -38,7 +38,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     if (isDragging.current || isInside) return;
 
     const distance = bound - positionX.current;
-    const force = distance * 0.12;
+    const force = distance * 0.14;
     const restX = positionX.current + (velocityX.current + force) * friction / (1 - friction);
     const isRestOutside = isForward ? restX > bound : restX < bound;
 
@@ -47,7 +47,7 @@ export default function DragScrollStrip({ children, className = "", showControls
       return;
     }
     // Bounce back align
-    const bounceForce = distance * 0.12 - velocityX.current;
+    const bounceForce = distance * 0.14 - velocityX.current;
     applyForce(bounceForce);
   };
 
@@ -106,12 +106,20 @@ export default function DragScrollStrip({ children, className = "", showControls
     return cardEl.getBoundingClientRect().width + gap;
   }, []);
 
-  // Arrow controls: Smooth single card step using DeSandro momentum impulse
+  // Arrow controls: Smooth 1-card step using DeSandro momentum & position step (no boundary lock)
   const scrollPrev = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return;
     const step = getCardStepWidth();
-    dragPositionX.current = Math.min(0, positionX.current + step);
-    velocityX.current = 14;
+    
+    if (positionX.current >= 0) {
+      // Elastic rebound bounce at start
+      velocityX.current = 10;
+    } else {
+      // Step 1 card to left
+      const nextPos = Math.min(0, positionX.current + step);
+      dragPositionX.current = nextPos;
+      velocityX.current = 8;
+    }
     startLoop();
   }, [getCardStepWidth, startLoop]);
 
@@ -121,11 +129,20 @@ export default function DragScrollStrip({ children, className = "", showControls
     const trackWidth = trackRef.current.scrollWidth;
     const leftBound = Math.min(0, containerWidth - trackWidth);
     const step = getCardStepWidth();
-    dragPositionX.current = Math.max(leftBound, positionX.current - step);
-    velocityX.current = -14;
+
+    if (positionX.current <= leftBound) {
+      // Elastic rebound bounce at end
+      velocityX.current = -10;
+    } else {
+      // Step 1 card to right
+      const nextPos = Math.max(leftBound, positionX.current - step);
+      dragPositionX.current = nextPos;
+      velocityX.current = -8;
+    }
     startLoop();
   }, [getCardStepWidth, startLoop]);
 
+  // Desktop Mouse Events
   const onMousedown = useCallback((e) => {
     if (e.button !== 0) return;
     e.preventDefault();
@@ -166,6 +183,37 @@ export default function DragScrollStrip({ children, className = "", showControls
     startLoop();
   }, [startLoop]);
 
+  // Mobile Touch Events
+  const onTouchStart = useCallback((e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    isDragging.current = true;
+    hasMoved.current = false;
+
+    dragStartX.current = touch.pageX;
+    particleDragStartX.current = positionX.current;
+    dragPositionX.current = positionX.current;
+
+    startLoop();
+  }, [startLoop]);
+
+  const onTouchMove = useCallback((e) => {
+    if (!isDragging.current || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const moveX = touch.pageX - dragStartX.current;
+    if (Math.abs(moveX) > 4) {
+      hasMoved.current = true;
+    }
+    dragPositionX.current = particleDragStartX.current + moveX;
+    startLoop();
+  }, [startLoop]);
+
+  const onTouchEnd = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    startLoop();
+  }, [startLoop]);
+
   // Prevent native browser image drag
   useEffect(() => {
     const el = containerRef.current;
@@ -193,7 +241,7 @@ export default function DragScrollStrip({ children, className = "", showControls
       <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-xl" />
       <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-xl" />
 
-      {/* Left/Right Navigation Arrow Overlay Buttons (DeSandro physics 1-card step) */}
+      {/* Left/Right Navigation Arrow Overlay Buttons (Smooth 1-card step) */}
       {showControls && (
         <>
           <button
@@ -216,7 +264,7 @@ export default function DragScrollStrip({ children, className = "", showControls
         </>
       )}
 
-      {/* DeSandro Physics Container */}
+      {/* DeSandro Physics Container for Mouse & Touch */}
       <div
         ref={containerRef}
         className={`overflow-hidden pb-3 cursor-grab select-none ${className}`}
@@ -224,6 +272,9 @@ export default function DragScrollStrip({ children, className = "", showControls
         onMouseMove={onMousemove}
         onMouseUp={onMouseup}
         onMouseLeave={onMouseup}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         onClickCapture={onClickCapture}
       >
         <div
