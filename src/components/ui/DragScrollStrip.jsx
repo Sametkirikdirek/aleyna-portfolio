@@ -1,97 +1,185 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 /**
  * DragScrollStrip
- * Mouse drag + touch scroll horizontal container with spring rubber-band bounce.
- * Supports dragging over images without trigger native browser image drag.
+ * Pure requestAnimationFrame particle-physics horizontal container based on user's exact rubber-band spring algorithm.
+ * Handles mouse drag directly over images, flick inertia momentum, and elastic bound rebound without React state glitching.
  */
 export default function DragScrollStrip({ children, className = "" }) {
-  const scrollRef = useRef(null);
+  const containerRef = useRef(null);
+  const trackRef = useRef(null);
+
+  // Physics simulation variables (exact match to particle bounce system)
+  const positionX = useRef(0);
+  const velocityX = useRef(0);
+  const dragPositionX = useRef(0);
   const isDragging = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
-  const hasDragged = useRef(false);
-  
-  const [bounceOffset, setBounceOffset] = useState(0);
-  const [isReleasing, setIsReleasing] = useState(false);
+  const mousedownX = useRef(0);
+  const dragStartPositionX = useRef(0);
+  const hasMoved = useRef(false);
+  const animFrameId = useRef(null);
+
+  const friction = 0.93;
+
+  const animate = useCallback(() => {
+    if (!containerRef.current || !trackRef.current) return;
+
+    const container = containerRef.current;
+    const track = trackRef.current;
+    const rightBound = Math.max(0, container.scrollWidth - container.clientWidth);
+
+    let pos = positionX.current;
+    let vel = velocityX.current;
+    const dragging = isDragging.current;
+
+    // 1) Apply drag force
+    if (dragging) {
+      const dragVelocity = dragPositionX.current - pos;
+      const dragForce = (dragVelocity - vel) * 0.4;
+      vel += dragForce;
+    } 
+    // 2) Apply left bound force (0)
+    else if (pos < 0) {
+      const distance = 0 - pos;
+      const force = distance * 0.12;
+      const restX = pos + (vel + force) / (1 - friction);
+      if (restX < 0) {
+        vel += force;
+      } else {
+        const alignForce = distance * 0.12 - vel;
+        vel += alignForce;
+      }
+    } 
+    // 3) Apply right bound force (rightBound)
+    else if (pos > rightBound && rightBound > 0) {
+      const distance = rightBound - pos;
+      const force = distance * 0.12;
+      const restX = pos + (vel + force) / (1 - friction);
+      if (restX > rightBound) {
+        vel += force;
+      } else {
+        const alignForce = distance * 0.12 - vel;
+        vel += alignForce;
+      }
+    }
+
+    // 4) Apply friction and position update
+    vel *= friction;
+    pos += vel;
+
+    positionX.current = pos;
+    velocityX.current = vel;
+
+    // 5) Render to DOM with GPU acceleration
+    if (pos >= 0 && pos <= rightBound) {
+      container.scrollLeft = pos;
+      track.style.transform = "translate3d(0, 0, 0)";
+    } else if (pos < 0) {
+      container.scrollLeft = 0;
+      track.style.transform = `translate3d(${-pos}px, 0, 0)`;
+    } else {
+      container.scrollLeft = rightBound;
+      track.style.transform = `translate3d(${rightBound - pos}px, 0, 0)`;
+    }
+
+    // Continue animation loop
+    const isOutOfBounds = pos < -0.1 || pos > rightBound + 0.1;
+    const isMoving = Math.abs(vel) > 0.02;
+
+    if (dragging || isMoving || isOutOfBounds) {
+      animFrameId.current = requestAnimationFrame(animate);
+    } else {
+      // Snap neatly at resting position
+      if (pos < 0) positionX.current = 0;
+      if (pos > rightBound) positionX.current = rightBound;
+      velocityX.current = 0;
+      track.style.transform = "translate3d(0, 0, 0)";
+      animFrameId.current = null;
+    }
+  }, [friction]);
+
+  const startLoop = useCallback(() => {
+    if (!animFrameId.current) {
+      animFrameId.current = requestAnimationFrame(animate);
+    }
+  }, [animate]);
 
   const onMouseDown = useCallback((e) => {
-    if (!scrollRef.current) return;
+    if (!containerRef.current || e.button !== 0) return;
+
     isDragging.current = true;
-    hasDragged.current = false;
-    setIsReleasing(false);
-    startX.current = e.pageX;
-    scrollLeft.current = scrollRef.current.scrollLeft;
-    scrollRef.current.style.cursor = "grabbing";
-    scrollRef.current.style.userSelect = "none";
-  }, []);
+    hasMoved.current = false;
+
+    // Sync pos with current scrollLeft
+    const currentScroll = containerRef.current.scrollLeft;
+    positionX.current = currentScroll;
+    dragStartPositionX.current = currentScroll;
+    dragPositionX.current = currentScroll;
+    velocityX.current = 0;
+
+    mousedownX.current = e.pageX;
+
+    containerRef.current.style.cursor = "grabbing";
+    containerRef.current.style.userSelect = "none";
+
+    startLoop();
+  }, [startLoop]);
 
   const onMouseMove = useCallback((e) => {
-    if (!isDragging.current || !scrollRef.current) return;
-    
-    const deltaX = e.pageX - startX.current;
-    if (Math.abs(deltaX) > 4) {
-      hasDragged.current = true;
+    if (!isDragging.current) return;
+
+    const moveX = e.pageX - mousedownX.current;
+    if (Math.abs(moveX) > 3) {
+      hasMoved.current = true;
     }
 
-    const container = scrollRef.current;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-    const targetScroll = scrollLeft.current - deltaX * 1.2;
+    // Move in scroll direction (dragging left scrolls right)
+    dragPositionX.current = dragStartPositionX.current - moveX * 1.15;
 
-    if (targetScroll < 0) {
-      // Rubber-band elastic over-scroll at left edge
-      container.scrollLeft = 0;
-      const elastic = Math.pow(Math.abs(targetScroll), 0.72) * 1.6;
-      setBounceOffset(elastic);
-    } else if (targetScroll > maxScroll && maxScroll > 0) {
-      // Rubber-band elastic over-scroll at right edge
-      container.scrollLeft = maxScroll;
-      const elastic = -Math.pow(targetScroll - maxScroll, 0.72) * 1.6;
-      setBounceOffset(elastic);
-    } else {
-      container.scrollLeft = Math.max(0, targetScroll);
-      setBounceOffset(0);
-    }
-  }, []);
+    startLoop();
+  }, [startLoop]);
 
   const onMouseUp = useCallback(() => {
     if (!isDragging.current) return;
     isDragging.current = false;
-    if (scrollRef.current) {
-      scrollRef.current.style.cursor = "grab";
-      scrollRef.current.style.userSelect = "";
-    }
-    setIsReleasing(true);
-    setBounceOffset(0);
-  }, []);
 
-  // Prevent native image drag (browser default behavior) so images can be dragged smoothly
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "grab";
+      containerRef.current.style.userSelect = "";
+    }
+
+    startLoop();
+  }, [startLoop]);
+
+  // Prevent native browser image drag
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = containerRef.current;
     if (!el) return;
 
-    const handleDragStart = (e) => e.preventDefault();
-    el.addEventListener("dragstart", handleDragStart);
-    return () => el.removeEventListener("dragstart", handleDragStart);
+    const preventDrag = (e) => e.preventDefault();
+    el.addEventListener("dragstart", preventDrag);
+    return () => {
+      el.removeEventListener("dragstart", preventDrag);
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    };
   }, []);
 
-  // Prevent click firing after a drag
   const onClickCapture = useCallback((e) => {
-    if (hasDragged.current) {
+    if (hasMoved.current) {
       e.stopPropagation();
       e.preventDefault();
-      hasDragged.current = false;
+      hasMoved.current = false;
     }
   }, []);
 
   return (
     <div className="relative z-10 overflow-hidden">
-      {/* Fade edges */}
+      {/* Edge Fade Gradients */}
       <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-xl" />
       <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-xl" />
 
       <div
-        ref={scrollRef}
+        ref={containerRef}
         className={`flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory cursor-grab select-none ${className}`}
         style={{ WebkitOverflowScrolling: "touch" }}
         onMouseDown={onMouseDown}
@@ -101,14 +189,9 @@ export default function DragScrollStrip({ children, className = "" }) {
         onClickCapture={onClickCapture}
       >
         <div
-          className="flex gap-4 w-full transition-transform"
-          style={{
-            transform: `translateX(${bounceOffset}px)`,
-            transition: isReleasing
-              ? "transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-              : "none",
-            willChange: "transform",
-          }}
+          ref={trackRef}
+          className="flex gap-4 w-full"
+          style={{ willChange: "transform" }}
         >
           {children}
         </div>

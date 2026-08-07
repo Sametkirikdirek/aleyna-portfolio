@@ -360,15 +360,11 @@ export default function Gallery() {
     if (!items || items.length === 0) return [];
     
     const featured = items.filter((item) => item.featuredInMonthly);
-    if (featured.length >= 4) {
-      return featured.slice(0, 4);
+    if (featured.length > 0) {
+      return featured;
     }
     
-    const remaining = [...items]
-      .filter((item) => !featured.some((f) => f.id === item.id))
-      .sort((a, b) => (b.likes || 0) - (a.likes || 0));
-
-    return [...featured, ...remaining].slice(0, 4);
+    return [...items].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 6);
   }, [items]);
 
   // Filter & Sort Pipeline for Main Pinterest Grid (Contains ALL artworks including generated harvest paintings)
