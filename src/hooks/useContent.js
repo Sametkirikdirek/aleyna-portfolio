@@ -54,6 +54,13 @@ export function useContent(docId, fallback) {
 
   useEffect(() => {
     load();
+
+    const handleUpdate = () => {
+      load();
+    };
+
+    window.addEventListener("portfolio_content_updated", handleUpdate);
+    return () => window.removeEventListener("portfolio_content_updated", handleUpdate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docId]);
 

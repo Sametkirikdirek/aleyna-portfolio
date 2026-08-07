@@ -64,13 +64,31 @@ export default function GalleryEditor() {
     setSaveStatus("saving");
     try {
       await setContent("gallery", { artworks });
-      // Update cache
+      // Update cache & trigger sync event
       localStorage.setItem("portfolio_cache_gallery", JSON.stringify({ artworks }));
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
+    }
+  };
+
+  const resetAllLikes = async () => {
+    if (!window.confirm("Tüm eserlerin beğeni sayılarını 0 yapmak istediğinize emin misiniz?")) {
+      return;
+    }
+    const zeroed = artworks.map((art) => ({ ...art, likes: 0 }));
+    setArtworks(zeroed);
+    try {
+      localStorage.removeItem("user_liked_artworks");
+      localStorage.setItem("portfolio_cache_gallery", JSON.stringify({ artworks: zeroed }));
+      await setContent("gallery", { artworks: zeroed });
+      window.dispatchEvent(new Event("portfolio_content_updated"));
+      alert("Tüm beğeni sayıları 0'a sıfırlandı!");
+    } catch (err) {
+      console.error("Sıfırlama hatası:", err);
     }
   };
 
@@ -170,12 +188,22 @@ export default function GalleryEditor() {
           <strong className="text-rose-400 font-semibold">"Ayın Tuvalinde Göster"</strong> işaretleyerek vitrine taşıyın!
         </p>
 
-        <button
-          onClick={addArtwork}
-          className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer shrink-0"
-        >
-          <Plus size={15} /> Yeni Eser Ekle
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={resetAllLikes}
+            className="flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+            title="Tüm eserlerin beğeni sayılarını 0 yap"
+          >
+            <Heart size={13} className="text-amber-400" /> Tüm Beğenileri Sıfırla (0 Yap)
+          </button>
+
+          <button
+            onClick={addArtwork}
+            className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer shrink-0"
+          >
+            <Plus size={15} /> Yeni Eser Ekle
+          </button>
+        </div>
       </div>
 
       {/* ─── Hızlı Seçim Paneli ─── */}
