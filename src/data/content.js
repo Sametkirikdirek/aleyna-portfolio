@@ -143,7 +143,7 @@ export const paintings = [
     image: "/gallery/aylik_hasat_1.png",
     size: "80x100 cm",
     note: "Sıcak kırmızılar, altın varak detayları ve tuval üzerinde derin dokulu fırça darbeleriyle Ağustos ayının ilk atölye çalışması.",
-    likes: 42,
+    likes: 0,
     featuredInMonthly: true,
   },
   {
@@ -154,7 +154,7 @@ export const paintings = [
     image: "/gallery/aylik_hasat_2.png",
     size: "70x120 cm",
     note: "Zümrüt yeşili ve kobalt mavisi katmanların altın dokularla buluştuğu dikey kompozisyonlu yeni dönem çalışması.",
-    likes: 38,
+    likes: 0,
     featuredInMonthly: true,
   },
   {
@@ -165,7 +165,7 @@ export const paintings = [
     image: "/gallery/aylik_hasat_3.png",
     size: "90x90 cm",
     note: "Yumuşak mercan tonları, ışıldayan siyan hatlar ve modern galeri estetiğini yansıtan tuval üzeri akrilik.",
-    likes: 31,
+    likes: 0,
     featuredInMonthly: true,
   },
   {
@@ -176,7 +176,7 @@ export const paintings = [
     image: "/gallery/aylik_hasat_4.png",
     size: "100x100 cm",
     note: "Kehribar tonları, bronz yaldız ve kömür kalemi darbelerinin ahşap panel üzerinde birleştiği müze kalitesinde eser.",
-    likes: 27,
+    likes: 0,
     featuredInMonthly: true,
   },
   {
@@ -187,7 +187,7 @@ export const paintings = [
     seed: 142,
     image: "/gallery/art-1.png",
     note: "Yapay sinir ağlarındaki veri akışının katmanlı renk geçişleriyle tuvale aktarılması.",
-    likes: 19,
+    likes: 0,
     featuredInMonthly: false,
   },
   {
@@ -198,7 +198,7 @@ export const paintings = [
     seed: 88,
     image: "/gallery/art-2.png",
     note: "Üretimsel modellerin latent uzayındaki biçim arayışının fırça darbeleriyle somutlaşması.",
-    likes: 24,
+    likes: 0,
     featuredInMonthly: false,
   },
   {
@@ -209,7 +209,7 @@ export const paintings = [
     seed: 205,
     image: "/gallery/art-3.png",
     note: "Mühendislik titizliği ile sanatsal serbestliğin tuval yüzeyindeki dengesi.",
-    likes: 15,
+    likes: 0,
     featuredInMonthly: false,
   },
   {
@@ -220,7 +220,7 @@ export const paintings = [
     seed: 310,
     image: "/gallery/art-4.png",
     note: "Dijital ekranlardaki piksel yapısının tuvaldeki boya katmanlarıyla diyaloğu.",
-    likes: 18,
+    likes: 0,
     featuredInMonthly: false,
   },
   {
@@ -231,7 +231,7 @@ export const paintings = [
     seed: 512,
     image: "/gallery/art-5.png",
     note: "Çok boyutlu veri uzaylarının iki boyutlu yüzeyde renk kümeleri olarak izdüşümü.",
-    likes: 12,
+    likes: 0,
     featuredInMonthly: false,
   },
   {
@@ -242,7 +242,7 @@ export const paintings = [
     seed: 740,
     image: "/gallery/art-6.png",
     note: "Kod döngülerinin getirdiği zihinsel odaklanmanın kağıt üzerindeki şeffaf izleri.",
-    likes: 22,
+    likes: 0,
     featuredInMonthly: false,
   },
 ];
