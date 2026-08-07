@@ -29,15 +29,35 @@ export default function GalleryEditor() {
     }
   }, [data]);
 
+  // Compute counts for quick status
+  const spotlightCount = useMemo(() => artworks.filter((a) => a.featuredInSpotlight).length, [artworks]);
+  const monthlyCount = useMemo(() => artworks.filter((a) => a.featuredInMonthly).length, [artworks]);
+
   // Compute top-liked artworks for quick-select
-  const topLiked = [...(artworks)]
-    .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-    .slice(0, 5);
+  const topLiked = useMemo(() => {
+    return [...(artworks)]
+      .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+      .slice(0, 5);
+  }, [artworks]);
 
   const toggleFeatured = (id) => {
     setArtworks((prev) =>
       prev.map((a) => a.id === id ? { ...a, featuredInMonthly: !a.featuredInMonthly } : a)
     );
+  };
+
+  const toggleSpotlight = (id) => {
+    setArtworks((prev) => {
+      const art = prev.find((a) => a.id === id);
+      if (art && !art.featuredInSpotlight) {
+        const currentCount = prev.filter((a) => a.featuredInSpotlight).length;
+        if (currentCount >= 5) {
+          alert("Öne Çıkanlar (Spotlight) vitrinine en fazla 5 eser seçilebilir!");
+          return prev;
+        }
+      }
+      return prev.map((a) => a.id === id ? { ...a, featuredInSpotlight: !a.featuredInSpotlight } : a);
+    });
   };
 
   const save = async () => {
@@ -56,6 +76,13 @@ export default function GalleryEditor() {
 
   const updateArtwork = (idx, key, value) => {
     setArtworks((prev) => {
+      if (key === "featuredInSpotlight" && value === true) {
+        const count = prev.filter((a) => a.featuredInSpotlight).length;
+        if (count >= 5) {
+          alert("Öne Çıkanlar (Spotlight) vitrini için en fazla 5 eser seçebilirsiniz!");
+          return prev;
+        }
+      }
       const next = [...prev];
       next[idx] = { ...next[idx], [key]: value };
       return next;
@@ -151,30 +178,60 @@ export default function GalleryEditor() {
         </button>
       </div>
 
-      {/* ─── En Çok Beğenilen Hızlı Seçim Paneli ─── */}
-      <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Trophy size={15} className="text-amber-400" />
-          <h4 className="font-mono text-sm font-semibold text-amber-300">Hızlı Seçim — En Çok Beğenilen Eserler</h4>
-          <span className="text-[10px] font-mono text-white/40 ml-1">(Tıklayınca ayın tuvaline ekle/kaldır)</span>
+      {/* ─── Hızlı Seçim Paneli ─── */}
+      <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 border-b border-amber-500/15 pb-2">
+          <div className="flex items-center gap-2">
+            <Trophy size={16} className="text-amber-400" />
+            <h4 className="font-mono text-sm font-semibold text-amber-300">Vitrin & Ayın Tuvalleri Yönetimi</h4>
+          </div>
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span className="text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded border border-rose-500/30">🔥 Ayın Tuvalleri: {monthlyCount}</span>
+            <span className={`px-2 py-0.5 rounded border ${spotlightCount >= 5 ? "bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold" : "bg-white/5 text-white/60 border-white/10"}`}>🏆 Öne Çıkanlar: {spotlightCount}/5</span>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {topLiked.map((art) => (
-            <button
-              key={art.id}
-              onClick={() => toggleFeatured(art.id)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
-                art.featuredInMonthly
-                  ? "bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.2)]"
-                  : "bg-white/[0.04] border-white/15 text-white/60 hover:border-amber-500/50 hover:text-amber-300"
-              }`}
-            >
-              <Heart size={11} className={art.featuredInMonthly ? "fill-rose-400 text-rose-400" : "text-white/40"} />
-              <span className="truncate max-w-[120px]">{art.title || "İsimsiz"}</span>
-              <span className="text-[10px] text-amber-400/80 font-bold">{art.likes || 0} ♥</span>
-              {art.featuredInMonthly && <Flame size={11} className="text-rose-400 shrink-0" />}
-            </button>
-          ))}
+
+        <div>
+          <p className="text-[11px] font-mono text-white/50 mb-2">En çok beğenilen eserler üzerinden hızlı seçim yapabilirsiniz:</p>
+          <div className="flex flex-wrap gap-2">
+            {topLiked.map((art) => (
+              <div
+                key={art.id}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-xs font-mono"
+              >
+                <span className="truncate max-w-[110px] text-white/80 font-medium">{art.title || "İsimsiz"}</span>
+                <span className="text-[10px] text-amber-400 font-bold mr-1">{art.likes || 0} ♥</span>
+                
+                {/* Monthly Toggle */}
+                <button
+                  type="button"
+                  onClick={() => toggleFeatured(art.id)}
+                  title="Ayın Tuvalinde Göster"
+                  className={`p-1 rounded transition-colors ${
+                    art.featuredInMonthly
+                      ? "bg-rose-500/25 text-rose-300 border border-rose-500/50"
+                      : "bg-white/5 text-white/30 hover:text-white"
+                  }`}
+                >
+                  🔥
+                </button>
+
+                {/* Spotlight Toggle */}
+                <button
+                  type="button"
+                  onClick={() => toggleSpotlight(art.id)}
+                  title="Öne Çıkanlarda Göster (Maks 5)"
+                  className={`p-1 rounded transition-colors ${
+                    art.featuredInSpotlight
+                      ? "bg-amber-500/25 text-amber-300 border border-amber-500/50"
+                      : "bg-white/5 text-white/30 hover:text-white"
+                  }`}
+                >
+                  🏆
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
