@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Plus, Trash2, Upload, Scissors, Heart, Flame, Trophy } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
