@@ -26,6 +26,11 @@ export default function DragScrollStrip({ children, className = "", showControls
   const targetX = useRef(null); // null = no active arrow animation
   const animFrameId = useRef(null);
 
+  // Arrow ease-out animation state
+  const arrowStartTime = useRef(null);
+  const arrowFromX = useRef(0);
+  const ARROW_DURATION = 320; // ms
+
   const FRICTION = 0.91;
 
   // ─── helpers ────────────────────────────────────────────────────────────────
@@ -47,19 +52,23 @@ export default function DragScrollStrip({ children, className = "", showControls
     const leftBound = getLeftBound();
 
     if (targetX.current !== null) {
-      // ── Arrow mode: smooth lerp to target, NO boundary spring ──
-      const diff = targetX.current - positionX.current;
-      const lerpForce = (diff - velocityX.current) * 0.25;
-      velocityX.current += lerpForce;
-      velocityX.current *= FRICTION;
-      positionX.current += velocityX.current;
+      // ── Arrow mode: fixed-duration ease-out cubic (no spring, no overshoot) ──
+      const now = performance.now();
+      if (arrowStartTime.current === null) {
+        arrowStartTime.current = now;
+        arrowFromX.current = positionX.current;
+      }
+      const elapsed = now - arrowStartTime.current;
+      const t = Math.min(elapsed / ARROW_DURATION, 1);
+      // Cubic ease-out: t => 1 - (1-t)^3
+      const eased = 1 - Math.pow(1 - t, 3);
+      positionX.current = arrowFromX.current + (targetX.current - arrowFromX.current) * eased;
+      velocityX.current = 0;
 
-      const remaining = Math.abs(targetX.current - positionX.current);
-      if (remaining < 0.4 && Math.abs(velocityX.current) < 0.2) {
-        // Arrived — snap to exact target and stop
+      if (t >= 1) {
         positionX.current = targetX.current;
-        velocityX.current = 0;
         targetX.current = null;
+        arrowStartTime.current = null;
         trackRef.current.style.transform = `translate3d(${positionX.current}px, 0, 0)`;
         animFrameId.current = null;
         return;
@@ -136,6 +145,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     const step = getCardStep();
     const next = Math.min(0, positionX.current + step);
     targetX.current = next;
+    arrowStartTime.current = null; // reset so animation starts fresh
     startLoop();
   }, [startLoop]);
 
@@ -144,6 +154,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     const step = getCardStep();
     const next = Math.max(leftBound, positionX.current - step);
     targetX.current = next;
+    arrowStartTime.current = null; // reset so animation starts fresh
     startLoop();
   }, [startLoop]);
 
