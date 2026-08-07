@@ -94,7 +94,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
             <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
           </div>
           <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
-            Öne Çıkan En İyiler <span className="text-brush-soft text-sm md:text-base font-mono font-normal">({artworks.length} Eser)</span>
+            Öne Çıkan En İyiler
           </h3>
           <p className="font-sans text-xs sm:text-sm text-paper/60 mt-1 max-w-xl">
             Sanatseverlerin ve ziyaretçilerin kalbine dokunan ikonik atölye serileri.
@@ -344,15 +344,14 @@ export default function Gallery() {
   }, [mergedArtworks]);
 
   // Compute "Enler" Top Artworks for Spotlight Carousel
-  // Priority: 1) Admin-selected featuredInSpotlight, 2) Top liked
+  // Priority: 1) Admin-selected featuredInSpotlight (if any selected), 2) Top liked (fallback)
   const topEnlerArtworks = useMemo(() => {
     if (!items || items.length === 0) return [];
     const spotlighted = items.filter((a) => a.featuredInSpotlight);
-    if (spotlighted.length >= 5) return spotlighted.slice(0, 5);
-    const remaining = [...items]
-      .filter((a) => !spotlighted.some((s) => s.id === a.id))
-      .sort((a, b) => (b.likes || 0) - (a.likes || 0));
-    return [...spotlighted, ...remaining].slice(0, 5);
+    if (spotlighted.length > 0) {
+      return spotlighted.slice(0, 5);
+    }
+    return [...items].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
   }, [items]);
 
   // Compute Monthly Showcase Artworks dynamically from Admin featured or Top Liked
