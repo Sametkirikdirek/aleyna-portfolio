@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 /**
  * DragScrollStrip
  * David DeSandro (practical-ui-physics / Flickity) photo-scroller physics engine.
- * Fully supports desktop mouse drag & mobile touch swipe with instant 1-card arrow navigation (no boundary lock bug).
+ * Fully supports desktop mouse drag, mobile touch swipe, and smooth 1-card target spring animation for arrows.
  */
 export default function DragScrollStrip({ children, className = "", showControls = true }) {
   const containerRef = useRef(null);
@@ -14,8 +14,9 @@ export default function DragScrollStrip({ children, className = "", showControls
   const positionX = useRef(0);
   const dragPositionX = useRef(0);
   const velocityX = useRef(0);
-  const friction = 0.91;
+  const friction = 0.90;
   const isDragging = useRef(false);
+  const isAnimatingTarget = useRef(false);
 
   const dragStartX = useRef(0);
   const particleDragStartX = useRef(0);
@@ -27,10 +28,20 @@ export default function DragScrollStrip({ children, className = "", showControls
   };
 
   const applyDragForce = () => {
-    if (!isDragging.current) return;
+    if (!isDragging.current && !isAnimatingTarget.current) return;
+
     const dragVelocity = dragPositionX.current - positionX.current;
-    const dragForce = (dragVelocity - velocityX.current) * 0.38;
+    const dragForce = (dragVelocity - velocityX.current) * 0.28;
     applyForce(dragForce);
+
+    // Settle target animation once arrived near target card
+    if (!isDragging.current && isAnimatingTarget.current) {
+      if (Math.abs(dragVelocity) < 0.5 && Math.abs(velocityX.current) < 0.2) {
+        positionX.current = dragPositionX.current;
+        velocityX.current = 0;
+        isAnimatingTarget.current = false;
+      }
+    }
   };
 
   const applyBoundForce = (bound, isForward) => {
@@ -57,10 +68,10 @@ export default function DragScrollStrip({ children, className = "", showControls
     const containerWidth = containerRef.current.clientWidth;
     const trackWidth = trackRef.current.scrollWidth;
 
-    const rightBound = 0; // left edge
+    const rightBound = 0; // left edge (0)
     const leftBound = Math.min(0, containerWidth - trackWidth); // right edge (negative offset)
 
-    // 1) Apply Drag Force
+    // 1) Apply Drag / Target Attraction Force
     applyDragForce();
 
     // 2) Apply DeSandro Boundary Forces
@@ -75,11 +86,11 @@ export default function DragScrollStrip({ children, className = "", showControls
     const pos = positionX.current;
     trackRef.current.style.transform = `translate3d(${pos}px, 0, 0)`;
 
-    // Continue loop if moving, dragging or rebounding
+    // Continue loop if moving, dragging, animating target or rebounding
     const isOutside = pos > 0.5 || pos < leftBound - 0.5;
     const isMoving = Math.abs(velocityX.current) > 0.03;
 
-    if (isDragging.current || isMoving || isOutside) {
+    if (isDragging.current || isAnimatingTarget.current || isMoving || isOutside) {
       animFrameId.current = requestAnimationFrame(updatePhysics);
     } else {
       // Snap neatly to exact bound
@@ -106,19 +117,19 @@ export default function DragScrollStrip({ children, className = "", showControls
     return cardEl.getBoundingClientRect().width + gap;
   }, []);
 
-  // Arrow controls: Smooth 1-card step using DeSandro momentum & position step (no boundary lock)
+  // Arrow controls: Smooth 1-card spring target attraction
   const scrollPrev = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return;
     const step = getCardStepWidth();
-    
+
     if (positionX.current >= 0) {
-      // Elastic rebound bounce at start
+      // Elastic spring bounce if already at first photo
       velocityX.current = 10;
     } else {
-      // Step 1 card to left
+      // Smoothly pull 1 card step to the left
       const nextPos = Math.min(0, positionX.current + step);
       dragPositionX.current = nextPos;
-      velocityX.current = 8;
+      isAnimatingTarget.current = true;
     }
     startLoop();
   }, [getCardStepWidth, startLoop]);
@@ -130,14 +141,14 @@ export default function DragScrollStrip({ children, className = "", showControls
     const leftBound = Math.min(0, containerWidth - trackWidth);
     const step = getCardStepWidth();
 
-    if (positionX.current <= leftBound) {
-      // Elastic rebound bounce at end
+    if (positionX.current <= leftBound + 2) {
+      // Elastic spring bounce if already at last photo
       velocityX.current = -10;
     } else {
-      // Step 1 card to right
+      // Smoothly pull 1 card step to the right
       const nextPos = Math.max(leftBound, positionX.current - step);
       dragPositionX.current = nextPos;
-      velocityX.current = -8;
+      isAnimatingTarget.current = true;
     }
     startLoop();
   }, [getCardStepWidth, startLoop]);
@@ -148,6 +159,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     e.preventDefault();
 
     isDragging.current = true;
+    isAnimatingTarget.current = false;
     hasMoved.current = false;
 
     dragStartX.current = e.pageX;
@@ -188,6 +200,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     isDragging.current = true;
+    isAnimatingTarget.current = false;
     hasMoved.current = false;
 
     dragStartX.current = touch.pageX;
