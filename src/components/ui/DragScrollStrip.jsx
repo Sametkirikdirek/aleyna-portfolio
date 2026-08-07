@@ -62,14 +62,25 @@ export default function DragScrollStrip({ children, className = "", showControls
     applyForce(bounceForce);
   };
 
+  const getLeftBound = useCallback(() => {
+    if (!containerRef.current || !trackRef.current) return -2000;
+    const containerWidth = containerRef.current.clientWidth;
+    const trackWidth = trackRef.current.scrollWidth;
+    let bound = containerWidth - trackWidth;
+
+    // Safety fallback if trackWidth layout hasn't populated yet
+    if (bound >= 0 && trackRef.current.children.length > 1) {
+      const step = getCardStepWidth();
+      bound = -(trackRef.current.children.length * step - containerWidth);
+    }
+    return Math.min(-10, bound);
+  }, [getCardStepWidth]);
+
   const updatePhysics = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return;
 
-    const containerWidth = containerRef.current.clientWidth;
-    const trackWidth = trackRef.current.scrollWidth;
-
     const rightBound = 0; // left edge (0)
-    const leftBound = Math.min(0, containerWidth - trackWidth); // right edge (negative offset)
+    const leftBound = getLeftBound(); // right edge (negative offset)
 
     // 1) Apply Drag / Target Attraction Force
     applyDragForce();
@@ -100,22 +111,13 @@ export default function DragScrollStrip({ children, className = "", showControls
       trackRef.current.style.transform = `translate3d(${positionX.current}px, 0, 0)`;
       animFrameId.current = null;
     }
-  }, [friction]);
+  }, [friction, getLeftBound]);
 
   const startLoop = useCallback(() => {
     if (!animFrameId.current) {
       animFrameId.current = requestAnimationFrame(updatePhysics);
     }
   }, [updatePhysics]);
-
-  // Calculate single card step width
-  const getCardStepWidth = useCallback(() => {
-    if (!trackRef.current || !trackRef.current.firstElementChild) return 272;
-    const cardEl = trackRef.current.firstElementChild;
-    const style = window.getComputedStyle(trackRef.current);
-    const gap = parseFloat(style.gap) || 16;
-    return cardEl.getBoundingClientRect().width + gap;
-  }, []);
 
   // Arrow controls: Smooth 1-card step without extra spring bounce
   const scrollPrev = useCallback(() => {
@@ -129,15 +131,13 @@ export default function DragScrollStrip({ children, className = "", showControls
 
   const scrollNext = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return;
-    const containerWidth = containerRef.current.clientWidth;
-    const trackWidth = trackRef.current.scrollWidth;
-    const leftBound = Math.min(0, containerWidth - trackWidth);
+    const leftBound = getLeftBound();
     const step = getCardStepWidth();
     const nextPos = Math.max(leftBound, positionX.current - step);
     dragPositionX.current = nextPos;
     isAnimatingTarget.current = true;
     startLoop();
-  }, [getCardStepWidth, startLoop]);
+  }, [getCardStepWidth, getLeftBound, startLoop]);
 
   // Desktop Mouse Events
   const onMousedown = useCallback((e) => {
