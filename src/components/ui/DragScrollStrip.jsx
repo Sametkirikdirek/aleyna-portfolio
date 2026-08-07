@@ -3,124 +3,126 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
  * DragScrollStrip
- * David DeSandro (practical-ui-physics / Flickity) photo-scroller physics engine.
- * Fully supports desktop mouse drag, mobile touch swipe, and smooth 1-card target spring animation for arrows.
+ * David DeSandro photo-scroller physics engine.
+ * - Mouse/touch drag: full DeSandro friction + rubber-band boundary forces
+ * - Arrow buttons: direct smooth lerp to target (NO boundary spring, NO lock)
  */
 export default function DragScrollStrip({ children, className = "", showControls = true }) {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
 
-  // DeSandro Physics Variables
+  // Physics state
   const positionX = useRef(0);
-  const dragPositionX = useRef(0);
   const velocityX = useRef(0);
-  const friction = 0.90;
   const isDragging = useRef(false);
-  const isAnimatingTarget = useRef(false);
 
+  // Drag tracking
   const dragStartX = useRef(0);
   const particleDragStartX = useRef(0);
+  const dragPositionX = useRef(0);
   const hasMoved = useRef(false);
+
+  // Arrow animation state (separate from drag)
+  const targetX = useRef(null); // null = no active arrow animation
   const animFrameId = useRef(null);
 
-  const applyForce = (force) => {
-    velocityX.current += force;
+  const FRICTION = 0.91;
+
+  // ─── helpers ────────────────────────────────────────────────────────────────
+
+  const getLeftBound = () => {
+    if (!containerRef.current || !trackRef.current) return -9999;
+    return Math.min(0, containerRef.current.clientWidth - trackRef.current.scrollWidth);
   };
 
-  const applyDragForce = () => {
-    if (!isDragging.current && !isAnimatingTarget.current) return;
-
-    const dragVelocity = dragPositionX.current - positionX.current;
-    const dragForce = (dragVelocity - velocityX.current) * 0.28;
-    applyForce(dragForce);
-
-    // Settle target animation once arrived near target card
-    if (!isDragging.current && isAnimatingTarget.current) {
-      if (Math.abs(dragVelocity) < 0.5 && Math.abs(velocityX.current) < 0.2) {
-        positionX.current = dragPositionX.current;
-        velocityX.current = 0;
-        isAnimatingTarget.current = false;
-      }
-    }
+  const getCardStep = () => {
+    if (!trackRef.current?.firstElementChild) return 280;
+    const gap = parseFloat(window.getComputedStyle(trackRef.current).gap) || 16;
+    return trackRef.current.firstElementChild.getBoundingClientRect().width + gap;
   };
 
-  const applyBoundForce = (bound, isForward) => {
-    const isInside = isForward ? positionX.current < bound : positionX.current > bound;
-    if (isDragging.current || isInside) return;
-
-    const distance = bound - positionX.current;
-    const force = distance * 0.14;
-    const restX = positionX.current + (velocityX.current + force) * friction / (1 - friction);
-    const isRestOutside = isForward ? restX > bound : restX < bound;
-
-    if (isRestOutside) {
-      applyForce(force);
-      return;
-    }
-    // Bounce back align
-    const bounceForce = distance * 0.14 - velocityX.current;
-    applyForce(bounceForce);
-  };
-
-  // Calculate single card step width
-  const getCardStepWidth = useCallback(() => {
-    if (!trackRef.current || !trackRef.current.firstElementChild) return 272;
-    const cardEl = trackRef.current.firstElementChild;
-    const style = window.getComputedStyle(trackRef.current);
-    const gap = parseFloat(style.gap) || 16;
-    return cardEl.getBoundingClientRect().width + gap;
-  }, []);
-
-  const getLeftBound = useCallback(() => {
-    if (!containerRef.current || !trackRef.current) return -2000;
-    const containerWidth = containerRef.current.clientWidth;
-    const trackWidth = trackRef.current.scrollWidth;
-    let bound = containerWidth - trackWidth;
-
-    // Safety fallback if trackWidth layout hasn't populated yet
-    if (bound >= 0 && trackRef.current.children.length > 1) {
-      const step = getCardStepWidth();
-      bound = -(trackRef.current.children.length * step - containerWidth);
-    }
-    return Math.min(-10, bound);
-  }, [getCardStepWidth]);
+  // ─── physics loop ────────────────────────────────────────────────────────────
 
   const updatePhysics = useCallback(() => {
-    if (!containerRef.current || !trackRef.current) return;
+    const leftBound = getLeftBound();
 
-    const rightBound = 0; // left edge (0)
-    const leftBound = getLeftBound(); // right edge (negative offset)
+    if (targetX.current !== null) {
+      // ── Arrow mode: smooth lerp to target, NO boundary spring ──
+      const diff = targetX.current - positionX.current;
+      const lerpForce = (diff - velocityX.current) * 0.25;
+      velocityX.current += lerpForce;
+      velocityX.current *= FRICTION;
+      positionX.current += velocityX.current;
 
-    // 1) Apply Drag / Target Attraction Force
-    applyDragForce();
+      const remaining = Math.abs(targetX.current - positionX.current);
+      if (remaining < 0.4 && Math.abs(velocityX.current) < 0.2) {
+        // Arrived — snap to exact target and stop
+        positionX.current = targetX.current;
+        velocityX.current = 0;
+        targetX.current = null;
+        trackRef.current.style.transform = `translate3d(${positionX.current}px, 0, 0)`;
+        animFrameId.current = null;
+        return;
+      }
 
-    // 2) Apply DeSandro Boundary Forces
-    applyBoundForce(rightBound, true);
-    applyBoundForce(leftBound, false);
+    } else if (isDragging.current) {
+      // ── Drag mode: DeSandro drag force + boundary rubber-band ──
+      const dragVel = dragPositionX.current - positionX.current;
+      const dragForce = (dragVel - velocityX.current) * 0.38;
+      velocityX.current += dragForce;
 
-    // 3) Integrate Friction & Position
-    velocityX.current *= friction;
-    positionX.current += velocityX.current;
+      // Rubber-band boundary forces (only during drag)
+      const applyBound = (bound, isRight) => {
+        const outside = isRight ? positionX.current > bound : positionX.current < bound;
+        if (!outside) return;
+        const dist = bound - positionX.current;
+        const force = dist * 0.14;
+        const restX = positionX.current + (velocityX.current + force) * FRICTION / (1 - FRICTION);
+        const willOvershoot = isRight ? restX > bound : restX < bound;
+        velocityX.current += willOvershoot ? force : (dist * 0.14 - velocityX.current);
+      };
+      applyBound(0, true);         // right boundary (start)
+      applyBound(leftBound, false); // left boundary (end)
 
-    // 4) Render via GPU translate3d
-    const pos = positionX.current;
-    trackRef.current.style.transform = `translate3d(${pos}px, 0, 0)`;
+      velocityX.current *= FRICTION;
+      positionX.current += velocityX.current;
 
-    // Continue loop if moving, dragging, animating target or rebounding
-    const isOutside = pos > 0.5 || pos < leftBound - 0.5;
+    } else {
+      // ── Release/coast mode: friction decay + boundary spring ──
+      const applyBound = (bound, isRight) => {
+        const outside = isRight ? positionX.current > bound : positionX.current < bound;
+        if (!outside) return;
+        const dist = bound - positionX.current;
+        const force = dist * 0.14;
+        const restX = positionX.current + (velocityX.current + force) * FRICTION / (1 - FRICTION);
+        const willOvershoot = isRight ? restX > bound : restX < bound;
+        velocityX.current += willOvershoot ? force : (dist * 0.14 - velocityX.current);
+      };
+      applyBound(0, true);
+      applyBound(leftBound, false);
+
+      velocityX.current *= FRICTION;
+      positionX.current += velocityX.current;
+    }
+
+    // Render
+    trackRef.current.style.transform = `translate3d(${positionX.current}px, 0, 0)`;
+
+    // Continue?
+    const isOutside = positionX.current > 0.5 || positionX.current < leftBound - 0.5;
     const isMoving = Math.abs(velocityX.current) > 0.03;
 
-    if (isDragging.current || isAnimatingTarget.current || isMoving || isOutside) {
+    if (isDragging.current || targetX.current !== null || isMoving || isOutside) {
       animFrameId.current = requestAnimationFrame(updatePhysics);
     } else {
-      // Snap neatly to exact bound
-      if (pos > 0) positionX.current = 0;
-      if (pos < leftBound) positionX.current = leftBound;
+      // Final snap
+      if (positionX.current > 0) positionX.current = 0;
+      if (positionX.current < leftBound) positionX.current = leftBound;
       velocityX.current = 0;
       trackRef.current.style.transform = `translate3d(${positionX.current}px, 0, 0)`;
       animFrameId.current = null;
     }
-  }, [friction, getLeftBound]);
+  }, []);
 
   const startLoop = useCallback(() => {
     if (!animFrameId.current) {
@@ -128,53 +130,45 @@ export default function DragScrollStrip({ children, className = "", showControls
     }
   }, [updatePhysics]);
 
-  // Arrow controls: Smooth 1-card step without extra spring bounce
+  // ─── Arrow controls ──────────────────────────────────────────────────────────
+
   const scrollPrev = useCallback(() => {
-    if (!containerRef.current || !trackRef.current) return;
-    const step = getCardStepWidth();
-    const nextPos = Math.min(0, positionX.current + step);
-    dragPositionX.current = nextPos;
-    isAnimatingTarget.current = true;
+    const step = getCardStep();
+    const next = Math.min(0, positionX.current + step);
+    targetX.current = next;
     startLoop();
-  }, [getCardStepWidth, startLoop]);
+  }, [startLoop]);
 
   const scrollNext = useCallback(() => {
-    if (!containerRef.current || !trackRef.current) return;
     const leftBound = getLeftBound();
-    const step = getCardStepWidth();
-    const nextPos = Math.max(leftBound, positionX.current - step);
-    dragPositionX.current = nextPos;
-    isAnimatingTarget.current = true;
+    const step = getCardStep();
+    const next = Math.max(leftBound, positionX.current - step);
+    targetX.current = next;
     startLoop();
-  }, [getCardStepWidth, getLeftBound, startLoop]);
+  }, [startLoop]);
 
-  // Desktop Mouse Events
+  // ─── Mouse events ────────────────────────────────────────────────────────────
+
   const onMousedown = useCallback((e) => {
     if (e.button !== 0) return;
     e.preventDefault();
-
     isDragging.current = true;
-    isAnimatingTarget.current = false;
+    targetX.current = null; // cancel any arrow animation
     hasMoved.current = false;
-
     dragStartX.current = e.pageX;
     particleDragStartX.current = positionX.current;
     dragPositionX.current = positionX.current;
-
     if (containerRef.current) {
       containerRef.current.style.cursor = "grabbing";
       containerRef.current.style.userSelect = "none";
     }
-
     startLoop();
   }, [startLoop]);
 
   const onMousemove = useCallback((e) => {
     if (!isDragging.current) return;
     const moveX = e.pageX - dragStartX.current;
-    if (Math.abs(moveX) > 4) {
-      hasMoved.current = true;
-    }
+    if (Math.abs(moveX) > 4) hasMoved.current = true;
     dragPositionX.current = particleDragStartX.current + moveX;
     startLoop();
   }, [startLoop]);
@@ -182,7 +176,6 @@ export default function DragScrollStrip({ children, className = "", showControls
   const onMouseup = useCallback(() => {
     if (!isDragging.current) return;
     isDragging.current = false;
-
     if (containerRef.current) {
       containerRef.current.style.cursor = "grab";
       containerRef.current.style.userSelect = "";
@@ -190,28 +183,25 @@ export default function DragScrollStrip({ children, className = "", showControls
     startLoop();
   }, [startLoop]);
 
-  // Mobile Touch Events
+  // ─── Touch events ────────────────────────────────────────────────────────────
+
   const onTouchStart = useCallback((e) => {
     if (e.touches.length !== 1) return;
-    const touch = e.touches[0];
+    const t = e.touches[0];
     isDragging.current = true;
-    isAnimatingTarget.current = false;
+    targetX.current = null;
     hasMoved.current = false;
-
-    dragStartX.current = touch.pageX;
+    dragStartX.current = t.pageX;
     particleDragStartX.current = positionX.current;
     dragPositionX.current = positionX.current;
-
     startLoop();
   }, [startLoop]);
 
   const onTouchMove = useCallback((e) => {
     if (!isDragging.current || e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    const moveX = touch.pageX - dragStartX.current;
-    if (Math.abs(moveX) > 4) {
-      hasMoved.current = true;
-    }
+    const t = e.touches[0];
+    const moveX = t.pageX - dragStartX.current;
+    if (Math.abs(moveX) > 4) hasMoved.current = true;
     dragPositionX.current = particleDragStartX.current + moveX;
     startLoop();
   }, [startLoop]);
@@ -222,18 +212,7 @@ export default function DragScrollStrip({ children, className = "", showControls
     startLoop();
   }, [startLoop]);
 
-  // Prevent native browser image drag
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const preventDrag = (e) => e.preventDefault();
-    el.addEventListener("dragstart", preventDrag);
-    return () => {
-      el.removeEventListener("dragstart", preventDrag);
-      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
-    };
-  }, []);
+  // ─── Click-through guard ─────────────────────────────────────────────────────
 
   const onClickCapture = useCallback((e) => {
     if (hasMoved.current) {
@@ -243,13 +222,27 @@ export default function DragScrollStrip({ children, className = "", showControls
     }
   }, []);
 
+  // ─── Cleanup ─────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const preventDrag = (e) => e.preventDefault();
+    el.addEventListener("dragstart", preventDrag);
+    return () => {
+      el.removeEventListener("dragstart", preventDrag);
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    };
+  }, []);
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className="relative z-10 overflow-hidden group/strip">
-      {/* Edge Fade Gradients */}
+      {/* Edge fade gradients */}
       <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-xl" />
       <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-xl" />
 
-      {/* Left/Right Navigation Arrow Overlay Buttons (Smooth 1-card step) */}
       {showControls && (
         <>
           <button
@@ -272,7 +265,7 @@ export default function DragScrollStrip({ children, className = "", showControls
         </>
       )}
 
-      {/* DeSandro Physics Container for Mouse & Touch */}
+      {/* Physics container */}
       <div
         ref={containerRef}
         className={`overflow-hidden pb-3 cursor-grab select-none ${className}`}
