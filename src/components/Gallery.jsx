@@ -712,7 +712,7 @@ export default function Gallery() {
                 <div
                   key={item.id}
                   onClick={() => setLightboxCustomItem(item)}
-                  className="group relative flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(244,63,94,0.2)] transition-all duration-300 snap-start"
+                  className="group relative flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(244,63,94,0.2)] transition-all duration-300"
                 >
                   {/* Image */}
                   <div className="aspect-[3/4] w-full overflow-hidden relative">
