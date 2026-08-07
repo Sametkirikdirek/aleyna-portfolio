@@ -9,6 +9,7 @@ import { useGallery, useTimeline } from "../hooks/useContent";
 import { paintings as defaultPaintings } from "../data/content";
 import { setContent } from "../lib/firestore";
 import InfiniteGallery from "./ui/infinite-gallery";
+import DragScrollStrip from "./ui/DragScrollStrip";
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -343,9 +344,15 @@ export default function Gallery() {
   }, [mergedArtworks]);
 
   // Compute "Enler" Top Artworks for Spotlight Carousel
+  // Priority: 1) Admin-selected featuredInSpotlight, 2) Top liked
   const topEnlerArtworks = useMemo(() => {
     if (!items || items.length === 0) return [];
-    return [...items].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+    const spotlighted = items.filter((a) => a.featuredInSpotlight);
+    if (spotlighted.length >= 5) return spotlighted.slice(0, 5);
+    const remaining = [...items]
+      .filter((a) => !spotlighted.some((s) => s.id === a.id))
+      .sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    return [...spotlighted, ...remaining].slice(0, 5);
   }, [items]);
 
   // Compute Monthly Showcase Artworks dynamically from Admin featured or Top Liked
@@ -387,6 +394,8 @@ export default function Gallery() {
       list.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     } else if (sortBy === "oldest") {
       list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
+    } else if (sortBy === "likes") {
+      list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
     }
 
     return list;
@@ -592,6 +601,7 @@ export default function Gallery() {
                       <div className="flex flex-wrap gap-1.5 flex-1">
                         {[
                           { id: "default", label: "Varsayılan" },
+                          { id: "likes", label: "❤️ Beğeniye Göre" },
                           { id: "newest", label: "Yeniye Göre" },
                           { id: "oldest", label: "Eskiye Göre" },
                         ].map((s) => (
@@ -609,7 +619,6 @@ export default function Gallery() {
                         ))}
                       </div>
                     </div>
-                    {/* NOTE: Beğeniye göre sıralama sadece admin panelinde görünür */}
                   </div>
 
                   {/* Technique Categories */}
@@ -701,22 +710,13 @@ export default function Gallery() {
               </span>
             </div>
 
-            {/* ─── Yatay Kaydırılabilir Şerit ─── */}
-            <div
-              className="relative z-10 flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              {/* Fade edges */}
-              <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-10 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-2xl" />
-              <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-10 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-2xl" />
-
+            {/* ─── Drag-Scroll Şeridi (mouse + touch) ─── */}
+            <DragScrollStrip>
               {monthlyArtworks.map((item) => (
-                <motion.div
+                <div
                   key={item.id}
-                  whileHover={{ y: -4, scale: 1.02 }}
-                  transition={{ duration: 0.25 }}
                   onClick={() => setLightboxCustomItem(item)}
-                  className="group relative flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(244,63,94,0.2)] transition-all duration-400 snap-start"
+                  className="group relative flex-shrink-0 w-48 sm:w-56 md:w-64 rounded-2xl overflow-hidden bg-ink/80 border border-paper/12 hover:border-rose-500/50 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(244,63,94,0.2)] transition-all duration-300 snap-start"
                 >
                   {/* Image */}
                   <div className="aspect-[3/4] w-full overflow-hidden relative">
@@ -753,9 +753,9 @@ export default function Gallery() {
                       </span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </div>
+            </DragScrollStrip>
           </motion.div>
         )}
 

@@ -267,19 +267,35 @@ export default function GalleryEditor() {
                   <TextInput value={art.medium} onChange={(v) => updateArtwork(idx, "medium", v)} placeholder="Yağlı Boya & Dijital Karışım" />
                 </Field>
 
-                {/* Ayın Tuvalinde Göster Toggle Switch */}
-                <div className="pt-6">
-                  <label className="inline-flex items-center gap-2 cursor-pointer bg-white/[0.04] border border-white/10 hover:border-rose-500/40 px-3 py-2 rounded-xl transition-all">
-                    <input
-                      type="checkbox"
-                      checked={!!art.featuredInMonthly}
-                      onChange={(e) => updateArtwork(idx, "featuredInMonthly", e.target.checked)}
-                      className="rounded border-white/20 text-rose-500 focus:ring-rose-500 bg-black/40"
-                    />
-                    <span className="text-xs font-mono text-white/80 flex items-center gap-1.5">
-                      🔥 <strong className={art.featuredInMonthly ? "text-rose-300 font-bold" : "text-white/60"}>Ayın Tuvalinde Göster</strong>
-                    </span>
-                  </label>
+                {/* Ayın Tuvalinde Göster + Öne Çıkanlarda Göster Toggle Butonlar */}
+                <div className="pt-3 flex flex-wrap gap-2">
+                  {/* Ayın Tuvalinde Göster */}
+                  <button
+                    type="button"
+                    onClick={() => updateArtwork(idx, "featuredInMonthly", !art.featuredInMonthly)}
+                    className={`inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all text-xs font-mono ${
+                      art.featuredInMonthly
+                        ? "bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)]"
+                        : "bg-white/[0.04] border-white/10 hover:border-rose-500/40 text-white/60"
+                    }`}
+                  >
+                    <span className="text-base leading-none">{art.featuredInMonthly ? "✅" : "☐"}</span>
+                    🔥 <strong className={art.featuredInMonthly ? "text-rose-300" : "text-white/50"}>Ayın Tuvalinde Göster</strong>
+                  </button>
+
+                  {/* Öne Çıkanlarda Göster (Spotlight / Enler) */}
+                  <button
+                    type="button"
+                    onClick={() => updateArtwork(idx, "featuredInSpotlight", !art.featuredInSpotlight)}
+                    className={`inline-flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all text-xs font-mono ${
+                      art.featuredInSpotlight
+                        ? "bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                        : "bg-white/[0.04] border-white/10 hover:border-amber-500/40 text-white/60"
+                    }`}
+                  >
+                    <span className="text-base leading-none">{art.featuredInSpotlight ? "✅" : "☐"}</span>
+                    🏆 <strong className={art.featuredInSpotlight ? "text-amber-300" : "text-white/50"}>Öne Çıkanlarda Göster</strong>
+                  </button>
                 </div>
 
                 <div className="sm:col-span-2">
