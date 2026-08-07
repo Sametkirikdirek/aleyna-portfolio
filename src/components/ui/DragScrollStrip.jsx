@@ -117,20 +117,13 @@ export default function DragScrollStrip({ children, className = "", showControls
     return cardEl.getBoundingClientRect().width + gap;
   }, []);
 
-  // Arrow controls: Smooth 1-card spring target attraction
+  // Arrow controls: Smooth 1-card step without extra spring bounce
   const scrollPrev = useCallback(() => {
     if (!containerRef.current || !trackRef.current) return;
     const step = getCardStepWidth();
-
-    if (positionX.current >= 0) {
-      // Elastic spring bounce if already at first photo
-      velocityX.current = 10;
-    } else {
-      // Smoothly pull 1 card step to the left
-      const nextPos = Math.min(0, positionX.current + step);
-      dragPositionX.current = nextPos;
-      isAnimatingTarget.current = true;
-    }
+    const nextPos = Math.min(0, positionX.current + step);
+    dragPositionX.current = nextPos;
+    isAnimatingTarget.current = true;
     startLoop();
   }, [getCardStepWidth, startLoop]);
 
@@ -140,16 +133,9 @@ export default function DragScrollStrip({ children, className = "", showControls
     const trackWidth = trackRef.current.scrollWidth;
     const leftBound = Math.min(0, containerWidth - trackWidth);
     const step = getCardStepWidth();
-
-    if (positionX.current <= leftBound + 2) {
-      // Elastic spring bounce if already at last photo
-      velocityX.current = -10;
-    } else {
-      // Smoothly pull 1 card step to the right
-      const nextPos = Math.max(leftBound, positionX.current - step);
-      dragPositionX.current = nextPos;
-      isAnimatingTarget.current = true;
-    }
+    const nextPos = Math.max(leftBound, positionX.current - step);
+    dragPositionX.current = nextPos;
+    isAnimatingTarget.current = true;
     startLoop();
   }, [getCardStepWidth, startLoop]);
 
