@@ -1,41 +1,78 @@
-import { useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 /**
  * DragScrollStrip
- * Mouse drag + touch scroll horizontal container.
- * Children are laid out in a flex row.
+ * Mouse drag + touch scroll horizontal container with spring rubber-band bounce.
+ * Supports dragging over images without trigger native browser image drag.
  */
 export default function DragScrollStrip({ children, className = "" }) {
-  const ref = useRef(null);
+  const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
   const hasDragged = useRef(false);
+  
+  const [bounceOffset, setBounceOffset] = useState(0);
+  const [isReleasing, setIsReleasing] = useState(false);
 
   const onMouseDown = useCallback((e) => {
-    if (!ref.current) return;
+    if (!scrollRef.current) return;
     isDragging.current = true;
     hasDragged.current = false;
-    startX.current = e.pageX - ref.current.offsetLeft;
-    scrollLeft.current = ref.current.scrollLeft;
-    ref.current.style.cursor = "grabbing";
-    ref.current.style.userSelect = "none";
+    setIsReleasing(false);
+    startX.current = e.pageX;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+    scrollRef.current.style.cursor = "grabbing";
+    scrollRef.current.style.userSelect = "none";
   }, []);
 
   const onMouseMove = useCallback((e) => {
-    if (!isDragging.current || !ref.current) return;
-    e.preventDefault();
-    const x = e.pageX - ref.current.offsetLeft;
-    const walk = (x - startX.current) * 1.4;
-    if (Math.abs(walk) > 4) hasDragged.current = true;
-    ref.current.scrollLeft = scrollLeft.current - walk;
+    if (!isDragging.current || !scrollRef.current) return;
+    
+    const deltaX = e.pageX - startX.current;
+    if (Math.abs(deltaX) > 4) {
+      hasDragged.current = true;
+    }
+
+    const container = scrollRef.current;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const targetScroll = scrollLeft.current - deltaX * 1.2;
+
+    if (targetScroll < 0) {
+      // Rubber-band elastic over-scroll at left edge
+      container.scrollLeft = 0;
+      const elastic = Math.pow(Math.abs(targetScroll), 0.72) * 1.6;
+      setBounceOffset(elastic);
+    } else if (targetScroll > maxScroll && maxScroll > 0) {
+      // Rubber-band elastic over-scroll at right edge
+      container.scrollLeft = maxScroll;
+      const elastic = -Math.pow(targetScroll - maxScroll, 0.72) * 1.6;
+      setBounceOffset(elastic);
+    } else {
+      container.scrollLeft = Math.max(0, targetScroll);
+      setBounceOffset(0);
+    }
   }, []);
 
   const onMouseUp = useCallback(() => {
-    if (!ref.current) return;
+    if (!isDragging.current) return;
     isDragging.current = false;
-    ref.current.style.cursor = "grab";
-    ref.current.style.userSelect = "";
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.userSelect = "";
+    }
+    setIsReleasing(true);
+    setBounceOffset(0);
+  }, []);
+
+  // Prevent native image drag (browser default behavior) so images can be dragged smoothly
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleDragStart = (e) => e.preventDefault();
+    el.addEventListener("dragstart", handleDragStart);
+    return () => el.removeEventListener("dragstart", handleDragStart);
   }, []);
 
   // Prevent click firing after a drag
@@ -48,13 +85,13 @@ export default function DragScrollStrip({ children, className = "" }) {
   }, []);
 
   return (
-    <div className="relative z-10">
+    <div className="relative z-10 overflow-hidden">
       {/* Fade edges */}
-      <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-10 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-xl" />
-      <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-10 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-xl" />
+      <div className="pointer-events-none absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-ink-soft/90 to-transparent z-20 rounded-l-xl" />
+      <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-ink-soft/90 to-transparent z-20 rounded-r-xl" />
 
       <div
-        ref={ref}
+        ref={scrollRef}
         className={`flex gap-4 overflow-x-auto pb-3 scrollbar-none snap-x snap-mandatory cursor-grab select-none ${className}`}
         style={{ WebkitOverflowScrolling: "touch" }}
         onMouseDown={onMouseDown}
@@ -63,7 +100,18 @@ export default function DragScrollStrip({ children, className = "" }) {
         onMouseLeave={onMouseUp}
         onClickCapture={onClickCapture}
       >
-        {children}
+        <div
+          className="flex gap-4 w-full transition-transform"
+          style={{
+            transform: `translateX(${bounceOffset}px)`,
+            transition: isReleasing
+              ? "transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+              : "none",
+            willChange: "transform",
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
