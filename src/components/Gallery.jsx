@@ -90,13 +90,13 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
       {/* Header Info */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-amber-500/15 bg-amber-500/25 dark:border-amber-500/30 border-amber-600/50 dark:text-amber-300 text-amber-950 font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-amber-500/15 bg-amber-500/25 dark:border-amber-500/30 border-amber-600/50 dark:text-amber-300 text-amber-950 font-bold font-mono text-[11px] tracking-wider uppercase mb-2">
             <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
           </div>
           <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
             Öne Çıkan En İyiler
           </h3>
-          <p className="font-sans text-xs sm:text-sm dark:text-paper/60 text-paper/85 mt-1 max-w-xl transition-colors duration-300">
+          <p className="font-sans text-xs sm:text-sm dark:text-paper/60 text-paper/85 mt-1 max-w-xl">
             Sanatseverlerin ve ziyaretçilerin kalbine dokunan ikonik atölye serileri.
           </p>
         </div>
@@ -690,17 +690,17 @@ export default function Gallery() {
             {/* Header Info */}
             <div className="flex items-center justify-between gap-3 mb-5 relative z-10">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 bg-rose-500/25 dark:border-rose-500/30 border-rose-600/50 dark:text-rose-300 text-rose-950 font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5 transition-colors duration-300">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 bg-rose-500/25 dark:border-rose-500/30 border-rose-600/50 dark:text-rose-300 text-rose-950 font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5">
                   <Calendar size={11} /> AYIN TUVALLERİ
                 </div>
                 <h3 className="font-display text-xl sm:text-2xl md:text-3xl text-paper font-bold">
                   Ayın Tuval Günlüğü
                 </h3>
-                <p className="font-sans text-[11px] sm:text-xs dark:text-paper/55 text-paper/85 mt-0.5 transition-colors duration-300">
+                <p className="font-sans text-[11px] sm:text-xs dark:text-paper/55 text-paper/85 mt-0.5">
                   Kaydırarak tüm seçkileri görün
                 </p>
               </div>
-              <span className="shrink-0 font-mono text-[10px] dark:text-rose-400 text-rose-950 dark:bg-rose-500/10 bg-rose-500/25 px-2.5 py-1 rounded-xl border dark:border-rose-500/20 border-rose-600/50 font-bold flex items-center gap-1.5 transition-colors duration-300">
+              <span className="shrink-0 font-mono text-[10px] dark:text-rose-400 text-rose-950 dark:bg-rose-500/10 bg-rose-500/25 px-2.5 py-1 rounded-xl border dark:border-rose-500/20 border-rose-600/50 font-bold flex items-center gap-1.5">
                 🔥 {monthlyArtworks.length} Seçki
               </span>
             </div>
