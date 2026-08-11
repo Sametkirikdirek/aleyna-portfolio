@@ -50,6 +50,7 @@ html.light {
 body {
   background-color: var(--color-ink);
   color: var(--color-paper);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @theme {

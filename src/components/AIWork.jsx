@@ -139,19 +139,19 @@ export default function AIWork() {
                   {/* Top Bar inside Card */}
                   <div className="flex items-start justify-between gap-2 mb-4">
                     {proj.pinned ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-circuit/15 bg-teal-500/25 dark:text-circuit-soft text-teal-950 border dark:border-circuit/30 border-teal-600/50 font-bold">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-circuit/15 bg-teal-500/25 dark:text-circuit-soft text-teal-950 border dark:border-circuit/30 border-teal-600/50 font-bold transition-colors duration-300">
                         <Pin size={11} className="rotate-45" />
                         {proj.pinnedTag || "Pinned"}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-paper/15 dark:text-paper/50 text-paper/85 border dark:border-paper/10 border-paper/20">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-paper/15 dark:text-paper/50 text-paper/85 border dark:border-paper/10 border-paper/20 transition-colors duration-300">
                         <Cpu size={11} />
                         {proj.category}
                       </span>
                     )}
 
                     {proj.metric && (
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-amber-500/10 bg-amber-500/25 dark:text-amber-300 text-amber-950 border dark:border-amber-500/20 border-amber-600/50">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-amber-500/10 bg-amber-500/25 dark:text-amber-300 text-amber-950 border dark:border-amber-500/20 border-amber-600/50 transition-colors duration-300">
                         {proj.metric}
                       </span>
                     )}
