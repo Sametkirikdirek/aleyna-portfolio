@@ -171,7 +171,7 @@ function ArticleList({ articles, external = true, onSelectArticle }) {
 
             <div className="order-2 md:order-none space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-sans font-medium text-lg md:text-xl text-ink group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors">
+                <h3 className="font-sans font-medium text-lg md:text-xl text-ink group-hover:text-brush dark:group-hover:text-brush-soft transition-colors">
                   {w.title}
                 </h3>
                 {w.tag && (
@@ -197,7 +197,7 @@ function ArticleList({ articles, external = true, onSelectArticle }) {
                   className="text-ink/40 group-hover:text-ink group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
                 />
               ) : (
-                <span className="font-sans text-xs text-rose-700 dark:text-rose-400 font-medium group-hover:underline flex items-center gap-1">
+                <span className="font-sans text-xs text-brush dark:text-brush-soft font-medium group-hover:underline flex items-center gap-1">
                   Oku <BookMarked size={14} />
                 </span>
               )}
@@ -449,7 +449,7 @@ export default function Writings() {
                         )}
                       </div>
 
-                      <h4 className="font-sans font-medium text-base md:text-lg text-ink group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors leading-snug mb-2">
+                      <h4 className="font-sans font-medium text-base md:text-lg text-ink group-hover:text-brush dark:group-hover:text-brush-soft transition-colors leading-snug mb-2">
                         {w.title}
                       </h4>
 

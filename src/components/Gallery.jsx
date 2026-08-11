@@ -90,7 +90,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
       {/* Header Info */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-rose-500/15 bg-rose-500/20 dark:border-rose-500/30 border-rose-600/40 dark:text-rose-300 text-rose-950 font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-brush/20 bg-brush/15 dark:border-brush/40 border-brush/40 dark:text-brush-soft text-brush font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
             <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
           </div>
           <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
@@ -146,14 +146,14 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
 
           {/* Badge */}
           <div className="absolute top-4 left-4 z-10">
-            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-rose-600/90 text-white shadow-lg flex items-center gap-1.5">
+            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-brush text-paper shadow-lg flex items-center gap-1.5">
               <Trophy size={12} /> En Çok Beğenilen Eser
             </span>
           </div>
 
           {/* Overlay info */}
           <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink via-ink/80 to-transparent">
-            <h4 className="font-display text-xl sm:text-2xl text-paper font-bold group-hover:text-rose-400 transition-colors">
+            <h4 className="font-display text-xl sm:text-2xl text-paper font-bold group-hover:text-brush-soft transition-colors">
               {current.title}
             </h4>
             <p className="font-mono text-xs text-paper/60 mt-1">
@@ -170,7 +170,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
               onClick={() => setActiveIdx(idx)}
               className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer shrink-0 w-44 md:w-full ${
                 activeIdx === idx
-                  ? "dark:bg-rose-500/15 bg-rose-500/25 dark:border-rose-500/50 border-rose-600/60 shadow-[0_0_15px_rgba(244,63,94,0.2)] scale-[1.02]"
+                  ? "dark:bg-brush/20 bg-brush/15 dark:border-brush/50 border-brush/50 shadow-[0_0_15px_rgba(181,72,46,0.25)] scale-[1.02]"
                   : "bg-paper/5 border-paper/10 hover:bg-paper/10 hover:border-paper/25 opacity-70 hover:opacity-100"
               }`}
             >
@@ -690,7 +690,7 @@ export default function Gallery() {
             {/* Header Info */}
             <div className="flex items-center justify-between gap-3 mb-5 relative z-10">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-rose-500/15 bg-rose-500/25 dark:border-rose-500/30 border-rose-600/50 dark:text-rose-300 text-rose-950 font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5 transition-colors duration-300">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-brush/20 bg-brush/15 dark:border-brush/40 border-brush/40 dark:text-brush-soft text-brush font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5 transition-colors duration-300">
                   <Calendar size={11} /> AYIN TUVALLERİ
                 </div>
                 <h3 className="font-display text-xl sm:text-2xl md:text-3xl text-paper font-bold">
@@ -700,7 +700,7 @@ export default function Gallery() {
                   Kaydırarak tüm seçkileri görün
                 </p>
               </div>
-              <span className="shrink-0 font-mono text-[10px] dark:text-rose-400 text-rose-950 dark:bg-rose-500/10 bg-rose-500/25 px-2.5 py-1 rounded-xl border dark:border-rose-500/20 border-rose-600/50 font-bold flex items-center gap-1.5 transition-colors duration-300">
+              <span className="shrink-0 font-mono text-[10px] dark:text-brush-soft text-brush dark:bg-brush/15 bg-brush/15 px-2.5 py-1 rounded-xl border dark:border-brush/30 border-brush/40 font-bold flex items-center gap-1.5 transition-colors duration-300">
                 🔥 {monthlyArtworks.length} Seçki
               </span>
             </div>

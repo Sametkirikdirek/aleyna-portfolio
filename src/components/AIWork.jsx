@@ -151,7 +151,7 @@ export default function AIWork() {
                     )}
 
                     {proj.metric && (
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-rose-500/15 bg-rose-500/20 dark:text-rose-300 text-rose-950 border dark:border-rose-500/30 border-rose-600/40 transition-colors duration-300">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-brush/20 bg-brush/15 dark:text-brush-soft text-brush border dark:border-brush/30 border-brush/40 transition-colors duration-300">
                         {proj.metric}
                       </span>
                     )}
