@@ -90,7 +90,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
       {/* Header Info */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-amber-500/15 bg-amber-500/25 dark:border-amber-500/30 border-amber-600/50 dark:text-amber-300 text-amber-950 font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-amber-500/15 bg-rose-500/20 dark:border-amber-500/30 border-rose-600/40 dark:text-amber-300 text-rose-950 font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
             <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
           </div>
           <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
