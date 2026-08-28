@@ -25,7 +25,7 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.75, delay, ease: [0.25, 1, 0.5, 1] },
 });
 
-const roleColorStyles = [
+const roleColorStylesDark = [
   {
     activeBorder: "border-[#e11d48]/50",
     activeText: "text-[#fb7185]",
@@ -43,6 +43,27 @@ const roleColorStyles = [
     activeText: "text-[#fda4af]",
     activeBg: "bg-[#f43f5e]/15",
     activeShadow: "shadow-[0_0_15px_rgba(244,63,94,0.35)]",
+  },
+];
+
+const roleColorStylesLight = [
+  {
+    activeBorder: "border-[#9f1239]/50",
+    activeText: "text-[#881337] font-semibold",
+    activeBg: "bg-[#9f1239]/12",
+    activeShadow: "shadow-[0_0_12px_rgba(159,18,57,0.2)]",
+  },
+  {
+    activeBorder: "border-[#1d4ed8]/50",
+    activeText: "text-[#1e3a8a] font-semibold",
+    activeBg: "bg-[#1d4ed8]/12",
+    activeShadow: "shadow-[0_0_12px_rgba(29,78,216,0.2)]",
+  },
+  {
+    activeBorder: "border-[#b45309]/50",
+    activeText: "text-[#78350f] font-semibold",
+    activeBg: "bg-[#b45309]/12",
+    activeShadow: "shadow-[0_0_12px_rgba(180,83,9,0.2)]",
   },
 ];
 
@@ -129,7 +150,8 @@ export default function Hero() {
             {/* 2. Roles pill row */}
             <motion.div {...fadeUp(0.08)} className="flex flex-wrap gap-2">
               {profile.roles.map((role, idx) => {
-                const activeStyle = roleColorStyles[idx % roleColorStyles.length];
+                const stylesList = isLightMode ? roleColorStylesLight : roleColorStylesDark;
+                const activeStyle = stylesList[idx % stylesList.length];
                 return (
                   <span
                     key={role}
@@ -162,7 +184,9 @@ export default function Hero() {
               {...fadeUp(0.24)}
               className={`max-w-lg font-sans text-lg md:text-xl leading-relaxed transition-all duration-500 ease-in-out ${
                 isColorActive
-                  ? "text-[#fb7185] drop-shadow-[0_0_12px_rgba(251,113,133,0.3)] font-medium"
+                  ? isLightMode
+                    ? "text-[#881337] font-semibold drop-shadow-[0_0_8px_rgba(136,19,55,0.12)]"
+                    : "text-[#fb7185] drop-shadow-[0_0_12px_rgba(251,113,133,0.3)] font-medium"
                   : "text-paper/70"
               }`}
             >

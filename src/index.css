@@ -170,3 +170,11 @@ body {
   animation: colorShimmer 16s ease-in-out infinite;
 }
 
+html.light .text-gradient-animated {
+  background: linear-gradient(135deg, #7c1d3c 0%, #b45309 30%, #1e40af 65%, #4c1d95 100%);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: colorShimmer 16s ease-in-out infinite;
+}
+
