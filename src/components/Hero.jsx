@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen } from "lucide-react";
 import ParticleCanvas from "./ui/particle-canvas";
+import RapunzelTreeCanvas from "./ui/RapunzelTreeCanvas";
 import SocialCards from "./ui/card-fan-carousel";
 import { useColorMode } from "../context/ColorModeContext";
 import { useProfile } from "../hooks/useContent";
@@ -56,7 +57,7 @@ const fallbackHeroCards = [
 ];
 
 export default function Hero() {
-  const { isColorActive } = useColorMode();
+  const { isColorActive, theme } = useColorMode();
   const { data: profile } = useProfile();
 
   const socialLinks = [
@@ -71,14 +72,30 @@ export default function Hero() {
       ? profile.heroCards
       : fallbackHeroCards;
 
+  const isLightMode = theme === "light";
+  const treeConfig = profile?.treeConfig || {
+    enabled: true,
+    leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
+    leafCount: 35,
+    speed: 1,
+  };
+
   return (
     <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-ink pt-20 pb-16 lg:py-0">
-      {/* ── Particle background ──────────────────────── */}
-      <ParticleCanvas
-        particleCount={800}
-        speed={isColorActive ? 1.25 : 1}
-        accentColor={isColorActive ? "#e11d48" : "#c0956c"}
-      />
+      {/* ── Dynamic Background: Rapunzel Blossom Tree & Falling Leaves (Light) vs Starry Sky (Dark) ── */}
+      {isLightMode && treeConfig.enabled !== false ? (
+        <RapunzelTreeCanvas
+          leafColors={treeConfig.leafColors}
+          leafCount={treeConfig.leafCount}
+          speed={treeConfig.speed}
+        />
+      ) : (
+        <ParticleCanvas
+          particleCount={800}
+          speed={isColorActive ? 1.25 : 1}
+          accentColor={isColorActive ? "#e11d48" : "#c0956c"}
+        />
+      )}
 
       {/* ── Subtle grain overlay ─────────────────────── */}
       <div

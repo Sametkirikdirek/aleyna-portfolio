@@ -63,6 +63,12 @@ export default function ProfileEditor() {
         roles: data.roles || [],
         experiences: data.experiences || [],
         skills: data.skills || [],
+        treeConfig: data.treeConfig || {
+          enabled: true,
+          leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
+          leafCount: 35,
+          speed: 1,
+        },
       });
     }
   }, [data, form]);
@@ -153,6 +159,61 @@ export default function ProfileEditor() {
       ...prev,
       extendedBio: (prev.extendedBio || []).filter((_, i) => i !== idx),
     }));
+  };
+
+  const updateTreeConfig = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      treeConfig: {
+        ...(prev.treeConfig || {
+          enabled: true,
+          leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
+          leafCount: 35,
+          speed: 1,
+        }),
+        [key]: value,
+      },
+    }));
+  };
+
+  const addLeafColor = () => {
+    setForm((prev) => {
+      const currentColors = prev.treeConfig?.leafColors || ["#e11d48", "#be123c", "#f43f5e", "#dc2626"];
+      return {
+        ...prev,
+        treeConfig: {
+          ...(prev.treeConfig || {}),
+          leafColors: [...currentColors, "#f43f5e"],
+        },
+      };
+    });
+  };
+
+  const updateLeafColor = (idx, color) => {
+    setForm((prev) => {
+      const leafColors = [...(prev.treeConfig?.leafColors || [])];
+      leafColors[idx] = color;
+      return {
+        ...prev,
+        treeConfig: {
+          ...(prev.treeConfig || {}),
+          leafColors,
+        },
+      };
+    });
+  };
+
+  const removeLeafColor = (idx) => {
+    setForm((prev) => {
+      const leafColors = (prev.treeConfig?.leafColors || []).filter((_, i) => i !== idx);
+      return {
+        ...prev,
+        treeConfig: {
+          ...(prev.treeConfig || {}),
+          leafColors,
+        },
+      };
+    });
   };
 
   const uploadHeroImage = async (idx, file) => {
@@ -520,6 +581,104 @@ export default function ProfileEditor() {
               </Field>
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Hero Ağaç & Düşen Yapraklar Yönetimi (Light Mod) */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <SectionTitle>🌸 Hero Ağaç & Düşen Yapraklar (Light Mod)</SectionTitle>
+            <p className="text-white/40 text-xs mt-0.5">
+              Açık (pembe) modda Hero yelpaze kartlarının arkasından çıkan Rapunzel ağacının yaprak renkleri, yoğunluğu ve düşüş hızı.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-xs text-rose-300 font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.treeConfig?.enabled !== false}
+              onChange={(e) => updateTreeConfig("enabled", e.target.checked)}
+              className="accent-rose-500 rounded"
+            />
+            Efekti Etkinleştir
+          </label>
+        </div>
+
+        <div className="space-y-5 mt-4">
+          {/* Yaprak Renk Paleti */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-mono uppercase tracking-wider text-white/60">
+                Yaprak Renk Paleti ({form.treeConfig?.leafColors?.length || 0} Renk)
+              </label>
+              <button
+                type="button"
+                onClick={addLeafColor}
+                className="flex items-center gap-1 text-[11px] text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-2.5 py-1 transition-colors cursor-pointer"
+              >
+                <Plus size={12} /> Yeni Renk Ekle
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2.5 items-center">
+              {(form.treeConfig?.leafColors || []).map((color, cIdx) => (
+                <div
+                  key={cIdx}
+                  className="flex items-center gap-2 bg-white/[0.04] border border-white/10 rounded-xl p-2 group hover:border-white/20 transition-all"
+                >
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => updateLeafColor(cIdx, e.target.value)}
+                    className="w-7 h-7 rounded-lg border-0 cursor-pointer bg-transparent"
+                    title="Rengi değiştir"
+                  />
+                  <input
+                    type="text"
+                    value={color}
+                    onChange={(e) => updateLeafColor(cIdx, e.target.value)}
+                    className="w-20 bg-transparent text-xs font-mono text-white/90 border-0 focus:outline-none"
+                    placeholder="#e11d48"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLeafColor(cIdx)}
+                    className="text-white/30 hover:text-rose-400 p-0.5 transition-colors"
+                    title="Rengi Sil"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Yoğunluk & Hız Ayarları */}
+          <div className="grid md:grid-cols-2 gap-4 pt-2 border-t border-white/8">
+            <Field label={`Yaprak Yoğunluğu (Ekranda süzülecek yaprak sayısı: ${form.treeConfig?.leafCount || 35})`}>
+              <input
+                type="range"
+                min="15"
+                max="75"
+                step="5"
+                value={form.treeConfig?.leafCount || 35}
+                onChange={(e) => updateTreeConfig("leafCount", Number(e.target.value))}
+                className="w-full accent-rose-500"
+              />
+            </Field>
+
+            <Field label={`Süzülme Hızı (${form.treeConfig?.speed || 1}x)`}>
+              <input
+                type="range"
+                min="0.5"
+                max="2.5"
+                step="0.25"
+                value={form.treeConfig?.speed || 1}
+                onChange={(e) => updateTreeConfig("speed", Number(e.target.value))}
+                className="w-full accent-rose-500"
+              />
+            </Field>
+          </div>
         </div>
       </Card>
 

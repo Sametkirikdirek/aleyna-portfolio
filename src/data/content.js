@@ -46,6 +46,12 @@ export const profile = {
     { imgUrl: "/artworks/hero_card_6.png", title: "Siber Desen", linkUrl: "/ai-work" },
     { imgUrl: "/artworks/hero_card_7.png", title: "Tuval & Kod", linkUrl: "/gallery" },
   ],
+  treeConfig: {
+    enabled: true,
+    leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
+    leafCount: 35,
+    speed: 1,
+  },
 };
 
 // İş ve Profesyonel Deneyim Geçmişi (LinkedIn / CV)
