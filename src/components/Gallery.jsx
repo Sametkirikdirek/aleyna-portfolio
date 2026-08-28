@@ -82,7 +82,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
   const current = artworks[activeIdx] || artworks[0];
 
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
+    <div className="relative rounded-3xl overflow-hidden border border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-white/75 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
       {/* Ambient Orbs */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
@@ -90,7 +90,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
       {/* Header Info */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-brush/20 bg-brush/15 dark:border-brush/40 border-brush/40 dark:text-brush-soft text-brush font-bold font-mono text-[11px] tracking-wider uppercase mb-2 transition-colors duration-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/40 border-brush font-bold font-mono text-[11px] tracking-wider uppercase mb-2 shadow-sm transition-colors duration-300">
             <Trophy size={12} /> ATÖLYENİN ENLERİ · SEÇKİN TABLOLAR
           </div>
           <h3 className="font-display text-2xl md:text-3xl text-paper font-bold flex items-center gap-2">
@@ -105,17 +105,17 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
         <div className="shrink-0 flex items-center gap-2">
           <button
             onClick={() => setActiveIdx((prev) => (prev - 1 + artworks.length) % artworks.length)}
-            className="p-2.5 rounded-full bg-paper/10 hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            className="p-2.5 rounded-full dark:bg-paper/10 bg-white/80 hover:bg-white dark:hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
             aria-label="Önceki Eser"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="font-mono text-xs text-paper/50 px-2">
+          <span className="font-mono text-xs text-paper/70 px-2 font-semibold">
             {activeIdx + 1} / {artworks.length}
           </span>
           <button
             onClick={() => setActiveIdx((prev) => (prev + 1) % artworks.length)}
-            className="p-2.5 rounded-full bg-paper/10 hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            className="p-2.5 rounded-full dark:bg-paper/10 bg-white/80 hover:bg-white dark:hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
             aria-label="Sonraki Eser"
           >
             <ChevronRight size={18} />
@@ -146,17 +146,17 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
 
           {/* Badge */}
           <div className="absolute top-4 left-4 z-10">
-            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-brush text-paper shadow-lg flex items-center gap-1.5">
+            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-brush text-white shadow-lg flex items-center gap-1.5">
               <Trophy size={12} /> En Çok Beğenilen Eser
             </span>
           </div>
 
           {/* Overlay info */}
-          <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink via-ink/80 to-transparent">
-            <h4 className="font-display text-xl sm:text-2xl text-paper font-bold group-hover:text-brush-soft transition-colors">
+          <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+            <h4 className="font-display text-xl sm:text-2xl text-white font-bold group-hover:text-brush-soft transition-colors">
               {current.title}
             </h4>
-            <p className="font-mono text-xs text-paper/60 mt-1">
+            <p className="font-mono text-xs text-white/75 mt-1">
               {current.medium} · {current.year}
             </p>
           </div>
@@ -170,8 +170,8 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
               onClick={() => setActiveIdx(idx)}
               className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer shrink-0 w-44 md:w-full ${
                 activeIdx === idx
-                  ? "dark:bg-brush/20 bg-brush/15 dark:border-brush/50 border-brush/50 shadow-[0_0_15px_rgba(181,72,46,0.25)] scale-[1.02]"
-                  : "bg-paper/5 border-paper/10 hover:bg-paper/10 hover:border-paper/25 opacity-70 hover:opacity-100"
+                  ? "dark:bg-brush/20 bg-brush text-white border-brush shadow-[0_0_15px_rgba(181,72,46,0.3)] scale-[1.02]"
+                  : "dark:bg-paper/5 bg-white/60 dark:border-paper/10 border-ink/10 hover:bg-white/90 hover:border-ink/20 opacity-85 hover:opacity-100"
               }`}
             >
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
@@ -182,10 +182,10 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <h5 className="font-display text-xs text-paper font-semibold truncate">
+                <h5 className={`font-display text-xs font-semibold truncate ${activeIdx === idx ? "text-white" : "dark:text-paper text-ink"}`}>
                   {item.title}
                 </h5>
-                <p className="font-mono text-[10px] text-paper/50 truncate mt-0.5">
+                <p className={`font-mono text-[10px] truncate mt-0.5 ${activeIdx === idx ? "text-white/80" : "dark:text-paper/50 text-ink/60"}`}>
                   {item.medium}
                 </p>
               </div>
@@ -507,8 +507,8 @@ export default function Gallery() {
                     aria-label="Galeri (Tuval Seçkileri)"
                     className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
                       activeTab === "galeri"
-                        ? "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_16px_rgba(244,63,94,0.35)] scale-105"
-                        : "bg-paper/5 text-paper/60 border-paper/15 hover:text-paper hover:bg-paper/10 hover:border-paper/30"
+                        ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/50 border-brush shadow-md scale-105"
+                        : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/70 dark:border-paper/15 border-ink/15 hover:text-ink hover:bg-white hover:border-ink/30"
                     }`}
                   >
                     <CanvasIcon className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" />
@@ -525,8 +525,8 @@ export default function Gallery() {
                     aria-label="Zaman Yolculuğu"
                     className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
                       activeTab === "zaman-yolculugu"
-                        ? "bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-[0_0_16px_rgba(168,85,247,0.35)] scale-105"
-                        : "bg-paper/5 text-paper/60 border-paper/15 hover:text-paper hover:bg-paper/10 hover:border-paper/30"
+                        ? "dark:bg-purple-500/20 bg-purple-600 text-white dark:text-purple-300 dark:border-purple-500/50 border-purple-600 shadow-md scale-105"
+                        : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/70 dark:border-paper/15 border-ink/15 hover:text-ink hover:bg-white hover:border-ink/30"
                     }`}
                   >
                     <PortalIcon className="w-5 h-5 animate-[spin_10s_linear_infinite] group-hover:animate-[spin_2.5s_linear_infinite] transition-transform" />
@@ -537,21 +537,21 @@ export default function Gallery() {
                 </div>
 
                 {/* Subtle Divider */}
-                <div className="w-px h-6 bg-paper/15 mx-0.5" />
+                <div className="w-px h-6 dark:bg-paper/15 bg-ink/15 mx-0.5" />
 
                 {/* Filtrele & Ara Accordion Button */}
                 <button
                   onClick={() => setIsAccordionOpen((prev) => !prev)}
                   className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2.5 px-4 rounded-full border shadow-sm cursor-pointer ${
                     isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
-                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
-                      : "bg-paper/5 text-paper/70 border-paper/15 hover:bg-paper/10 hover:border-paper/30"
+                      ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/40 border-brush shadow-md font-semibold"
+                      : "dark:bg-paper/5 bg-white/70 dark:text-paper/70 text-ink/80 dark:border-paper/15 border-ink/15 hover:bg-white hover:border-ink/30"
                   }`}
                 >
                   <SlidersHorizontal size={13} />
                   <span>Filtrele & Ara</span>
                   {activeFilter !== "Tümü" && (
-                    <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
+                    <span className="bg-white text-brush dark:bg-rose-500 dark:text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
                   )}
                   {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 </button>
@@ -567,24 +567,24 @@ export default function Gallery() {
                 animate={{ opacity: 1, height: "auto", marginTop: 24 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="overflow-hidden bg-ink-soft/90 border border-paper/12 rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+                className="overflow-hidden dark:bg-ink-soft/90 bg-white/80 dark:border-paper/12 border-ink/12 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
               >
                 <div className="flex flex-col gap-5">
                   {/* Search & Sort */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="relative flex items-center">
-                      <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
+                      <Search size={16} className="absolute left-3.5 dark:text-paper/40 text-ink/40 pointer-events-none" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Eser adı, teknik veya yılda ara..."
-                        className="w-full bg-paper/5 border border-paper/15 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-rose-500/50 transition-colors"
+                        className="w-full dark:bg-paper/5 bg-white/90 border dark:border-paper/15 border-ink/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono dark:text-paper text-ink placeholder:dark:text-paper/40 placeholder:text-ink/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
                       />
                       {searchQuery && (
                         <button
                           onClick={() => setSearchQuery("")}
-                          className="absolute right-3 text-paper/40 hover:text-paper"
+                          className="absolute right-3 dark:text-paper/40 text-ink/40 hover:text-ink dark:hover:text-paper"
                         >
                           <X size={14} />
                         </button>
@@ -592,7 +592,7 @@ export default function Gallery() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-paper/40 shrink-0">Sırala:</span>
+                      <span className="font-mono text-xs dark:text-paper/50 text-ink/60 shrink-0 font-medium">Sırala:</span>
                       <div className="flex flex-wrap gap-1.5 flex-1">
                         {[
                           { id: "default", label: "Varsayılan" },
@@ -605,8 +605,8 @@ export default function Gallery() {
                             onClick={() => setSortBy(s.id)}
                             className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                               sortBy === s.id
-                                ? "bg-rose-500/20 text-rose-300 border-rose-500/40 font-semibold"
-                                : "bg-paper/5 text-paper/60 border-paper/10 hover:bg-paper/10"
+                                ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
+                                : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/75 dark:border-paper/10 border-ink/15 hover:bg-white hover:text-ink"
                             }`}
                           >
                             {s.label}
@@ -618,8 +618,8 @@ export default function Gallery() {
 
                   {/* Technique Categories */}
                   <div>
-                    <p className="font-mono text-xs text-paper/40 mb-2.5 flex items-center gap-1.5">
-                      <Layers size={13} className="text-brush-soft" /> Teknik & Materyal Filtresi
+                    <p className="font-mono text-xs dark:text-paper/50 text-ink/70 mb-2.5 flex items-center gap-1.5 font-semibold">
+                      <Layers size={13} className="text-brush" /> Teknik & Materyal Filtresi
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {categories.map((cat) => (
@@ -629,8 +629,8 @@ export default function Gallery() {
                           className={`
                             font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
                             ${activeFilter === cat
-                              ? "bg-rose-600/25 text-rose-300 border-rose-500/50 shadow-[0_0_14px_rgba(244,63,94,0.25)] font-semibold"
-                              : "bg-paper/5 text-paper/60 border-paper/12 hover:text-paper hover:border-paper/30 hover:bg-paper/8"
+                              ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
+                              : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/75 dark:border-paper/12 border-ink/15 hover:bg-white hover:text-ink hover:border-ink/30"
                             }
                           `}
                         >
@@ -681,7 +681,7 @@ export default function Gallery() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 bg-gradient-to-br from-ink-soft/95 via-ink-soft/75 to-ink-soft/95 px-5 pt-6 pb-7 md:px-8 md:pt-7 md:pb-8 backdrop-blur-xl shadow-2xl"
+            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-white/75 px-5 pt-6 pb-7 md:px-8 md:pt-7 md:pb-8 backdrop-blur-xl shadow-2xl"
           >
             {/* Ambient Glow Orbs */}
             <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />

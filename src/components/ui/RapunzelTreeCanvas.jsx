@@ -46,6 +46,7 @@ export default function RapunzelTreeCanvas({
   leafColors = DEFAULT_LEAF_COLORS,
   leafCount = 35,
   speed = 1,
+  burstCooldown = 1.8,
   className = "",
 }) {
   const canvasRef = useRef(null);
@@ -53,6 +54,7 @@ export default function RapunzelTreeCanvas({
   const activeColorsRef = useRef(leafColors.length > 0 ? leafColors : DEFAULT_LEAF_COLORS);
   const activeCountRef = useRef(leafCount);
   const activeSpeedRef = useRef(speed);
+  const activeCooldownRef = useRef(burstCooldown);
   const burstParticlesRef = useRef([]);
   const treeShakeRef = useRef({ intensity: 0, decay: 0.90 });
 
@@ -67,6 +69,10 @@ export default function RapunzelTreeCanvas({
   useEffect(() => {
     activeSpeedRef.current = speed;
   }, [speed]);
+
+  useEffect(() => {
+    activeCooldownRef.current = burstCooldown;
+  }, [burstCooldown]);
 
   useEffect(() => {
     const cvs = canvasRef.current;
@@ -327,10 +333,10 @@ export default function RapunzelTreeCanvas({
         }
       });
 
-      // 1.8s debounce cooldown
+      // Configurable debounce cooldown (e.g. 1.8s)
       setTimeout(() => {
         canBurstRef.current = true;
-      }, 1800);
+      }, (activeCooldownRef.current || 1.8) * 1000);
     };
 
     const handleGlobalHeroClick = (e) => {

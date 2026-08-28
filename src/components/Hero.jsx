@@ -99,6 +99,7 @@ export default function Hero() {
     leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
     leafCount: 35,
     speed: 1,
+    burstCooldown: 1.8,
   };
 
   return (
@@ -109,6 +110,7 @@ export default function Hero() {
           leafColors={treeConfig.leafColors}
           leafCount={treeConfig.leafCount}
           speed={treeConfig.speed}
+          burstCooldown={treeConfig.burstCooldown}
         />
       ) : (
         <ParticleCanvas

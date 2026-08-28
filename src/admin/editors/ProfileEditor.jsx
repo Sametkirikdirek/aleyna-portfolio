@@ -653,9 +653,9 @@ export default function ProfileEditor() {
             </div>
           </div>
 
-          {/* Yoğunluk & Hız Ayarları */}
-          <div className="grid md:grid-cols-2 gap-4 pt-2 border-t border-white/8">
-            <Field label={`Yaprak Yoğunluğu (Ekranda süzülecek yaprak sayısı: ${form.treeConfig?.leafCount || 35})`}>
+          {/* Yoğunluk, Hız & Spam Kilidi Ayarları */}
+          <div className="grid md:grid-cols-3 gap-4 pt-2 border-t border-white/8">
+            <Field label={`Yaprak Yoğunluğu (${form.treeConfig?.leafCount || 35} Yaprak)`}>
               <input
                 type="range"
                 min="15"
@@ -675,6 +675,18 @@ export default function ProfileEditor() {
                 step="0.25"
                 value={form.treeConfig?.speed || 1}
                 onChange={(e) => updateTreeConfig("speed", Number(e.target.value))}
+                className="w-full accent-rose-500"
+              />
+            </Field>
+
+            <Field label={`Spam Kilidi / Patlama Bekleme (${form.treeConfig?.burstCooldown || 1.8}s)`}>
+              <input
+                type="range"
+                min="0.5"
+                max="4.0"
+                step="0.1"
+                value={form.treeConfig?.burstCooldown || 1.8}
+                onChange={(e) => updateTreeConfig("burstCooldown", Number(e.target.value))}
                 className="w-full accent-rose-500"
               />
             </Field>

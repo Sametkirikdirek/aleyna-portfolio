@@ -51,6 +51,7 @@ export const profile = {
     leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
     leafCount: 35,
     speed: 1,
+    burstCooldown: 1.8,
   },
 };
 
