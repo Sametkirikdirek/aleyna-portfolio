@@ -82,7 +82,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
   const current = artworks[activeIdx] || artworks[0];
 
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-white/75 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
+    <div className="relative rounded-3xl overflow-hidden border border-amber-900/15 dark:border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-[#fdfbf7]/80 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
       {/* Ambient Orbs */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
@@ -105,7 +105,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
         <div className="shrink-0 flex items-center gap-2">
           <button
             onClick={() => setActiveIdx((prev) => (prev - 1 + artworks.length) % artworks.length)}
-            className="p-2.5 rounded-full dark:bg-paper/10 bg-white/80 hover:bg-white dark:hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            className="p-2.5 rounded-full dark:bg-paper/10 bg-[#fdfbf7]/90 hover:bg-white dark:hover:bg-paper/20 border border-amber-900/15 dark:border-paper/15 text-paper transition-all cursor-pointer shadow-md"
             aria-label="Önceki Eser"
           >
             <ChevronLeft size={18} />
@@ -115,7 +115,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
           </span>
           <button
             onClick={() => setActiveIdx((prev) => (prev + 1) % artworks.length)}
-            className="p-2.5 rounded-full dark:bg-paper/10 bg-white/80 hover:bg-white dark:hover:bg-paper/20 border border-paper/15 text-paper transition-all cursor-pointer shadow-md"
+            className="p-2.5 rounded-full dark:bg-paper/10 bg-[#fdfbf7]/90 hover:bg-white dark:hover:bg-paper/20 border border-amber-900/15 dark:border-paper/15 text-paper transition-all cursor-pointer shadow-md"
             aria-label="Sonraki Eser"
           >
             <ChevronRight size={18} />
@@ -132,7 +132,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           onClick={() => onSelect(current)}
-          className="md:col-span-7 group relative rounded-2xl overflow-hidden bg-ink border border-paper/15 cursor-pointer shadow-2xl aspect-[4/3] sm:aspect-[16/10]"
+          className="md:col-span-7 group relative rounded-2xl overflow-hidden bg-ink border border-amber-900/15 dark:border-paper/15 cursor-pointer shadow-2xl aspect-[4/3] sm:aspect-[16/10]"
         >
           {current.image ? (
             <img
@@ -171,7 +171,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
               className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer shrink-0 w-44 md:w-full ${
                 activeIdx === idx
                   ? "dark:bg-brush/20 bg-brush text-white border-brush shadow-[0_0_15px_rgba(181,72,46,0.3)] scale-[1.02]"
-                  : "dark:bg-paper/5 bg-white/80 dark:border-paper/10 border-black/10 hover:bg-white hover:border-black/25 opacity-90 hover:opacity-100 shadow-xs"
+                  : "dark:bg-paper/5 bg-[#fdfbf7]/90 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:border-amber-900/30 opacity-90 hover:opacity-100 shadow-xs"
               }`}
             >
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
@@ -567,24 +567,24 @@ export default function Gallery() {
                 animate={{ opacity: 1, height: "auto", marginTop: 24 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="overflow-hidden dark:bg-ink-soft/90 bg-white/80 dark:border-paper/12 border-ink/12 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+                className="overflow-hidden dark:bg-ink-soft/90 bg-[#fdfbf7]/90 dark:border-paper/12 border-amber-900/15 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
               >
                 <div className="flex flex-col gap-5">
                   {/* Search & Sort */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="relative flex items-center">
-                      <Search size={16} className="absolute left-3.5 dark:text-paper/40 text-ink/40 pointer-events-none" />
+                      <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Eser adı, teknik veya yılda ara..."
-                        className="w-full dark:bg-paper/5 bg-white/90 border dark:border-paper/15 border-ink/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono dark:text-paper text-ink placeholder:dark:text-paper/40 placeholder:text-ink/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
+                        className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
                       />
                       {searchQuery && (
                         <button
                           onClick={() => setSearchQuery("")}
-                          className="absolute right-3 dark:text-paper/40 text-ink/40 hover:text-ink dark:hover:text-paper"
+                          className="absolute right-3 text-paper/40 hover:text-paper"
                         >
                           <X size={14} />
                         </button>
@@ -592,7 +592,7 @@ export default function Gallery() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs dark:text-paper/50 text-ink/60 shrink-0 font-medium">Sırala:</span>
+                      <span className="font-mono text-xs text-paper/60 shrink-0 font-medium">Sırala:</span>
                       <div className="flex flex-wrap gap-1.5 flex-1">
                         {[
                           { id: "default", label: "Varsayılan" },
@@ -606,7 +606,7 @@ export default function Gallery() {
                             className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                               sortBy === s.id
                                 ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
-                                : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/75 dark:border-paper/10 border-ink/15 hover:bg-white hover:text-ink"
+                                : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:text-paper"
                             }`}
                           >
                             {s.label}
@@ -618,7 +618,7 @@ export default function Gallery() {
 
                   {/* Technique Categories */}
                   <div>
-                    <p className="font-mono text-xs dark:text-paper/50 text-ink/70 mb-2.5 flex items-center gap-1.5 font-semibold">
+                    <p className="font-mono text-xs text-paper/70 mb-2.5 flex items-center gap-1.5 font-semibold">
                       <Layers size={13} className="text-brush" /> Teknik & Materyal Filtresi
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -630,7 +630,7 @@ export default function Gallery() {
                             font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
                             ${activeFilter === cat
                               ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
-                              : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/75 dark:border-paper/12 border-ink/15 hover:bg-white hover:text-ink hover:border-ink/30"
+                              : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/12 border-amber-900/15 hover:bg-white hover:text-paper hover:border-amber-900/30"
                             }
                           `}
                         >
@@ -681,7 +681,7 @@ export default function Gallery() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mb-12 relative rounded-3xl overflow-hidden border border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-white/75 px-5 pt-6 pb-7 md:px-8 md:pt-7 md:pb-8 backdrop-blur-xl shadow-2xl"
+            className="mb-12 relative rounded-3xl overflow-hidden border border-amber-900/15 dark:border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-[#fdfbf7]/80 px-5 pt-6 pb-7 md:px-8 md:pt-7 md:pb-8 backdrop-blur-xl shadow-2xl"
           >
             {/* Ambient Glow Orbs */}
             <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl" />
@@ -840,20 +840,20 @@ export default function Gallery() {
                     />
 
                     {/* Alt Bilgi Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-ink via-ink/80 to-transparent z-10">
-                      <div className="backdrop-blur-md bg-ink/75 border border-paper/10 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush-soft/40 group-hover:bg-ink/90 flex items-center justify-between">
+                    <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+                      <div className="backdrop-blur-md dark:bg-ink/85 bg-[#fdfbf7]/95 border dark:border-paper/10 border-amber-900/15 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush/40 flex items-center justify-between shadow-md">
                         <div className="min-w-0 flex-1 pr-2">
-                          <h3 className="font-display text-sm sm:text-base text-paper font-semibold leading-snug group-hover:text-brush-soft transition-colors duration-300 truncate">
+                          <h3 className="font-display text-sm sm:text-base text-paper font-bold leading-snug group-hover:text-brush transition-colors duration-300 truncate">
                             {p.title || "İsimsiz Eser"}
                           </h3>
                           {p.medium && (
-                            <p className="font-mono text-[10px] text-paper/50 mt-0.5 truncate">
+                            <p className="font-mono text-[10px] dark:text-paper/60 text-paper/75 font-medium mt-0.5 truncate">
                               {p.medium}
                             </p>
                           )}
                         </div>
                         {p.year && (
-                          <span className="font-mono text-[10px] text-paper/40 shrink-0">
+                          <span className="font-mono text-[10px] shrink-0 font-bold dark:text-brush-soft text-amber-900 dark:bg-brush/15 bg-amber-500/15 px-2 py-0.5 rounded-md border dark:border-brush/30 border-amber-900/20">
                             {p.year}
                           </span>
                         )}

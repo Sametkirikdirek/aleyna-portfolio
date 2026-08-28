@@ -65,7 +65,7 @@ export default function AIWork() {
           </div>
 
           {/* Quick Stats Pill */}
-          <div className="flex items-center gap-4 p-4 rounded-xl border dark:border-paper/10 border-black/10 dark:bg-ink-soft/80 bg-white/80 backdrop-blur-md self-start md:self-auto shadow-lg">
+          <div className="flex items-center gap-4 p-4 rounded-xl border dark:border-paper/10 border-amber-900/15 dark:bg-ink-soft/80 bg-[#fdfbf7]/85 backdrop-blur-md self-start md:self-auto shadow-lg">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg dark:bg-circuit/15 bg-blue-900/10 text-[#1e3a8a] dark:text-circuit-soft shadow-xs">
                 <Pin size={18} />
@@ -75,7 +75,7 @@ export default function AIWork() {
                 <p className="font-mono text-[10px] uppercase tracking-wider text-paper/60 font-semibold">Öne Çıkarılan Eser</p>
               </div>
             </div>
-            <div className="h-8 w-[1px] dark:bg-paper/10 bg-black/10" />
+            <div className="h-8 w-[1px] dark:bg-paper/10 bg-amber-900/15" />
             <div>
               <p className="font-mono text-xl font-bold text-[#1e3a8a] dark:text-circuit-soft">Production</p>
               <p className="font-mono text-[10px] uppercase tracking-wider text-paper/60 font-semibold">Ready Mimariler</p>
@@ -84,7 +84,7 @@ export default function AIWork() {
         </div>
 
         {/* ── Category Filter Bar (Web & Mobile Unified Dropdown Filter) ──────────────────────── */}
-        <div className="mt-8 flex items-center justify-between p-4 rounded-xl dark:bg-ink-soft/90 bg-white/80 border dark:border-paper/15 border-black/10 backdrop-blur-md shadow-lg">
+        <div className="mt-8 flex items-center justify-between p-4 rounded-xl dark:bg-ink-soft/90 bg-[#fdfbf7]/85 border dark:border-paper/15 border-amber-900/15 backdrop-blur-md shadow-lg">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg dark:bg-circuit/15 bg-blue-900/10 text-[#1e3a8a] dark:text-circuit-soft shadow-xs">
               <Filter size={16} />
@@ -103,10 +103,10 @@ export default function AIWork() {
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="w-full appearance-none dark:bg-ink/80 bg-white/95 border dark:border-paper/20 border-black/15 hover:border-blue-900/50 rounded-lg px-4 py-2.5 font-mono text-xs font-bold tracking-wider text-paper uppercase pr-8 focus:outline-none focus:border-blue-900 transition-all cursor-pointer shadow-xs"
+              className="w-full appearance-none dark:bg-ink/80 bg-white/95 border dark:border-paper/20 border-amber-900/20 hover:border-blue-900/50 rounded-lg px-4 py-2.5 font-mono text-xs font-bold tracking-wider text-paper uppercase pr-8 focus:outline-none focus:border-blue-900 transition-all cursor-pointer shadow-xs"
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat} className="dark:bg-ink-soft bg-white text-paper py-1 font-semibold">
+                <option key={cat} value={cat} className="dark:bg-ink-soft bg-[#fdfbf7] text-paper py-1 font-semibold">
                   {cat}
                 </option>
               ))}
@@ -131,8 +131,8 @@ export default function AIWork() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
                 className={`group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl border backdrop-blur-md transition-all duration-500 ${
                   proj.pinned
-                    ? "dark:bg-gradient-to-b dark:from-ink-soft dark:via-ink-soft dark:to-circuit/[0.04] bg-white/85 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
-                    : "dark:bg-ink-soft/90 bg-white/75 border dark:border-paper/10 border-black/10 hover:border-black/25 hover:shadow-lg"
+                    ? "dark:bg-gradient-to-b dark:from-ink-soft dark:via-ink-soft dark:to-circuit/[0.04] bg-[#fdfbf7]/90 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
+                    : "dark:bg-ink-soft/90 bg-[#fdfbf7]/80 border dark:border-paper/10 border-amber-900/15 hover:border-amber-900/30 hover:shadow-lg"
                 }`}
               >
                 <div>

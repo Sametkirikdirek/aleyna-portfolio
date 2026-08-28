@@ -120,23 +120,23 @@ function WritingModal({ article, onClose }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 14 }}
         transition={{ type: "spring", stiffness: 320, damping: 26 }}
-        className="relative w-full max-w-2xl md:max-w-3xl max-h-[82vh] overflow-hidden bg-paper text-ink rounded-3xl p-6 md:p-10 shadow-2xl border border-ink/10 z-10 my-auto flex flex-col"
+        className="relative w-full max-w-2xl md:max-w-3xl max-h-[82vh] overflow-hidden bg-[#fdfbf7] dark:bg-ink-soft text-paper rounded-3xl p-6 md:p-10 shadow-2xl border dark:border-paper/15 border-amber-900/20 z-10 my-auto flex flex-col"
       >
         {/* Üst Bilgiler & Kapat Butonu */}
         <div className="flex items-center justify-between gap-4 mb-5 shrink-0">
           <div className="flex items-center gap-3 flex-wrap">
             {article.tag && (
-              <span className="font-mono text-xs uppercase tracking-widest px-3 py-1 rounded-full bg-ink/[0.08] text-umber font-semibold">
+              <span className="font-mono text-xs uppercase tracking-widest px-3 py-1 rounded-full dark:bg-paper/10 bg-amber-900/10 dark:text-umber text-amber-900 font-bold">
                 {article.tag}
               </span>
             )}
             {article.date && (
-              <span className="font-mono text-xs text-ink/50">
+              <span className="font-mono text-xs text-paper/60 font-medium">
                 {article.date}
               </span>
             )}
             {article.readTime && (
-              <span className="font-mono text-xs text-ink/50">
+              <span className="font-mono text-xs text-paper/60 font-medium">
                 • {article.readTime} okuma
               </span>
             )}
@@ -145,7 +145,7 @@ function WritingModal({ article, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-ink/5 hover:bg-ink/12 flex items-center justify-center text-ink/60 hover:text-ink transition-colors cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-full dark:bg-paper/10 bg-black/5 hover:bg-black/10 dark:hover:bg-paper/20 flex items-center justify-center text-paper/70 hover:text-paper transition-colors cursor-pointer shrink-0"
             aria-label="Kapat"
           >
             <X size={18} />
@@ -153,19 +153,19 @@ function WritingModal({ article, onClose }) {
         </div>
 
         {/* Yazı Başlığı */}
-        <h2 className="font-display text-2xl md:text-3xl text-ink leading-snug tracking-tight mb-4 shrink-0">
+        <h2 className="font-display text-2xl md:text-3xl text-paper font-bold leading-snug tracking-tight mb-4 shrink-0">
           {article.title}
         </h2>
 
         {/* Önizleme Metni & Bulanıklık Katmanı */}
-        <div className="relative flex-1 overflow-hidden border-t border-ink/10 pt-4">
-          <div className="text-ink/80 font-sans text-sm md:text-base leading-relaxed whitespace-pre-line space-y-4 pb-20">
+        <div className="relative flex-1 overflow-hidden border-t dark:border-paper/10 border-amber-900/10 pt-4">
+          <div className="text-paper/85 font-sans text-sm md:text-base leading-relaxed whitespace-pre-line space-y-4 pb-20">
             {fullText}
           </div>
 
           {/* Blur Fade Effect & "Yazıyı Okumaya Devam Et" Button */}
           {isLongText && (
-            <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-paper via-paper/95 to-transparent flex items-end justify-center pb-3 pt-12">
+            <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t dark:from-ink-soft from-[#fdfbf7] via-[#fdfbf7]/95 dark:via-ink-soft/95 to-transparent flex items-end justify-center pb-3 pt-12">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -173,7 +173,7 @@ function WritingModal({ article, onClose }) {
                   onClose();
                   navigate(`/writings/${article.id}`);
                 }}
-                className="group flex items-center gap-2 px-6 py-3 rounded-full bg-brush text-paper font-sans text-sm font-medium shadow-xl hover:shadow-2xl hover:bg-brush-soft transition-all duration-300 cursor-pointer border border-paper/20"
+                className="group flex items-center gap-2 px-6 py-3 rounded-full bg-brush text-white font-sans text-sm font-semibold shadow-xl hover:shadow-2xl hover:bg-brush-soft transition-all duration-300 cursor-pointer border border-white/20"
               >
                 Yazıyı Okumaya Devam Et
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -189,43 +189,43 @@ function WritingModal({ article, onClose }) {
 function ArticleList({ articles, external = true, onSelectArticle }) {
   if (articles.length === 0) {
     return (
-      <p className="py-12 text-center font-sans text-sm text-ink/50">
+      <p className="py-12 text-center font-sans text-sm text-paper/50 font-medium">
         Henüz yazı eklenmemiş.
       </p>
     );
   }
 
   return (
-    <div className="flex flex-col divide-y divide-ink/10 border-t border-b border-ink/10">
+    <div className="flex flex-col divide-y dark:divide-paper/10 divide-amber-900/10 border-t border-b dark:border-paper/10 border-amber-900/10">
       {articles.map((w, i) => {
         const className =
-          "group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start hover:bg-ink/[0.02] -mx-2 px-2 rounded-lg transition-colors cursor-pointer";
+          "group py-7 md:py-8 grid md:grid-cols-[auto_1fr_auto] gap-2 md:gap-8 items-baseline md:items-start hover:bg-amber-900/[0.03] dark:hover:bg-paper/[0.03] -mx-2 px-3 rounded-xl transition-colors cursor-pointer";
 
         const content = (
           <>
-            <span className="font-mono text-xs text-umber order-1 md:order-none whitespace-nowrap">
+            <span className="font-mono text-xs text-amber-900 dark:text-umber font-bold order-1 md:order-none whitespace-nowrap">
               {w.date}
             </span>
 
             <div className="order-2 md:order-none space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-sans font-medium text-lg md:text-xl text-ink group-hover:text-brush dark:group-hover:text-brush-soft transition-colors">
+                <h3 className="font-sans font-semibold text-lg md:text-xl text-paper group-hover:text-brush transition-colors">
                   {w.title}
                 </h3>
                 {w.tag && (
-                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-ink/[0.06] text-ink/70">
+                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full dark:bg-paper/10 bg-amber-900/10 dark:text-paper/80 text-amber-900 font-bold">
                     {w.tag}
                   </span>
                 )}
               </div>
-              <p className="font-sans text-sm text-ink/65 leading-relaxed line-clamp-2">
+              <p className="font-sans text-sm text-paper/75 leading-relaxed line-clamp-2">
                 {w.excerpt}
               </p>
             </div>
 
             <div className="order-3 md:order-none flex items-center gap-3 shrink-0 self-center md:self-start">
               {w.readTime && (
-                <span className="font-mono text-xs text-ink/40">
+                <span className="font-mono text-xs text-paper/50 font-medium">
                   {w.readTime}
                 </span>
               )}
@@ -314,16 +314,16 @@ export default function Writings() {
   }, [mediumUrl]);
 
   return (
-    <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-paper text-ink">
+    <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-5xl mx-auto">
         <header className="mb-10 md:mb-12">
-          <p className="font-mono text-xs tracking-[0.25em] uppercase text-umber mb-4">
+          <p className="font-mono text-xs tracking-[0.25em] uppercase text-amber-900 dark:text-umber font-bold mb-4">
             Yazılar
           </p>
-          <h2 className="font-display text-3xl md:text-5xl leading-tight text-balance">
+          <h2 className="font-display text-3xl md:text-5xl leading-tight text-balance text-paper font-bold">
             Kelimelerle şekillenen düşünceler
           </h2>
-          <p className="mt-4 font-sans text-sm text-ink/55 max-w-xl">
+          <p className="mt-4 font-sans text-sm text-paper/70 max-w-xl font-medium">
             Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı
             çizgi, aynı elden.
           </p>
@@ -331,7 +331,7 @@ export default function Writings() {
 
         {/* Sekmeler */}
         <div
-          className="mb-8 flex flex-wrap gap-2 border-b border-ink/10 pb-4"
+          className="mb-8 flex flex-wrap gap-2 border-b dark:border-paper/10 border-amber-900/15 pb-4"
           role="tablist"
           aria-label="Yazı kategorileri"
         >
@@ -341,17 +341,17 @@ export default function Writings() {
               role="tab"
               aria-selected={activeTab === id}
               onClick={() => setActiveTab(id)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-sans text-sm transition-colors ${
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-sans text-sm transition-colors cursor-pointer ${
                 activeTab === id
-                  ? "bg-brush text-paper"
-                  : "text-ink/60 hover:text-ink hover:bg-ink/5"
+                  ? "bg-brush text-white font-semibold shadow-md"
+                  : "text-paper/75 dark:bg-paper/5 bg-[#fdfbf7]/80 dark:border-paper/10 border-amber-900/15 border hover:bg-white hover:text-paper"
               }`}
             >
               <Icon size={16} />
               {label}
               <span
-                className={`font-mono text-[10px] px-1.5 py-0.5 rounded-full ${
-                  activeTab === id ? "bg-paper/20 text-paper" : "bg-ink/8 text-ink/50"
+                className={`font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  activeTab === id ? "bg-white/20 text-white" : "bg-black/5 dark:bg-paper/10 text-paper/60"
                 }`}
               >
                 {id === "medium" ? mediumArticles.length : personalWritings.length}
@@ -372,10 +372,10 @@ export default function Writings() {
             >
               <div className="mb-6 flex items-end justify-between flex-wrap gap-4">
                 <div>
-                  <h3 className="font-display text-xl md:text-2xl text-ink">
+                  <h3 className="font-display text-xl md:text-2xl text-paper font-bold">
                     Medium yazıları
                   </h3>
-                  <p className="mt-1 font-sans text-sm text-ink/55">
+                  <p className="mt-1 font-sans text-sm text-paper/65 font-medium">
                     {!mediumReady
                       ? "Medium'dan yükleniyor…"
                       : `${mediumArticles.length} yazı — tıklayınca Medium'da açılır`}
@@ -385,7 +385,7 @@ export default function Writings() {
                   href={mediumUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 font-sans text-sm text-ink/70 hover:text-brush transition-colors"
+                  className="inline-flex items-center gap-1.5 font-sans text-sm text-paper/75 hover:text-brush transition-colors font-semibold"
                 >
                   @aleynaaltunsu <ExternalLink size={15} />
                 </a>
@@ -402,7 +402,7 @@ export default function Writings() {
                   href={mediumUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 border border-ink/15 rounded-full font-sans text-sm text-ink/70 hover:text-brush hover:border-brush/40 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 border dark:border-paper/15 border-amber-900/20 rounded-full font-sans text-sm text-paper/80 hover:text-brush hover:border-brush/40 bg-[#fdfbf7]/80 dark:bg-paper/5 transition-all shadow-xs"
                 >
                   Medium profilinde tüm yazıları gör
                   <ArrowUpRight size={16} />
@@ -421,10 +421,10 @@ export default function Writings() {
               role="tabpanel"
             >
               <div className="mb-6">
-                <h3 className="font-display text-xl md:text-2xl text-ink">
+                <h3 className="font-display text-xl md:text-2xl text-paper font-bold">
                   Yazılarım
                 </h3>
-                <p className="mt-1 font-sans text-sm text-ink/55">
+                <p className="mt-1 font-sans text-sm text-paper/65 font-medium">
                   Atölyeden, defterden — Medium dışında kalan kişisel notlar ve düşünceler. Yazılara tıklayarak detayını okuyabilirsiniz.
                 </p>
               </div>
@@ -447,10 +447,10 @@ export default function Writings() {
               role="tabpanel"
             >
               <div className="mb-6">
-                <h3 className="font-display text-xl md:text-2xl text-ink">
+                <h3 className="font-display text-xl md:text-2xl text-paper font-bold">
                   Kütüphane
                 </h3>
-                <p className="mt-1 font-sans text-sm text-ink/55">
+                <p className="mt-1 font-sans text-sm text-paper/65 font-medium">
                   Kapak fotoğrafları, yazar künyesi ve konu özetleri ile tüm kişisel yazılar kütüphanesi.
                 </p>
               </div>
@@ -463,11 +463,11 @@ export default function Writings() {
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="group bg-ink/[0.02] border border-ink/10 rounded-2xl p-4 flex flex-col justify-between hover:border-brush/40 hover:bg-ink/[0.04] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                    className="group dark:bg-ink-soft/80 bg-[#fdfbf7]/90 border dark:border-paper/10 border-amber-900/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brush/40 hover:shadow-xl transition-all duration-300 cursor-pointer shadow-md"
                   >
                     <div>
                       {/* Kapak Görseli */}
-                      <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-ink/5 border border-ink/5 relative">
+                      <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-ink/5 border border-amber-900/10 relative">
                         {w.image ? (
                           <img
                             src={w.image}
@@ -475,29 +475,29 @@ export default function Writings() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-ink/30 bg-ink/[0.03]">
+                          <div className="w-full h-full flex flex-col items-center justify-center text-paper/40 bg-amber-900/[0.04]">
                             <BookMarked size={28} />
                             <span className="font-mono text-xs mt-1">Aleyna Altunsu</span>
                           </div>
                         )}
                         {w.tag && (
-                          <span className="absolute top-2.5 left-2.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-paper font-medium">
+                          <span className="absolute top-2.5 left-2.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white font-bold">
                             {w.tag}
                           </span>
                         )}
                       </div>
 
-                      <h4 className="font-sans font-medium text-base md:text-lg text-ink group-hover:text-brush dark:group-hover:text-brush-soft transition-colors leading-snug mb-2">
+                      <h4 className="font-sans font-bold text-base md:text-lg text-paper group-hover:text-brush transition-colors leading-snug mb-2">
                         {w.title}
                       </h4>
 
-                      <p className="font-sans text-xs text-ink/65 line-clamp-3 leading-relaxed mb-4">
+                      <p className="font-sans text-xs text-paper/75 line-clamp-3 leading-relaxed mb-4 font-normal">
                         {w.excerpt}
                       </p>
                     </div>
 
                     {/* Alt Künye */}
-                    <div className="pt-3 border-t border-ink/8 flex items-center justify-between font-mono text-[11px] text-ink/40">
+                    <div className="pt-3 border-t dark:border-paper/8 border-amber-900/10 flex items-center justify-between font-mono text-[11px] text-paper/60 font-medium">
                       <span className="flex items-center gap-1">
                         <User size={12} /> {profile?.name || "Aleyna Altunsu"}
                       </span>
