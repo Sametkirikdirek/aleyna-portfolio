@@ -99,20 +99,38 @@ export default function RapunzelTreeCanvas({
     };
 
     /**
-     * Branch blossom nodes where flowers and leaves grow
+     * Branch blossom nodes where flowers and leaves grow (Mobile vs Desktop)
      */
     const getBranchNodes = (w, h) => {
-      const { cx, cy, scale } = getCardCenter(w, h);
+      const isMobile = w < 1024;
+      if (isMobile) {
+        return [
+          // Top-right canopy framing the header & avatar area
+          { x: w * 0.92, y: h * 0.05, size: 22 },
+          { x: w * 0.76, y: h * 0.08, size: 24 },
+          { x: w * 0.60, y: h * 0.11, size: 20 },
+          { x: w * 0.42, y: h * 0.09, size: 18 },
+          { x: w * 0.85, y: h * 0.15, size: 20 },
+          // Card flank nodes (framing 3D carousel horizontally without crossing buttons)
+          { x: w * 0.16, y: h * 0.78, size: 18 },
+          { x: w * 0.84, y: h * 0.78, size: 18 },
+          { x: w * 0.32, y: h * 0.86, size: 16 },
+          { x: w * 0.68, y: h * 0.86, size: 16 },
+        ];
+      }
+
+      const cx = w * 0.725;
+      const cy = h * 0.54;
       return [
-        { x: cx - w * 0.12 * scale, y: cy - h * 0.28 * scale, size: 24 },
-        { x: cx - w * 0.22 * scale, y: cy - h * 0.35 * scale, size: 28 },
-        { x: cx - w * 0.34 * scale, y: cy - h * 0.32 * scale, size: 22 },
-        { x: cx - w * 0.05 * scale, y: cy - h * 0.42 * scale, size: 26 },
-        { x: cx + w * 0.08 * scale, y: cy - h * 0.46 * scale, size: 22 },
-        { x: cx + w * 0.18 * scale, y: cy - h * 0.36 * scale, size: 26 },
-        { x: cx + w * 0.26 * scale, y: cy - h * 0.26 * scale, size: 20 },
-        { x: cx - w * 0.02 * scale, y: cy - h * 0.22 * scale, size: 20 },
-        { x: cx + w * 0.12 * scale, y: cy - h * 0.20 * scale, size: 18 },
+        { x: cx - w * 0.12, y: cy - h * 0.28, size: 24 },
+        { x: cx - w * 0.22, y: cy - h * 0.35, size: 28 },
+        { x: cx - w * 0.34, y: cy - h * 0.32, size: 22 },
+        { x: cx - w * 0.05, y: cy - h * 0.42, size: 26 },
+        { x: cx + w * 0.08, y: cy - h * 0.46, size: 22 },
+        { x: cx + w * 0.18, y: cy - h * 0.36, size: 26 },
+        { x: cx + w * 0.26, y: cy - h * 0.26, size: 20 },
+        { x: cx - w * 0.02, y: cy - h * 0.22, size: 20 },
+        { x: cx + w * 0.12, y: cy - h * 0.20, size: 18 },
       ];
     };
 
@@ -145,7 +163,7 @@ export default function RapunzelTreeCanvas({
     };
 
     const isMob = getW() < 768;
-    const count = isMob ? Math.min(22, activeCountRef.current) : Math.max(16, activeCountRef.current);
+    const count = isMob ? Math.min(20, activeCountRef.current) : Math.max(16, activeCountRef.current);
     const initialNodes = getBranchNodes(getW(), getH());
     const leaves = [];
     for (let i = 0; i < count; i++) {
@@ -153,59 +171,81 @@ export default function RapunzelTreeCanvas({
     }
 
     /**
-     * Draws the Rapunzel Tree branching out from behind the "Gece Vardiyası" card
+     * Draws the Rapunzel Tree branching out
      */
     const drawRapunzelTree = (w, h, shakeOffset) => {
       ctx.save();
       ctx.translate(shakeOffset.x, shakeOffset.y);
 
-      const { cx, cy, scale } = getCardCenter(w, h);
-
-      // Bark Gradients
-      const barkGrad = ctx.createLinearGradient(cx, cy + 200, cx, cy - 250);
-      barkGrad.addColorStop(0, "rgba(52, 22, 34, 0.92)");
-      barkGrad.addColorStop(0.5, "rgba(75, 30, 48, 0.85)");
-      barkGrad.addColorStop(1, "rgba(102, 42, 66, 0.75)");
-
-      const subBarkGrad = "rgba(85, 34, 54, 0.78)";
-
-      // 1. Trunk (Rooted directly behind the center card)
-      drawTaperedBranch(ctx, cx, cy + 180 * scale, cx - 10 * scale, cy + 60 * scale, cx - 15 * scale, cy - 30 * scale, 42 * scale, 26 * scale, barkGrad);
-
-      // 2. Main Left Upper Branch (Arching across top left)
-      drawTaperedBranch(ctx, cx - 15 * scale, cy - 30 * scale, cx - w * 0.12 * scale, cy - h * 0.22 * scale, cx - w * 0.24 * scale, cy - h * 0.34 * scale, 24 * scale, 12 * scale, barkGrad);
-      drawTaperedBranch(ctx, cx - w * 0.24 * scale, cy - h * 0.34 * scale, cx - w * 0.30 * scale, cy - h * 0.36 * scale, cx - w * 0.36 * scale, cy - h * 0.32 * scale, 12 * scale, 5 * scale, subBarkGrad);
-
-      // 3. Main Center/High Branch (Reaching up to top)
-      drawTaperedBranch(ctx, cx - 15 * scale, cy - 30 * scale, cx + 10 * scale, cy - h * 0.26 * scale, cx - w * 0.05 * scale, cy - h * 0.42 * scale, 20 * scale, 10 * scale, barkGrad);
-      drawTaperedBranch(ctx, cx - w * 0.05 * scale, cy - h * 0.42 * scale, cx + w * 0.02 * scale, cy - h * 0.48 * scale, cx + w * 0.08 * scale, cy - h * 0.46 * scale, 10 * scale, 4 * scale, subBarkGrad);
-
-      // 4. Main Right Upper Branch (Arching towards top right)
-      drawTaperedBranch(ctx, cx - 15 * scale, cy - 30 * scale, cx + w * 0.10 * scale, cy - h * 0.20 * scale, cx + w * 0.20 * scale, cy - h * 0.34 * scale, 22 * scale, 10 * scale, barkGrad);
-      drawTaperedBranch(ctx, cx + w * 0.20 * scale, cy - h * 0.34 * scale, cx + w * 0.25 * scale, cy - h * 0.30 * scale, cx + w * 0.28 * scale, cy - h * 0.24 * scale, 10 * scale, 4 * scale, subBarkGrad);
-
-      // 5. Blossom and Leaf Foliage Clusters on all branch tips
+      const isMobile = w < 1024;
       const colors = activeColorsRef.current;
       const nodes = getBranchNodes(w, h);
 
+      if (isMobile) {
+        // ── MOBILE: Organic top canopy and subtle lower card side boughs ──
+        const barkGrad = ctx.createLinearGradient(w * 0.95, 0, w * 0.45, h * 0.15);
+        barkGrad.addColorStop(0, "rgba(52, 22, 34, 0.92)");
+        barkGrad.addColorStop(0.5, "rgba(75, 30, 48, 0.85)");
+        barkGrad.addColorStop(1, "rgba(102, 42, 66, 0.75)");
+
+        const subBarkGrad = "rgba(85, 34, 54, 0.78)";
+
+        // Top Canopy Branch arching across top-right towards avatar
+        drawTaperedBranch(ctx, w * 1.02, h * 0.02, w * 0.85, h * 0.06, w * 0.68, h * 0.09, 22, 10, barkGrad);
+        drawTaperedBranch(ctx, w * 0.68, h * 0.09, w * 0.54, h * 0.11, w * 0.40, h * 0.09, 10, 4, subBarkGrad);
+        drawTaperedBranch(ctx, w * 0.85, h * 0.06, w * 0.88, h * 0.12, w * 0.82, h * 0.18, 9, 3.5, subBarkGrad);
+
+        // Lower Card Flank Branches (behind the cards at the bottom, without crossing buttons)
+        const cardCy = h * 0.78;
+        drawTaperedBranch(ctx, w * 0.50, cardCy + 50, w * 0.32, cardCy + 30, w * 0.16, cardCy + 10, 16, 6, barkGrad);
+        drawTaperedBranch(ctx, w * 0.50, cardCy + 50, w * 0.68, cardCy + 30, w * 0.84, cardCy + 10, 16, 6, barkGrad);
+      } else {
+        // ── DESKTOP: Tree rooted behind "Gece Vardiyası" card spreading across top ──
+        const cx = w * 0.725;
+        const cy = h * 0.54;
+
+        const barkGrad = ctx.createLinearGradient(cx, cy + 200, cx, cy - 250);
+        barkGrad.addColorStop(0, "rgba(52, 22, 34, 0.92)");
+        barkGrad.addColorStop(0.5, "rgba(75, 30, 48, 0.85)");
+        barkGrad.addColorStop(1, "rgba(102, 42, 66, 0.75)");
+
+        const subBarkGrad = "rgba(85, 34, 54, 0.78)";
+
+        // 1. Trunk (Rooted directly behind the center card)
+        drawTaperedBranch(ctx, cx, cy + 180, cx - 10, cy + 60, cx - 15, cy - 30, 42, 26, barkGrad);
+
+        // 2. Main Left Upper Branch (Arching across top left)
+        drawTaperedBranch(ctx, cx - 15, cy - 30, cx - w * 0.12, cy - h * 0.22, cx - w * 0.24, cy - h * 0.34, 24, 12, barkGrad);
+        drawTaperedBranch(ctx, cx - w * 0.24, cy - h * 0.34, cx - w * 0.30, cy - h * 0.36, cx - w * 0.36, cy - h * 0.32, 12, 5, subBarkGrad);
+
+        // 3. Main Center/High Branch (Reaching up to top)
+        drawTaperedBranch(ctx, cx - 15, cy - 30, cx + 10, cy - h * 0.26, cx - w * 0.05, cy - h * 0.42, 20, 10, barkGrad);
+        drawTaperedBranch(ctx, cx - w * 0.05, cy - h * 0.42, cx + w * 0.02, cy - h * 0.48, cx + w * 0.08, cy - h * 0.46, 10, 4, subBarkGrad);
+
+        // 4. Main Right Upper Branch (Arching towards top right)
+        drawTaperedBranch(ctx, cx - 15, cy - 30, cx + w * 0.10, cy - h * 0.20, cx + w * 0.20, cy - h * 0.34, 22, 10, barkGrad);
+        drawTaperedBranch(ctx, cx + w * 0.20, cy - h * 0.34, cx + w * 0.25, cy - h * 0.30, cx + w * 0.28, cy - h * 0.24, 10, 4, subBarkGrad);
+      }
+
+      // Blossom and Leaf Foliage Clusters on all branch tips
       nodes.forEach((node, nIdx) => {
         const clusterCount = node.size || 20;
 
         // Soft ambient petal glow behind cluster
-        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, 50);
-        glow.addColorStop(0, "rgba(251, 113, 133, 0.22)");
+        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, 45);
+        glow.addColorStop(0, "rgba(251, 113, 133, 0.20)");
         glow.addColorStop(1, "rgba(251, 113, 133, 0)");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 50, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, 45, 0, Math.PI * 2);
         ctx.fill();
 
         for (let b = 0; b < clusterCount; b++) {
           const angle = (b / clusterCount) * Math.PI * 2 + nIdx;
-          const dist = 10 + (b % 4) * 8;
+          const dist = 8 + (b % 4) * 7;
           const px = node.x + Math.cos(angle) * dist;
           const py = node.y + Math.sin(angle) * dist * 0.75;
-          const leafSize = 4.5 + (b % 3) * 2.2;
+          const leafSize = 4.2 + (b % 3) * 2;
           const color = colors[(b + nIdx) % colors.length] || "#e11d48";
 
           ctx.save();
