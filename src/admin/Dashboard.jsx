@@ -57,11 +57,11 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (Sol Tarafta Sabit & Kaydırmada Görünür) ── */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#111118] border-r border-white/8 z-30 flex flex-col transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-[#111118] border-r border-white/8 z-30 flex flex-col transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 md:static md:flex`}
+        } md:translate-x-0 md:sticky md:top-0 md:h-screen md:shrink-0`}
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/8">

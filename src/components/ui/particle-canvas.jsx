@@ -40,7 +40,7 @@ export default function ParticleCanvas({
     const getW = () => cvs.offsetWidth;
     const getH = () => cvs.offsetHeight;
 
-    /* ── Generate Stars (GitHubSky Twinkle Logic) ──── */
+    /* ── Generate Stars & Rapunzel Fairytale Sparkles ──── */
     const count = Math.min(300, Math.max(120, particleCount));
     const stars = [];
     for (let i = 0; i < count; i++) {
@@ -52,7 +52,24 @@ export default function ParticleCanvas({
         baseOpacity: 0.15 + Math.random() * 0.55,
         twinkleSpeed: 0.35 + Math.random() * 1.1,
         twinklePhase: Math.random() * Math.PI * 2,
-        isWarm: Math.random() > 0.75, // Some warm golden stars
+        isWarm: Math.random() > 0.75, // Golden stars
+        isRose: Math.random() > 0.65, // Rapunzel pink/rose fairy sparkle
+      });
+    }
+
+    /* ── Floating Rapunzel Lantern / Petal Sparkles (Light Mode) ──── */
+    const rapunzelSparkles = [];
+    for (let i = 0; i < 18; i++) {
+      rapunzelSparkles.push({
+        x: Math.random(),
+        y: Math.random(),
+        r: 1.2 + Math.random() * 2.2,
+        vy: 0.00015 + Math.random() * 0.00025, // Slow upward drift
+        swaySpeed: 0.5 + Math.random() * 1.2,
+        swayPhase: Math.random() * Math.PI * 2,
+        swayAmp: 0.0004 + Math.random() * 0.0006,
+        alpha: 0.25 + Math.random() * 0.45,
+        hue: Math.random() > 0.5 ? "rose" : "amber", // Rose or warm golden lantern
       });
     }
 
@@ -108,21 +125,77 @@ export default function ParticleCanvas({
       const spd = speedRef.current;
       const time = (now - startTime) / 1000;
 
+      const isLight = document.documentElement.classList.contains("light");
+
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
 
-      /* 1. Subtle Night Sky Radial Gradient Backdrop */
-      const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.2, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.8);
-      bgGrad.addColorStop(0, "rgba(22, 28, 48, 0.4)");
-      bgGrad.addColorStop(0.6, "rgba(12, 14, 24, 0.2)");
-      bgGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, w, h);
+      /* 1. Dynamic Atmosphere Backdrop (Light Mode: Soft Fairytale Aura | Dark Mode: Midnight Sky) */
+      if (isLight) {
+        // Luminous warm fairytale aura without any dark/black artifacts
+        const lightGrad = ctx.createRadialGradient(w * 0.5, h * 0.35, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
+        lightGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+        lightGrad.addColorStop(0.35, "rgba(255, 230, 240, 0.25)");
+        lightGrad.addColorStop(0.75, "rgba(253, 215, 226, 0.12)");
+        lightGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = lightGrad;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        // Dark Mode Midnight Gradient
+        const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.2, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.8);
+        bgGrad.addColorStop(0, "rgba(22, 28, 48, 0.4)");
+        bgGrad.addColorStop(0.6, "rgba(12, 14, 24, 0.2)");
+        bgGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+      }
 
       const ptr = mouseRef.current;
 
-      /* 2. Check & Trigger Periodic Star Flare */
+      /* 2. Floating Rapunzel Lantern / Petal Sparkles (Light Mode Fairy Touch) */
+      if (isLight) {
+        for (let i = 0; i < rapunzelSparkles.length; i++) {
+          const sp = rapunzelSparkles[i];
+          sp.y -= sp.vy * spd;
+          sp.x += Math.sin(time * sp.swaySpeed + sp.swayPhase) * sp.swayAmp;
+
+          // Wrap around screen
+          if (sp.y < -0.05) sp.y = 1.05;
+          if (sp.x < -0.05) sp.x = 1.05;
+          if (sp.x > 1.05) sp.x = -0.05;
+
+          const sx = sp.x * w;
+          const sy = sp.y * h;
+          const pulse = 0.7 + 0.3 * Math.sin(time * 2 + sp.swayPhase);
+          const currentAlpha = sp.alpha * pulse;
+
+          // Soft Glowing Fairy Orb
+          const spGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sp.r * 2.5);
+          if (sp.hue === "rose") {
+            spGrad.addColorStop(0, `rgba(251, 113, 133, ${(currentAlpha * 0.9).toFixed(2)})`);
+            spGrad.addColorStop(0.5, `rgba(244, 63, 94, ${(currentAlpha * 0.4).toFixed(2)})`);
+            spGrad.addColorStop(1, "rgba(255, 200, 220, 0)");
+          } else {
+            spGrad.addColorStop(0, `rgba(253, 224, 71, ${(currentAlpha * 0.9).toFixed(2)})`);
+            spGrad.addColorStop(0.5, `rgba(245, 158, 11, ${(currentAlpha * 0.4).toFixed(2)})`);
+            spGrad.addColorStop(1, "rgba(255, 235, 180, 0)");
+          }
+
+          ctx.beginPath();
+          ctx.arc(sx, sy, sp.r * pulse * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = spGrad;
+          ctx.fill();
+
+          // Shiny Center Core
+          ctx.beginPath();
+          ctx.arc(sx, sy, sp.r * 0.7, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${(currentAlpha * 0.95).toFixed(2)})`;
+          ctx.fill();
+        }
+      }
+
+      /* 3. Check & Trigger Periodic Star Flare */
       if (!activeFlare && now >= nextFlareTime) {
         const randIdx = Math.floor(Math.random() * stars.length);
         activeFlare = {
@@ -133,16 +206,16 @@ export default function ParticleCanvas({
         nextFlareTime = now + 5000 + Math.random() * 3000; // Next flare in 5-8s
       }
 
-      /* 3. Check & Trigger Shooting Star (15-20s) */
+      /* 4. Check & Trigger Shooting Star (15-20s) */
       if (!shootingStar && now >= nextShootingStarTime) {
         triggerShootingStar(now);
       }
 
-      /* 4. Render Stars */
+      /* 5. Render Stars */
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
 
-        // Twinkle formula from GitHubSky: 0.55 + 0.45 * sin(time * speed + phase)
+        // Twinkle formula
         const twinkle = 0.55 + 0.45 * Math.sin(time * star.twinkleSpeed * Math.PI * 2 + star.twinklePhase);
         let opacity = star.baseOpacity * twinkle;
         let scale = 1;
@@ -173,24 +246,43 @@ export default function ParticleCanvas({
         // Draw Base Star Point
         ctx.beginPath();
         ctx.arc(px, py, r, 0, Math.PI * 2);
-        if (star.isWarm) {
-          ctx.fillStyle = `rgba(255, 238, 205, ${Math.min(1, opacity.toFixed(2))})`;
+
+        if (isLight) {
+          // Rapunzel Light mode colors (Rose, Amber, Pearl)
+          if (star.isRose) {
+            ctx.fillStyle = `rgba(225, 29, 72, ${Math.min(0.85, (opacity * 0.8).toFixed(2))})`;
+          } else if (star.isWarm) {
+            ctx.fillStyle = `rgba(217, 119, 6, ${Math.min(0.85, (opacity * 0.75).toFixed(2))})`;
+          } else {
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, (opacity * 0.95).toFixed(2))})`;
+          }
         } else {
-          ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, opacity.toFixed(2))})`;
+          // Dark mode colors
+          if (star.isWarm) {
+            ctx.fillStyle = `rgba(255, 238, 205, ${Math.min(1, opacity.toFixed(2))})`;
+          } else {
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, opacity.toFixed(2))})`;
+          }
         }
         ctx.fill();
 
-        // Subtle outer glow for larger stars
-        if (r > 1.4 && opacity > 0.4) {
+        // Outer glow for larger stars
+        if (r > 1.3 && opacity > 0.35) {
           ctx.beginPath();
           ctx.arc(px, py, r * 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = star.isWarm
-            ? `rgba(255, 220, 160, ${(opacity * 0.18).toFixed(2)})`
-            : `rgba(255, 255, 255, ${(opacity * 0.15).toFixed(2)})`;
+          if (isLight) {
+            ctx.fillStyle = star.isRose
+              ? `rgba(244, 63, 94, ${(opacity * 0.2).toFixed(2)})`
+              : `rgba(255, 255, 255, ${(opacity * 0.35).toFixed(2)})`;
+          } else {
+            ctx.fillStyle = star.isWarm
+              ? `rgba(255, 220, 160, ${(opacity * 0.18).toFixed(2)})`
+              : `rgba(255, 255, 255, ${(opacity * 0.15).toFixed(2)})`;
+          }
           ctx.fill();
         }
 
-        /* ── 5. Render Active Star Flare / Bloom ── */
+        /* ── 6. Render Active Star Flare / Bloom ── */
         if (activeFlare && activeFlare.starIndex === i) {
           const elapsed = now - activeFlare.startTime;
           if (elapsed > activeFlare.duration) {
@@ -203,9 +295,15 @@ export default function ParticleCanvas({
             // Halo Radial Glow
             const haloR = (12 + r * 6) * intensity;
             const haloGrad = ctx.createRadialGradient(px, py, 0, px, py, haloR);
-            haloGrad.addColorStop(0, `rgba(255, 245, 210, ${(0.85 * intensity).toFixed(2)})`);
-            haloGrad.addColorStop(0.4, `rgba(225, 29, 72, ${(0.35 * intensity).toFixed(2)})`);
-            haloGrad.addColorStop(1, "rgba(255, 200, 150, 0)");
+            if (isLight) {
+              haloGrad.addColorStop(0, `rgba(255, 255, 255, ${(0.95 * intensity).toFixed(2)})`);
+              haloGrad.addColorStop(0.4, `rgba(251, 113, 133, ${(0.45 * intensity).toFixed(2)})`);
+              haloGrad.addColorStop(1, "rgba(255, 225, 235, 0)");
+            } else {
+              haloGrad.addColorStop(0, `rgba(255, 245, 210, ${(0.85 * intensity).toFixed(2)})`);
+              haloGrad.addColorStop(0.4, `rgba(225, 29, 72, ${(0.35 * intensity).toFixed(2)})`);
+              haloGrad.addColorStop(1, "rgba(255, 200, 150, 0)");
+            }
 
             ctx.beginPath();
             ctx.arc(px, py, haloR, 0, Math.PI * 2);
@@ -218,7 +316,9 @@ export default function ParticleCanvas({
 
             ctx.save();
             ctx.translate(px, py);
-            ctx.fillStyle = `rgba(255, 255, 255, ${(0.9 * intensity).toFixed(2)})`;
+            ctx.fillStyle = isLight
+              ? `rgba(255, 255, 255, ${(0.98 * intensity).toFixed(2)})`
+              : `rgba(255, 255, 255, ${(0.9 * intensity).toFixed(2)})`;
 
             // Horizontal Ray
             ctx.beginPath();
@@ -239,14 +339,13 @@ export default function ParticleCanvas({
         }
       }
 
-      /* ── 6. Render Shooting Star (15-20s Kayan Yıldız) ── */
+      /* ── 7. Render Shooting Star (15-20s Kayan Yıldız) ── */
       if (shootingStar) {
         const elapsed = now - shootingStar.startTime;
         if (elapsed > shootingStar.duration) {
           shootingStar = null;
         } else {
           const progress = elapsed / shootingStar.duration;
-          // Fade in & out along trajectory
           const fade = Math.sin(progress * Math.PI);
 
           const distance = Math.hypot(w, h) * 0.45;
@@ -261,23 +360,34 @@ export default function ParticleCanvas({
 
           // Draw Meteor Trail Line
           const trailGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-          trailGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
-          trailGrad.addColorStop(0.6, `rgba(255, 210, 160, ${(0.45 * fade).toFixed(2)})`);
-          trailGrad.addColorStop(1, `rgba(255, 255, 255, ${(0.95 * fade).toFixed(2)})`);
+          if (isLight) {
+            trailGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+            trailGrad.addColorStop(0.5, `rgba(251, 113, 133, ${(0.55 * fade).toFixed(2)})`);
+            trailGrad.addColorStop(1, `rgba(255, 255, 255, ${(0.95 * fade).toFixed(2)})`);
+          } else {
+            trailGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+            trailGrad.addColorStop(0.6, `rgba(255, 210, 160, ${(0.45 * fade).toFixed(2)})`);
+            trailGrad.addColorStop(1, `rgba(255, 255, 255, ${(0.95 * fade).toFixed(2)})`);
+          }
 
           ctx.beginPath();
           ctx.moveTo(tailX, tailY);
           ctx.lineTo(headX, headY);
           ctx.strokeStyle = trailGrad;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.2;
           ctx.lineCap = "round";
           ctx.stroke();
 
           // Draw Glowing Meteor Head
           const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, 8);
           headGrad.addColorStop(0, `rgba(255, 255, 255, ${(1 * fade).toFixed(2)})`);
-          headGrad.addColorStop(0.4, `rgba(255, 220, 150, ${(0.6 * fade).toFixed(2)})`);
-          headGrad.addColorStop(1, "rgba(255, 180, 100, 0)");
+          if (isLight) {
+            headGrad.addColorStop(0.4, `rgba(251, 113, 133, ${(0.7 * fade).toFixed(2)})`);
+            headGrad.addColorStop(1, "rgba(255, 210, 225, 0)");
+          } else {
+            headGrad.addColorStop(0.4, `rgba(255, 220, 150, ${(0.6 * fade).toFixed(2)})`);
+            headGrad.addColorStop(1, "rgba(255, 180, 100, 0)");
+          }
 
           ctx.beginPath();
           ctx.arc(headX, headY, 8, 0, Math.PI * 2);
@@ -294,12 +404,13 @@ export default function ParticleCanvas({
               life: 1,
               decay: 0.03 + Math.random() * 0.03,
               size: 0.8 + Math.random() * 1.2,
+              isLight,
             });
           }
         }
       }
 
-      /* ── 7. Render Stardust Particles ── */
+      /* ── 8. Render Stardust Particles ── */
       for (let i = stardust.length - 1; i >= 0; i--) {
         const p = stardust[i];
         p.x += p.vx;
@@ -313,7 +424,11 @@ export default function ParticleCanvas({
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 220, 170, ${p.life.toFixed(2)})`;
+        if (p.isLight) {
+          ctx.fillStyle = `rgba(251, 113, 133, ${p.life.toFixed(2)})`;
+        } else {
+          ctx.fillStyle = `rgba(255, 220, 170, ${p.life.toFixed(2)})`;
+        }
         ctx.fill();
       }
 
