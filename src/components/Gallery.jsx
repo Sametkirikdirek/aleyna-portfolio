@@ -171,7 +171,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
               className={`flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all cursor-pointer shrink-0 w-44 md:w-full ${
                 activeIdx === idx
                   ? "dark:bg-brush/20 bg-brush text-white border-brush shadow-[0_0_15px_rgba(181,72,46,0.3)] scale-[1.02]"
-                  : "dark:bg-paper/5 bg-white/60 dark:border-paper/10 border-ink/10 hover:bg-white/90 hover:border-ink/20 opacity-85 hover:opacity-100"
+                  : "dark:bg-paper/5 bg-white/80 dark:border-paper/10 border-black/10 hover:bg-white hover:border-black/25 opacity-90 hover:opacity-100 shadow-xs"
               }`}
             >
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
@@ -182,10 +182,10 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <h5 className={`font-display text-xs font-semibold truncate ${activeIdx === idx ? "text-white" : "dark:text-paper text-ink"}`}>
+                <h5 className={`font-display text-xs font-bold truncate ${activeIdx === idx ? "text-white" : "text-paper"}`}>
                   {item.title}
                 </h5>
-                <p className={`font-mono text-[10px] truncate mt-0.5 ${activeIdx === idx ? "text-white/80" : "dark:text-paper/50 text-ink/60"}`}>
+                <p className={`font-mono text-[10px] font-medium truncate mt-0.5 ${activeIdx === idx ? "text-white/85" : "text-paper/70"}`}>
                   {item.medium}
                 </p>
               </div>

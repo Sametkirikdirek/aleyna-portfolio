@@ -44,6 +44,8 @@ html.light {
   --color-paper: #1c1524;
   --color-paper-dim: #38253b;
   --color-umber: #8a2f52;
+  --color-circuit: #1e3a8a;
+  --color-circuit-soft: #1d4ed8;
   color-scheme: light;
 }
 
