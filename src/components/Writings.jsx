@@ -15,24 +15,62 @@ const TABS = [
   { id: "library", label: "Kütüphane", icon: Library },
 ];
 
-async function fetchWithTimeout(url, ms = 8000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ms);
+function formatRssItem(item, idx) {
+  // Clean HTML tags for excerpt
+  const textContent = item.description?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() || "";
+  const excerpt = textContent.slice(0, 180) + (textContent.length > 180 ? "..." : "");
 
+  // Extract cover image
+  const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
+  const image = item.thumbnail || (imgMatch ? imgMatch[1] : "");
+
+  // Format date: "2026-04-12 14:00" -> "Nis 2026"
+  let formattedDate = "";
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    if (!Array.isArray(data.posts) || data.posts.length === 0) {
-      throw new Error("Empty feed");
-    }
-    return data.posts;
-  } finally {
-    clearTimeout(timeout);
+    const d = new Date(item.pubDate);
+    const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+    formattedDate = `${months[d.getMonth()]} ${d.getFullYear()}`;
+  } catch {
+    formattedDate = item.pubDate || "";
   }
+
+  // Calculate estimated read time
+  const wordCount = textContent.split(/\s+/).length;
+  const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+  return {
+    id: `m-live-${idx}`,
+    title: item.title,
+    excerpt: excerpt,
+    content: item.content || item.description || "",
+    date: formattedDate,
+    readTime: `${readTimeMinutes} dk`,
+    tag: item.categories && item.categories.length > 0 ? item.categories[0].toUpperCase() : "MEDIUM",
+    url: item.link,
+    image: image,
+  };
 }
 
-async function loadMediumArticles() {
+async function loadMediumArticles(mediumUrl = "https://medium.com/@aleynaaltunsu") {
+  // Extract handle: "@aleynaaltunsu"
+  const handleMatch = mediumUrl.match(/@([\w.-]+)/);
+  const handle = handleMatch ? `@${handleMatch[1]}` : "@aleynaaltunsu";
+
+  // 1. Live RSS to JSON
+  try {
+    const rssUrl = encodeURIComponent(`https://medium.com/feed/${handle}`);
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
+        return data.items.map(formatRssItem);
+      }
+    }
+  } catch (err) {
+    console.warn("Medium RSS live fetch error, falling back to local sources:", err);
+  }
+
+  // 2. Local fallback sources
   for (const source of FEED_SOURCES) {
     try {
       return await fetchWithTimeout(source);
@@ -263,7 +301,7 @@ export default function Writings() {
   useEffect(() => {
     let cancelled = false;
 
-    loadMediumArticles().then((posts) => {
+    loadMediumArticles(mediumUrl).then((posts) => {
       if (!cancelled) {
         setMediumArticles(posts);
         setMediumReady(true);
@@ -273,7 +311,7 @@ export default function Writings() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mediumUrl]);
 
   return (
     <section className="min-h-screen px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-paper text-ink">
