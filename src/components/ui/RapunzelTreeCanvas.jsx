@@ -309,8 +309,9 @@ export default function RapunzelTreeCanvas({
       const time = (now - startTime) / 1000;
       const spd = activeSpeedRef.current;
 
-      ctx.clearRect(0, 0, w, h);
-      ctx.save();
+      // Completely wipe entire physical canvas on every frame to prevent any trailing paint lines
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
       ctx.scale(dpr, dpr);
 
       // Tree sway calculation
