@@ -243,10 +243,10 @@ export default function SocialCards({ cards = [] }) {
   return (
     <section className="flex flex-col items-center w-full py-4 lg:py-6 px-2 md:px-4 relative z-20 overflow-visible">
       <div className="flex items-center justify-center w-full max-w-[42rem]">
-        <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full h-[20rem] md:h-[24rem]">
+        <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full h-[17rem] sm:h-[20rem] md:h-[24rem]">
           {cards.map((card, index) => {
             const cardContent = (
-              <div className="relative w-[10rem] h-[14rem] md:w-[12rem] md:h-[17rem] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-ink group transition-transform duration-300">
+              <div className="relative w-[8.2rem] h-[12rem] sm:w-[10rem] sm:h-[14.5rem] md:w-[12rem] md:h-[17rem] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-ink group transition-transform duration-300">
                 <img
                   src={card.imgUrl || card.image}
                   loading="lazy"

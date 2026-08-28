@@ -98,38 +98,39 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
       >
         <div className="flex w-full flex-col justify-between p-8 pt-28 md:w-1/2 md:p-12 md:pt-32 lg:w-3/5 lg:p-16 lg:pt-36">
           <div>
-            <motion.header className="mb-12" variants={itemVariants}>
+            <motion.header className="mb-8 sm:mb-12" variants={itemVariants}>
               {logo && (
-                <div className="flex items-center">
+                <div className="flex items-center gap-3">
                   {logo.url ? (
                     <img
                       src={logo.url}
                       alt={logo.alt}
-                      className="mr-3 h-8 w-8 rounded-full object-cover"
+                      className="mr-1 h-8 w-8 rounded-full object-cover"
                     />
-                  ) : null}
+                  ) : (
+                    <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                  )}
                   <div>
                     {logo.text && (
-                      <p className="font-display text-lg font-bold text-foreground">{logo.text}</p>
-                    )}
-                    {slogan && (
-                      <p className="font-mono text-xs tracking-wider text-muted-foreground">{slogan}</p>
+                      <p className="font-display text-base sm:text-lg font-bold text-foreground">{logo.text}</p>
                     )}
                   </div>
                 </div>
               )}
             </motion.header>
 
-            <motion.main variants={containerVariants}>
-              <motion.h1
-                className="font-display text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl"
-                variants={itemVariants}
-              >
+            <motion.main variants={itemVariants}>
+              {slogan && (
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-3">
+                  {slogan}
+                </p>
+              )}
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.1]">
                 {title}
-              </motion.h1>
-              <motion.div className="my-6 h-1 w-20 bg-primary" variants={itemVariants} />
+              </h1>
+              <motion.div className="my-5 sm:my-6 h-1 w-16 sm:w-20 bg-primary" variants={itemVariants} />
               <motion.p
-                className="mb-8 max-w-md font-sans text-base leading-relaxed text-muted-foreground"
+                className="mb-6 sm:mb-8 max-w-md font-sans text-sm sm:text-base leading-relaxed text-muted-foreground"
                 variants={itemVariants}
               >
                 {subtitle}
@@ -138,7 +139,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                 href={callToAction.href}
                 target={callToAction.href?.startsWith("http") ? "_blank" : undefined}
                 rel={callToAction.href?.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="inline-block font-sans text-lg font-bold tracking-widest text-primary transition-colors hover:text-primary/80"
+                className="inline-block font-sans text-base sm:text-lg font-bold tracking-widest text-primary transition-colors hover:text-primary/80"
                 variants={itemVariants}
               >
                 {callToAction.text}
@@ -146,11 +147,11 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
             </motion.main>
           </div>
 
-          <motion.footer className="mt-12 w-full" variants={itemVariants}>
-            <div className="grid grid-cols-1 gap-6 font-mono text-xs text-muted-foreground sm:grid-cols-3">
+          <motion.footer className="mt-8 sm:mt-12 w-full" variants={itemVariants}>
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 font-mono text-xs text-muted-foreground sm:grid-cols-3">
               <div className="flex items-center">
                 <InfoIcon type="website" />
-                <span>{contactInfo.website}</span>
+                <span className="truncate">{contactInfo.website}</span>
               </div>
               <div className="flex items-center">
                 <InfoIcon type="email" />
@@ -158,7 +159,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                   href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(contactInfo.email)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
+                  className="hover:text-primary transition-colors truncate"
                 >
                   {contactInfo.email}
                 </a>
@@ -172,7 +173,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
         </div>
 
         <motion.div
-          className="relative min-h-[380px] w-full md:min-h-full md:w-1/2 lg:w-2/5 overflow-hidden group cursor-pointer bg-ink"
+          className="relative min-h-[280px] sm:min-h-[380px] w-full md:min-h-full md:w-1/2 lg:w-2/5 overflow-hidden group cursor-pointer bg-ink"
           initial={{ clipPath: "polygon(100% 0, 100% 0, 100% 100%, 100% 100%)" }}
           animate={{ clipPath: "polygon(0% 0, 100% 0, 100% 100%, 0% 100%)" }}
           transition={{ duration: 1.2, ease: "circOut" }}

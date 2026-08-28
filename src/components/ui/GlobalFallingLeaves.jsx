@@ -57,8 +57,11 @@ export default function GlobalFallingLeaves() {
       ? treeConfig.leafColors
       : DEFAULT_LEAF_COLORS;
 
-    // 20-30 ambient floating leaves across the whole viewport
-    const count = Math.min(35, Math.max(16, Math.floor(treeConfig.leafCount * 0.7)));
+    // Ambient floating leaves: optimized for mobile (12-16) vs desktop (20-35)
+    const isMob = getW() < 768;
+    const count = isMob
+      ? Math.min(18, Math.max(10, Math.floor(treeConfig.leafCount * 0.45)))
+      : Math.min(35, Math.max(16, Math.floor(treeConfig.leafCount * 0.7)));
     const leaves = [];
 
     for (let i = 0; i < count; i++) {
