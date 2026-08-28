@@ -54,7 +54,9 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          href={`mailto:${profile.email}`}
+          href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profile?.email || "hello@aleynaaltunsu.com")}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="mt-9 inline-flex items-center gap-2 px-7 py-3.5 bg-brush text-paper font-sans text-sm rounded-full hover:bg-brush-soft transition-colors"
         >
           {profile.email}

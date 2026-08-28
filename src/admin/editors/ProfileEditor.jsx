@@ -130,6 +130,31 @@ export default function ProfileEditor() {
     }));
   };
 
+  const updateExtendedBio = (idx, key, value) => {
+    setForm((prev) => {
+      const extendedBio = [...(prev.extendedBio || [])];
+      extendedBio[idx] = { ...extendedBio[idx], [key]: value };
+      return { ...prev, extendedBio };
+    });
+  };
+
+  const addExtendedBio = () => {
+    setForm((prev) => ({
+      ...prev,
+      extendedBio: [
+        ...(prev.extendedBio || []),
+        { title: "", content: "" },
+      ],
+    }));
+  };
+
+  const removeExtendedBio = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      extendedBio: (prev.extendedBio || []).filter((_, i) => i !== idx),
+    }));
+  };
+
   const uploadHeroImage = async (idx, file) => {
     if (!file) return;
     setUploading((prev) => ({ ...prev, [idx]: true }));
@@ -433,6 +458,68 @@ export default function ProfileEditor() {
           <Field label="Felsefe (Cümle)">
             <TextInput value={form.philosophy} onChange={(v) => setField("philosophy", v)} />
           </Field>
+        </div>
+      </Card>
+
+      {/* Hakkımda 3 Ana Disiplin & Odak Kartları (Extended Bio) */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <SectionTitle>Hakkımda — 3 Ana Disiplin & Odak Kartları</SectionTitle>
+            <p className="text-white/40 text-xs mt-0.5">
+              Hakkımda sayfasında "İki disiplin, tek bakış açısı" başlığının altında 3 sütun halinde sergilenen odak kartları.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addExtendedBio}
+            className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer shrink-0"
+          >
+            <Plus size={13} /> Yeni Kart Ekle
+          </button>
+        </div>
+
+        <div className="space-y-4 mt-4">
+          {(form.extendedBio || []).map((card, idx) => (
+            <div
+              key={idx}
+              className="bg-white/[0.03] border border-white/8 rounded-xl p-4 space-y-3 relative group hover:border-white/20 transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs text-rose-300 font-semibold flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center text-[10px]">
+                    {idx + 1}
+                  </span>
+                  Odak Kartı
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeExtendedBio(idx)}
+                  className="text-white/30 hover:text-rose-400 transition-colors p-1"
+                  title="Kartı Sil"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+
+              <Field label="Kart Başlığı">
+                <TextInput
+                  value={card.title || ""}
+                  onChange={(v) => updateExtendedBio(idx, "title", v)}
+                  placeholder="Mühendislik & Yapay Zekâ"
+                />
+              </Field>
+
+              <Field label="Açıklama Metni">
+                <TextArea
+                  value={card.content || ""}
+                  onChange={(v) => updateExtendedBio(idx, "content", v)}
+                  rows={3}
+                  placeholder="Kartın detaylı açıklama metni..."
+                />
+              </Field>
+            </div>
+          ))}
         </div>
       </Card>
 

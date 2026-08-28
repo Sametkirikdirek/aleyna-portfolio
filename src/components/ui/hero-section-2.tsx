@@ -136,6 +136,8 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
               </motion.p>
               <motion.a
                 href={callToAction.href}
+                target={callToAction.href?.startsWith("http") ? "_blank" : undefined}
+                rel={callToAction.href?.startsWith("http") ? "noopener noreferrer" : undefined}
                 className="inline-block font-sans text-lg font-bold tracking-widest text-primary transition-colors hover:text-primary/80"
                 variants={itemVariants}
               >
@@ -152,7 +154,12 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
               </div>
               <div className="flex items-center">
                 <InfoIcon type="email" />
-                <a href={`mailto:${contactInfo.email}`} className="hover:text-primary transition-colors">
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(contactInfo.email)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   {contactInfo.email}
                 </a>
               </div>

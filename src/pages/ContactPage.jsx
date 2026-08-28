@@ -63,7 +63,7 @@ export default function ContactPage() {
         subtitle={pageSubtitle}
         callToAction={{
           text: ctaText,
-          href: `mailto:${profile?.email || "hello@aleynaaltunsu.com"}`,
+          href: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profile?.email || "hello@aleynaaltunsu.com")}`,
         }}
         backgroundImage={artwork?.image || ""}
         artwork={artwork || {}}

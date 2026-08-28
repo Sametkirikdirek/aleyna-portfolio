@@ -96,11 +96,11 @@ export default function About() {
         </div>
 
         {/* 3 Ana Üçlü Disiplin Odak Kartları */}
-        {profile.extendedBio && (
+        {profile?.extendedBio && profile.extendedBio.length > 0 && (
           <div className="grid md:grid-cols-3 gap-6">
             {profile.extendedBio.map((item, i) => (
               <motion.div
-                key={item.title}
+                key={item.title || i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
