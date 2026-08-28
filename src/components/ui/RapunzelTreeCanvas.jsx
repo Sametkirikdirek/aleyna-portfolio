@@ -333,14 +333,25 @@ export default function RapunzelTreeCanvas({
       }, 1800);
     };
 
-    const handleCanvasClick = (e) => {
+    const handleGlobalHeroClick = (e) => {
+      // Do not trigger burst when clicking on interactive buttons, links, inputs, or fan cards
+      const isInteractive = e.target.closest("button, a, input, select, textarea, .fan-card, [role='button']");
+      if (isInteractive) return;
+
       const rect = cvs.getBoundingClientRect();
+      if (
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom
+      ) return;
+
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
       triggerLeafBurst(clickX, clickY);
     };
 
-    cvs.addEventListener("click", handleCanvasClick);
+    window.addEventListener("click", handleGlobalHeroClick);
 
     let startTime = performance.now();
     let rafId = 0;
@@ -434,7 +445,7 @@ export default function RapunzelTreeCanvas({
 
     return () => {
       window.removeEventListener("resize", resize);
-      cvs.removeEventListener("click", handleCanvasClick);
+      window.removeEventListener("click", handleGlobalHeroClick);
       cancelAnimationFrame(rafId);
     };
   }, []);
