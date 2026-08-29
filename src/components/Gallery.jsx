@@ -1019,7 +1019,7 @@ export default function Gallery() {
               speed={1.2}
               autoPlaySpeed={timelineAutoPlaySpeed}
               idleDelay={timelineIdleDelay}
-              visibleCount={12}
+              visibleCount={Math.min(18, Math.max(10, infiniteGalleryImages.length))}
               className="h-full w-full"
               style={{ width: "100vw", height: "100vh" }}
             />
