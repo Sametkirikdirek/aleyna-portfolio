@@ -23,6 +23,10 @@ export default function TimelineEditor() {
   const [images, setImages] = useState([]);
   const [saveStatus, setSaveStatus] = useState("idle");
 
+  // Zaman Yolculuğu Animation Settings
+  const [idleDelay, setIdleDelay] = useState(3);
+  const [autoPlaySpeed, setAutoPlaySpeed] = useState(0.3);
+
   // Selection for Batch Deletion
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -45,13 +49,20 @@ export default function TimelineEditor() {
   useEffect(() => {
     if (data && images.length === 0) {
       setImages(data.images || []);
+      // Load persisted animation settings from Firestore
+      if (typeof data.idleDelay === "number") setIdleDelay(data.idleDelay / 1000);
+      if (typeof data.autoPlaySpeed === "number") setAutoPlaySpeed(data.autoPlaySpeed);
     }
   }, [data]);
 
   const save = async () => {
     setSaveStatus("saving");
     try {
-      const payload = { images };
+      const payload = {
+        images,
+        idleDelay: Math.round(idleDelay * 1000),   // store as ms
+        autoPlaySpeed: parseFloat(autoPlaySpeed.toFixed(2)),
+      };
       await setContent("timeline", payload);
       localStorage.setItem("portfolio_cache_timeline", JSON.stringify(payload));
       window.dispatchEvent(new Event("portfolio_content_updated"));
@@ -188,6 +199,63 @@ export default function TimelineEditor() {
         onChange={handleBatchUpload}
       />
 
+      {/* ─── ANİMASYON AYARLARI PANELİ ─── */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
+        <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-2">
+          <Sparkles size={13} className="text-rose-400" />
+          Zaman Yolculuğu Animasyon Ayarları
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5">
+          {/* Hareketsizlik Süresi */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono text-white/60">
+                ⏸ Hareketsizlik Başlangıç Süresi
+              </label>
+              <span className="text-xs font-bold text-rose-300 font-mono bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/25">
+                {idleDelay} sn
+              </span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="15"
+              step="0.5"
+              value={idleDelay}
+              onChange={(e) => setIdleDelay(parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-rose-500"
+            />
+            <p className="text-[10px] text-white/35 font-mono">
+              Kullanıcı etkileşiminin bitmesinden kaç saniye sonra otomatik hareket başlasın?
+            </p>
+          </div>
+
+          {/* Otomatik Hareket Hızı */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono text-white/60">
+                ▶ Otomatik Hareket Hızı
+              </label>
+              <span className="text-xs font-bold text-rose-300 font-mono bg-rose-500/15 px-2 py-0.5 rounded-md border border-rose-500/25">
+                {autoPlaySpeed.toFixed(1)}×
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.05"
+              max="2"
+              step="0.05"
+              value={autoPlaySpeed}
+              onChange={(e) => setAutoPlaySpeed(parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-rose-500"
+            />
+            <p className="text-[10px] text-white/35 font-mono">
+              Fotoğrafların otomatik hareket etme hızı (0.05× yavaş — 2.0× hızlı)
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* ─── ÜST ARAÇ ÇUBUĞU / YÜKLEME & TOPLU İŞLEMLER ─── */}
       <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-wrap">
@@ -208,7 +276,7 @@ export default function TimelineEditor() {
             ) : (
               <>
                 <Upload size={16} />
-                <span>Fotoğraf Ekle (Toplu Seçim)</span>
+                <span>Fotoğraf Ekle</span>
               </>
             )}
           </button>

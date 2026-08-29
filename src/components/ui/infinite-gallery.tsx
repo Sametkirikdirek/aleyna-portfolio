@@ -32,6 +32,8 @@ interface BlurSettings {
 interface InfiniteGalleryProps {
 	images: ImageItem[];
 	speed?: number;
+	autoPlaySpeed?: number;
+	idleDelay?: number;
 	zSpacing?: number;
 	visibleCount?: number;
 	falloff?: { near: number; far: number };
@@ -191,6 +193,8 @@ function ImagePlane({
 function GalleryScene({
 	images,
 	speed = 1,
+	autoPlaySpeed = 0.3,
+	idleDelay = 3000,
 	visibleCount = 8,
 	fadeSettings = {
 		fadeIn: { start: 0.05, end: 0.15 },
@@ -202,9 +206,13 @@ function GalleryScene({
 		maxBlur: 3.0,
 	},
 }: Omit<InfiniteGalleryProps, 'className' | 'style'>) {
-	const [scrollVelocity, setScrollVelocity] = useState(0);
-	const [autoPlay, setAutoPlay] = useState(true);
+	// Use refs for velocity to avoid stale closures in useFrame
+	const velocityRef = useRef(0);
+	const autoPlayRef = useRef(true);
 	const lastInteraction = useRef(Date.now());
+
+	// Keep a ref to the Three.js canvas DOM element for proper event targeting
+	const { gl } = useThree();
 
 	const normalizedImages = useMemo(
 		() =>
@@ -274,12 +282,12 @@ function GalleryScene({
 		}));
 	}, [depthRange, spatialPositions, totalImages, visibleCount]);
 
-	// Handle scroll input
+	// Handle scroll input — attach to THIS canvas, not document.querySelector('canvas')
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
 			event.preventDefault();
-			setScrollVelocity((prev) => prev + event.deltaY * 0.01 * speed);
-			setAutoPlay(false);
+			velocityRef.current += event.deltaY * 0.01 * speed;
+			autoPlayRef.current = false;
 			lastInteraction.current = Date.now();
 		},
 		[speed]
@@ -289,12 +297,12 @@ function GalleryScene({
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
 			if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
-				setScrollVelocity((prev) => prev - 2 * speed);
-				setAutoPlay(false);
+				velocityRef.current -= 2 * speed;
+				autoPlayRef.current = false;
 				lastInteraction.current = Date.now();
 			} else if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
-				setScrollVelocity((prev) => prev + 2 * speed);
-				setAutoPlay(false);
+				velocityRef.current += 2 * speed;
+				autoPlayRef.current = false;
 				lastInteraction.current = Date.now();
 			}
 		},
@@ -302,7 +310,8 @@ function GalleryScene({
 	);
 
 	useEffect(() => {
-		const canvas = document.querySelector('canvas');
+		// Attach wheel to THIS scene's canvas, not document.querySelector('canvas')
+		const canvas = gl.domElement;
 		if (canvas) {
 			canvas.addEventListener('wheel', handleWheel, { passive: false });
 			document.addEventListener('keydown', handleKeyDown);
@@ -312,33 +321,34 @@ function GalleryScene({
 				document.removeEventListener('keydown', handleKeyDown);
 			};
 		}
-	}, [handleWheel, handleKeyDown]);
+	}, [gl.domElement, handleWheel, handleKeyDown]);
 
-	// Auto-play logic
+	// Auto-play logic: check every 500ms if idle long enough
 	useEffect(() => {
 		const interval = setInterval(() => {
-			if (Date.now() - lastInteraction.current > 3000) {
-				setAutoPlay(true);
+			if (Date.now() - lastInteraction.current > idleDelay) {
+				autoPlayRef.current = true;
 			}
-		}, 1000);
+		}, 500);
 		return () => clearInterval(interval);
-	}, []);
+	}, [idleDelay]);
 
 	useFrame((state, delta) => {
-		// Apply auto-play
-		if (autoPlay) {
-			setScrollVelocity((prev) => prev + 0.3 * delta);
+		// Apply auto-play using refs (no stale closure)
+		if (autoPlayRef.current) {
+			velocityRef.current += autoPlaySpeed * delta;
 		}
 
 		// Damping
-		setScrollVelocity((prev) => prev * 0.95);
+		velocityRef.current *= 0.95;
+		const vel = velocityRef.current;
 
 		// Update time uniform for all materials
 		const time = state.clock.getElapsedTime();
 		materials.forEach((material) => {
 			if (material && material.uniforms) {
 				material.uniforms.time.value = time;
-				material.uniforms.scrollForce.value = scrollVelocity;
+				material.uniforms.scrollForce.value = vel;
 			}
 		});
 
@@ -349,7 +359,7 @@ function GalleryScene({
 		const halfRange = totalRange / 2;
 
 		planesData.current.forEach((plane, i) => {
-			let newZ = plane.z + scrollVelocity * delta * 10;
+			let newZ = plane.z + vel * delta * 10;
 			let wrapsForward = 0;
 			let wrapsBackward = 0;
 
@@ -515,6 +525,10 @@ function FallbackGallery({ images }: { images: ImageItem[] }) {
 
 export default function InfiniteGallery({
 	images,
+	speed = 1,
+	autoPlaySpeed = 0.3,
+	idleDelay = 3000,
+	visibleCount = 8,
 	className = 'h-96 w-full',
 	style,
 	fadeSettings = {
@@ -560,6 +574,10 @@ export default function InfiniteGallery({
 				<Suspense fallback={null}>
 					<GalleryScene
 						images={images}
+						speed={speed}
+						autoPlaySpeed={autoPlaySpeed}
+						idleDelay={idleDelay}
+						visibleCount={visibleCount}
 						fadeSettings={fadeSettings}
 						blurSettings={blurSettings}
 					/>

@@ -25,6 +25,11 @@ export function ColorModeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
+
+    // 1. Briefly suppress all transitions to prevent repaint cascade
+    body.classList.add("no-transition");
+
     if (theme === "dark") {
       root.classList.add("dark");
       root.classList.remove("light");
@@ -33,6 +38,13 @@ export function ColorModeProvider({ children }) {
       root.classList.remove("dark");
     }
     localStorage.setItem("theme", theme);
+
+    // 2. Re-enable transitions after one paint cycle
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        body.classList.remove("no-transition");
+      });
+    });
   }, [theme]);
 
   const toggleColorMode = () => {

@@ -260,6 +260,9 @@ export default function Gallery() {
 
   const artworks = galleryData?.artworks || [];
   const timelineImagesList = timelineData?.images || [];
+  // Admin-configurable settings for Zaman Yolculuğu InfiniteGallery
+  const timelineIdleDelay = typeof timelineData?.idleDelay === "number" ? timelineData.idleDelay : 3000;
+  const timelineAutoPlaySpeed = typeof timelineData?.autoPlaySpeed === "number" ? timelineData.autoPlaySpeed : 0.3;
 
   const [activeTab, setActiveTab] = useState("galeri"); // "galeri" | "zaman-yolculugu"
   const [activeIdx, setActiveIdx] = useState(null);
@@ -1014,6 +1017,8 @@ export default function Gallery() {
             <InfiniteGallery
               images={infiniteGalleryImages}
               speed={1.2}
+              autoPlaySpeed={timelineAutoPlaySpeed}
+              idleDelay={timelineIdleDelay}
               visibleCount={12}
               className="h-full w-full"
               style={{ width: "100vw", height: "100vh" }}

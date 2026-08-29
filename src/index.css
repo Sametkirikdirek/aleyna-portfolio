@@ -52,7 +52,17 @@ html.light {
 body {
   background-color: var(--color-ink);
   color: var(--color-paper);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.35s ease, color 0.35s ease;
+  /* GPU-hint: promote body to its own composited layer during theme transitions */
+  will-change: background-color;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prevent transition flicker on first render */
+body.no-transition,
+body.no-transition * {
+  transition: none !important;
 }
 
 @theme {
@@ -113,6 +123,16 @@ body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+  }
+
+  /* Gallery cards: limit expensive stacking contexts to visible cards only */
+  .gallery-card {
+    contain: layout style;
+  }
+
+  /* Only promote GPU layers when needed (hover), not all the time */
+  .gallery-card:hover {
+    will-change: transform;
   }
 
   ::selection {
