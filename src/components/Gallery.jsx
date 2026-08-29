@@ -336,8 +336,13 @@ export default function Gallery() {
 
         // Sync back to cache & Firestore
         try {
-          localStorage.setItem("portfolio_cache_gallery", JSON.stringify({ artworks: updated }));
-          setContent("gallery", { artworks: updated }).catch(() => {});
+          const payload = {
+            title: galleryData?.title || "",
+            subtitle: galleryData?.subtitle || "",
+            artworks: updated,
+          };
+          localStorage.setItem("portfolio_cache_gallery", JSON.stringify(payload));
+          setContent("gallery", payload).catch(() => {});
         } catch {}
 
         return updated;
