@@ -231,8 +231,8 @@ function TiltCard({ children, className = "", onClick, style }) {
         ...style,
         transform: transform || undefined,
         transition: isHovering ? "transform 0.1s ease-out" : "transform 0.45s ease-out",
-        transformStyle: "preserve-3d",
-        willChange: "transform",
+        transformStyle: isHovering ? "preserve-3d" : undefined,
+        willChange: isHovering ? "transform" : "auto",
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -292,27 +292,10 @@ export default function Gallery() {
   // Dynamic columns for Left-to-Right Row-First Masonry Layout
   const [columnCount, setColumnCount] = useState(4);
 
-  // Track natural aspect ratios of images to balance column heights dynamically
-  const [imgAspects, setImgAspects] = useState({});
-
-  const handleImageLoad = useCallback((idOrKey, e) => {
-    const img = e.currentTarget;
-    if (img && img.naturalWidth && img.naturalHeight) {
-      const ratio = img.naturalHeight / img.naturalWidth;
-      setImgAspects((prev) => {
-        if (prev[idOrKey] && Math.abs(prev[idOrKey] - ratio) < 0.02) return prev;
-        return { ...prev, [idOrKey]: ratio };
-      });
-    }
-  }, []);
-
   useEffect(() => {
     const updateCols = () => {
       const w = window.innerWidth;
-      if (w < 640) setColumnCount(1);
-      else if (w < 1024) setColumnCount(2);
-      else if (w < 1280) setColumnCount(3);
-      else setColumnCount(4);
+      setColumnCount(w < 640 ? 1 : w < 1024 ? 2 : w < 1280 ? 3 : 4);
     };
     updateCols();
     window.addEventListener("resize", updateCols);
@@ -422,36 +405,15 @@ export default function Gallery() {
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
 
-  // Smart Height-Balanced Masonry Distribution:
-  // Places each next item into the currently shortest column to keep column bottoms perfectly level and prevent trailing gaps
+  // Deterministic Left-to-Right Row-First Masonry (Instant 0ms, Zero-Jitter & No Stutter)
   const masonryColumns = useMemo(() => {
     const count = Math.max(1, columnCount);
     const cols = Array.from({ length: count }, () => []);
-    const colHeights = Array(count).fill(0);
-
     processedItems.forEach((item, index) => {
-      // Find the column index with the minimum accumulated height
-      let minColIdx = 0;
-      let minHeight = colHeights[0];
-      for (let c = 1; c < count; c++) {
-        if (colHeights[c] < minHeight) {
-          minHeight = colHeights[c];
-          minColIdx = c;
-        }
-      }
-
-      cols[minColIdx].push({ item, index });
-
-      // Aspect ratio weight (portrait > 1, square = 1, landscape < 1) + card footer buffer
-      const key = item.id || item.image || item.title;
-      const ratio = imgAspects[key] || (item.image ? 1.25 : 1.25);
-      const estimatedHeight = ratio + 0.35; // ratio + card footer text and gap
-
-      colHeights[minColIdx] += estimatedHeight;
+      cols[index % count].push({ item, index });
     });
-
     return cols;
-  }, [processedItems, columnCount, imgAspects]);
+  }, [processedItems, columnCount]);
 
   const active = lightboxCustomItem
     ? lightboxCustomItem
@@ -874,50 +836,45 @@ export default function Gallery() {
           </div>
         )}
 
-        {/* ─── PINTEREST MASONRY GRID (Left-to-Right Row-First Masonry) ─── */}
+        {/* ─── PINTEREST MASONRY GRID (Fast & Smooth 60fps) ─── */}
         <div className="flex gap-4 sm:gap-5 items-start">
           {masonryColumns.map((col, colIdx) => (
             <div key={colIdx} className="flex-1 flex flex-col gap-4 sm:gap-5 min-w-0">
-              <AnimatePresence mode="popLayout">
-                {col.map(({ item: p, index: i }) => {
-                  const isLiked = userLikes.includes(p.id);
-                  return (
-                    <motion.div
-                      key={p.id || i}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.4, delay: (i % 6) * 0.04 }}
-                      className="w-full"
+              {col.map(({ item: p, index: i }) => {
+                const isLiked = userLikes.includes(p.id);
+                return (
+                  <motion.div
+                    key={p.id || i}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: Math.min((i % 6) * 0.03, 0.2) }}
+                    className="w-full"
+                  >
+                    <TiltCard
+                      className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-300"
+                      onClick={() => setActiveIdx(i)}
                     >
-                      <TiltCard
-                        className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
-                        onClick={() => setActiveIdx(i)}
-                      >
-                        {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
-                        {p.image ? (
-                          <img
-                            src={p.image}
-                            alt={p.title}
-                            loading="lazy"
-                            onLoad={(e) =>
-                              handleImageLoad(p.id || p.image || p.title, e)
-                            }
-                            className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
+                      {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.03]"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="aspect-[4/5] w-full">
+                          <PaintingCanvas
+                            seed={p.seed}
+                            palette={p.palette}
+                            className="w-full h-full"
                           />
-                        ) : (
-                          <div className="aspect-[4/5] w-full">
-                            <PaintingCanvas
-                              seed={p.seed}
-                              palette={p.palette}
-                              className="w-full h-full"
-                            />
-                          </div>
-                        )}
+                        </div>
+                      )}
 
                         {/* Heart / Like Button (Icon only, no like count number shown to visitors) */}
                         <button
@@ -977,7 +934,6 @@ export default function Gallery() {
                     </motion.div>
                   );
                 })}
-              </AnimatePresence>
             </div>
           ))}
         </div>
