@@ -262,19 +262,6 @@ export default function GalleryEditor() {
         onSave={save}
       />
 
-      <ImageAdjustModal
-        isOpen={adjustState.isOpen}
-        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
-        imageUrl={adjustState.imageUrl}
-        aspectRatio="square"
-        title="Eser Görseli Hizala & Kırp"
-        onSave={(newUrl) => {
-          if (adjustState.targetIdx !== null) {
-            updateArtwork(adjustState.targetIdx, "image", newUrl);
-          }
-        }}
-      />
-
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -790,6 +777,20 @@ export default function GalleryEditor() {
           </div>
         </div>
       )}
+
+      {/* Görsel Kırpma & Hizalama Modalı (z-[100] ile tüm pencerelerin en üstünde açılır) */}
+      <ImageAdjustModal
+        isOpen={adjustState.isOpen}
+        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={adjustState.imageUrl}
+        aspectRatio="square"
+        title="Eser Görseli Hizala & Kırp"
+        onSave={(newUrl) => {
+          if (adjustState.targetIdx !== null) {
+            updateArtwork(adjustState.targetIdx, "image", newUrl);
+          }
+        }}
+      />
     </div>
   );
 }
