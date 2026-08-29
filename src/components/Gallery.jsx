@@ -266,15 +266,10 @@ export default function Gallery() {
   const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
   const [items, setItems] = useState([]);
 
-  // Merge cached/Firestore artworks with defaultPaintings so new default items (hasat-1..4) are never lost due to old browser localStorage cache
+  // Use artworks directly to preserve Admin panel's exact custom ordering
   const mergedArtworks = useMemo(() => {
     if (!artworks || artworks.length === 0) return defaultPaintings;
-    const existingIds = new Set(artworks.map((a) => a.id || a.title));
-    const missingDefaults = defaultPaintings.filter(
-      (p) => !existingIds.has(p.id) && !existingIds.has(p.title)
-    );
-    if (missingDefaults.length === 0) return artworks;
-    return [...missingDefaults, ...artworks];
+    return artworks;
   }, [artworks]);
 
   // Local Storage Visitor Likes Tracker
@@ -292,6 +287,22 @@ export default function Gallery() {
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
+
+  // Dynamic columns for Left-to-Right Row-First Masonry Layout
+  const [columnCount, setColumnCount] = useState(4);
+
+  useEffect(() => {
+    const updateCols = () => {
+      const w = window.innerWidth;
+      if (w < 640) setColumnCount(1);
+      else if (w < 1024) setColumnCount(2);
+      else if (w < 1280) setColumnCount(3);
+      else setColumnCount(4);
+    };
+    updateCols();
+    window.addEventListener("resize", updateCols);
+    return () => window.removeEventListener("resize", updateCols);
+  }, []);
 
   // Sync items state whenever mergedArtworks updates
   useEffect(() => {
@@ -395,6 +406,16 @@ export default function Gallery() {
 
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
+
+  // Distribute items row-by-row into columns (Left-to-Right Row-First Masonry)
+  const masonryColumns = useMemo(() => {
+    const count = Math.max(1, columnCount);
+    const cols = Array.from({ length: count }, () => []);
+    processedItems.forEach((item, index) => {
+      cols[index % count].push({ item, index });
+    });
+    return cols;
+  }, [processedItems, columnCount]);
 
   const active = lightboxCustomItem
     ? lightboxCustomItem
@@ -739,116 +760,109 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* ─── PINTEREST MASONRY GRID (CONTAINS ALL ARTWORKS INCLUDING GENERATED HARVEST PAINTINGS) ─── */}
-        <div
-          className="pinterest-grid"
-          style={{
-            columns: "1",
-            columnGap: "1.25rem",
-          }}
-        >
-          {/* Responsive columns via CSS */}
-          <style>{`
-            @media (min-width: 640px) {
-              .pinterest-grid { columns: 2 !important; column-gap: 1.25rem !important; }
-            }
-            @media (min-width: 1024px) {
-              .pinterest-grid { columns: 3 !important; column-gap: 1.25rem !important; }
-            }
-            @media (min-width: 1280px) {
-              .pinterest-grid { columns: 4 !important; column-gap: 1.25rem !important; }
-            }
-          `}</style>
-
-          <AnimatePresence mode="popLayout">
-            {processedItems.map((p, i) => {
-              const isLiked = userLikes.includes(p.id);
-              return (
-                <motion.div
-                  key={p.id || i}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
-                  className="break-inside-avoid mb-4 md:mb-5"
-                >
-                  <TiltCard
-                    className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
-                    onClick={() => setActiveIdx(i)}
-                  >
-                    {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
-                    {p.image ? (
-                      <img
-                        src={p.image}
-                        alt={p.title}
-                        loading="lazy"
-                        className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
-                    ) : (
-                      <div className="aspect-[4/5] w-full">
-                        <PaintingCanvas
-                          seed={p.seed}
-                          palette={p.palette}
-                          className="w-full h-full"
-                        />
-                      </div>
-                    )}
-
-                    {/* Heart / Like Button (Icon only, no like count number shown to visitors) */}
-                    <button
-                      onClick={(e) => toggleLike(p.id, e)}
-                      className={`absolute top-3 right-3 z-20 p-2.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md flex items-center justify-center ${
-                        isLiked
-                          ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.6)] scale-110"
-                          : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:scale-105"
-                      }`}
-                      title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
+        {/* ─── PINTEREST MASONRY GRID (Left-to-Right Row-First Masonry) ─── */}
+        <div className="flex gap-4 sm:gap-5 items-start">
+          {masonryColumns.map((col, colIdx) => (
+            <div key={colIdx} className="flex-1 flex flex-col gap-4 sm:gap-5 min-w-0">
+              <AnimatePresence mode="popLayout">
+                {col.map(({ item: p, index: i }) => {
+                  const isLiked = userLikes.includes(p.id);
+                  return (
+                    <motion.div
+                      key={p.id || i}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, delay: (i % 6) * 0.04 }}
+                      className="w-full"
                     >
-                      <Heart size={14} className={isLiked ? "fill-white text-white" : "text-rose-400"} />
-                    </button>
-
-                    {/* Büyüt İkonu */}
-                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
-                        <Maximize2 size={13} />
-                      </span>
-                    </div>
-
-                    {/* Animasyonlu Çerçeve Glow */}
-                    <div
-                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
-                      style={{
-                        boxShadow: "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
-                      }}
-                    />
-
-                    {/* Alt Bilgi Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
-                      <div className="backdrop-blur-md dark:bg-ink/85 bg-[#fdfbf7]/95 border dark:border-paper/10 border-amber-900/15 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush/40 flex items-center justify-between shadow-md">
-                        <div className="min-w-0 flex-1 pr-2">
-                          <h3 className="font-display text-sm sm:text-base text-paper font-bold leading-snug group-hover:text-brush transition-colors duration-300 truncate">
-                            {p.title || "İsimsiz Eser"}
-                          </h3>
-                          {p.medium && (
-                            <p className="font-mono text-[10px] dark:text-paper/60 text-paper/75 font-medium mt-0.5 truncate">
-                              {p.medium}
-                            </p>
-                          )}
-                        </div>
-                        {p.year && (
-                          <span className="font-mono text-[10px] shrink-0 font-bold dark:text-brush-soft text-amber-900 dark:bg-brush/15 bg-amber-500/15 px-2 py-0.5 rounded-md border dark:border-brush/30 border-amber-900/20">
-                            {p.year}
-                          </span>
+                      <TiltCard
+                        className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-500"
+                        onClick={() => setActiveIdx(i)}
+                      >
+                        {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
+                        {p.image ? (
+                          <img
+                            src={p.image}
+                            alt={p.title}
+                            loading="lazy"
+                            className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="aspect-[4/5] w-full">
+                            <PaintingCanvas
+                              seed={p.seed}
+                              palette={p.palette}
+                              className="w-full h-full"
+                            />
+                          </div>
                         )}
-                      </div>
-                    </div>
-                  </TiltCard>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+
+                        {/* Heart / Like Button (Icon only, no like count number shown to visitors) */}
+                        <button
+                          onClick={(e) => toggleLike(p.id, e)}
+                          className={`absolute top-3 right-3 z-20 p-2.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md flex items-center justify-center ${
+                            isLiked
+                              ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.6)] scale-110"
+                              : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:scale-105"
+                          }`}
+                          title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
+                        >
+                          <Heart
+                            size={14}
+                            className={
+                              isLiked ? "fill-white text-white" : "text-rose-400"
+                            }
+                          />
+                        </button>
+
+                        {/* Büyüt İkonu */}
+                        <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
+                            <Maximize2 size={13} />
+                          </span>
+                        </div>
+
+                        {/* Animasyonlu Çerçeve Glow */}
+                        <div
+                          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
+                          style={{
+                            boxShadow:
+                              "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
+                          }}
+                        />
+
+                        {/* Alt Bilgi Overlay */}
+                        <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+                          <div className="backdrop-blur-md dark:bg-ink/85 bg-[#fdfbf7]/95 border dark:border-paper/10 border-amber-900/15 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush/40 flex items-center justify-between shadow-md">
+                            <div className="min-w-0 flex-1 pr-2">
+                              <h3 className="font-display text-sm sm:text-base text-paper font-bold leading-snug group-hover:text-brush transition-colors duration-300 truncate">
+                                {p.title || "İsimsiz Eser"}
+                              </h3>
+                              {p.medium && (
+                                <p className="font-mono text-[10px] dark:text-paper/60 text-paper/75 font-medium mt-0.5 truncate">
+                                  {p.medium}
+                                </p>
+                              )}
+                            </div>
+                            {p.year && (
+                              <span className="font-mono text-[10px] shrink-0 font-bold dark:text-brush-soft text-amber-900 dark:bg-brush/15 bg-amber-500/15 px-2 py-0.5 rounded-md border dark:border-brush/30 border-amber-900/20">
+                                {p.year}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </TiltCard>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          ))}
         </div>
 
         {/* Boş durum */}
