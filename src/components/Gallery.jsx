@@ -282,8 +282,9 @@ export default function Gallery() {
     }
   });
 
-  // Accordion Filter State
-  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  // Accordion Filter States (Nested: Outer Filter Box & Inner Categories)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
@@ -662,102 +663,180 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* ─── FİLTRELEME & ARAMA BARI (Ayın Tuvalleri'nin Hemen Altında & Grid'in Hemen Üstünde) ─── */}
+        {/* ─── FİLTRELEME & ARAMA ALANI (Nested Çift Accordion Modeli) ─── */}
         {activeTab === "galeri" && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-8 overflow-hidden dark:bg-ink-soft/90 bg-[#fdfbf7]/90 dark:border-paper/12 border-amber-900/15 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
-          >
-            <div className="flex flex-col gap-5">
-              {/* Search & Sort */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="relative flex items-center">
-                  <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Eser adı, teknik veya yılda ara..."
-                    className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
-                  />
-                  {searchQuery && (
+          <div className="mb-8 space-y-3">
+            {/* Üst Çubuk: Eser Sayısı & Filtre Aç/Kapat Butonu */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2.5 font-mono text-xs text-paper/75 font-semibold">
+                <span className="dark:text-paper/60 text-paper/80 font-bold">{processedItems.length} Eser</span>
+                {(activeFilter !== "Tümü" || searchQuery.trim() !== "" || sortBy !== "default") && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-brush/20 bg-brush text-white dark:text-brush-soft text-[11px] font-bold shadow-xs">
+                    {activeFilter !== "Tümü"
+                      ? `🎨 ${activeFilter}`
+                      : searchQuery
+                      ? `🔍 "${searchQuery}"`
+                      : "Filtrelendi"}
                     <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 text-paper/40 hover:text-paper cursor-pointer"
+                      type="button"
+                      onClick={() => {
+                        setActiveFilter("Tümü");
+                        setSearchQuery("");
+                        setSortBy("default");
+                      }}
+                      className="hover:opacity-80 cursor-pointer ml-0.5"
+                      title="Filtreyi Temizle"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-paper/60 shrink-0 font-medium">Sırala:</span>
-                  <div className="flex flex-wrap gap-1.5 flex-1">
-                    {[
-                      { id: "default", label: "Varsayılan Sıra" },
-                      { id: "likes", label: "❤️ Beğeniye Göre" },
-                      { id: "newest", label: "Yeniye Göre" },
-                      { id: "oldest", label: "Eskiye Göre" },
-                    ].map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => setSortBy(s.id)}
-                        className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                          sortBy === s.id
-                            ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
-                            : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:text-paper"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  </span>
+                )}
               </div>
 
-              {/* Technique Categories */}
-              <div>
-                <p className="font-mono text-xs text-paper/70 mb-2.5 flex items-center gap-1.5 font-semibold">
-                  <Layers size={13} className="text-brush" /> Teknik & Materyal Filtresi
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveFilter(cat)}
-                      className={`
-                        font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
-                        ${activeFilter === cat
-                          ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
-                          : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/12 border-amber-900/15 hover:bg-white hover:text-paper hover:border-amber-900/30"
-                        }
-                      `}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reset Filters */}
-              {(activeFilter !== "Tümü" || searchQuery !== "" || sortBy !== "default") && (
-                <div className="flex justify-end border-t dark:border-paper/10 border-amber-900/10 pt-3">
-                  <button
-                    onClick={() => {
-                      setActiveFilter("Tümü");
-                      setSearchQuery("");
-                      setSortBy("default");
-                    }}
-                    className="font-mono text-xs text-brush hover:underline cursor-pointer"
-                  >
-                    Filtreleri Sıfırla
-                  </button>
-                </div>
-              )}
+              {/* 1. DÜZEY ACCORDION TETİKLEYİCİ: Ana Filtre Aç/Kapat Butonu */}
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                className={`inline-flex items-center gap-2 font-mono text-xs px-4 py-2 rounded-full border transition-all shadow-sm cursor-pointer ${
+                  isFilterOpen || activeFilter !== "Tümü" || searchQuery.trim() !== ""
+                    ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/40 border-brush shadow-md font-semibold"
+                    : "dark:bg-paper/5 bg-[#fdfbf7]/90 dark:border-paper/15 border-amber-900/20 text-paper/80 hover:text-paper hover:border-amber-900/40"
+                }`}
+              >
+                <SlidersHorizontal size={13} />
+                <span>{isFilterOpen ? "Filtreyi Kapat" : "Filtrele & Sırala"}</span>
+                {isFilterOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
             </div>
-          </motion.div>
+
+            {/* 1. DÜZEY ACCORDION PANELİ: Ana Filtre Kutusu */}
+            <AnimatePresence>
+              {isFilterOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="overflow-hidden dark:bg-ink-soft/90 bg-[#fdfbf7]/90 dark:border-paper/12 border-amber-900/15 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+                >
+                  <div className="flex flex-col gap-4">
+                    {/* Arama ve Sıralama Satırı */}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="relative flex items-center">
+                        <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Eser adı, teknik veya yılda ara..."
+                          className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
+                        />
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-3 text-paper/40 hover:text-paper cursor-pointer"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-paper/60 shrink-0 font-medium">Sırala:</span>
+                        <div className="flex flex-wrap gap-1.5 flex-1">
+                          {[
+                            { id: "default", label: "Varsayılan Sıra" },
+                            { id: "likes", label: "❤️ Beğeniye Göre" },
+                            { id: "newest", label: "Yeniye Göre" },
+                            { id: "oldest", label: "Eskiye Göre" },
+                          ].map((s) => (
+                            <button
+                              key={s.id}
+                              onClick={() => setSortBy(s.id)}
+                              className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                                sortBy === s.id
+                                  ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
+                                  : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:text-paper"
+                              }`}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. DÜZEY ACCORDION: Teknik & Materyal Filtresi (Kategoriler) */}
+                    <div className="border-t dark:border-paper/10 border-amber-900/10 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryOpen((prev) => !prev)}
+                        className="w-full flex items-center justify-between font-mono text-xs text-paper/80 hover:text-paper cursor-pointer py-1.5 group"
+                      >
+                        <span className="flex items-center gap-2 font-semibold">
+                          <Layers size={14} className="text-brush group-hover:rotate-12 transition-transform" />
+                          Teknik & Materyal Filtresi
+                          <span className="text-[10px] font-normal text-paper/50 font-mono">
+                            ({categories.length} kategori {activeFilter !== "Tümü" ? `· Seçili: ${activeFilter}` : ""})
+                          </span>
+                        </span>
+                        <div className="flex items-center gap-1.5 text-paper/60 group-hover:text-paper text-[11px] font-medium">
+                          <span>{isCategoryOpen ? "Kategorileri Gizle" : "Kategorileri Göster"}</span>
+                          {isCategoryOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isCategoryOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden pt-3"
+                          >
+                            <div className="flex flex-wrap gap-2">
+                              {categories.map((cat) => (
+                                <button
+                                  key={cat}
+                                  onClick={() => setActiveFilter(cat)}
+                                  className={`
+                                    font-mono text-xs tracking-wide px-3.5 py-1.5 rounded-full border transition-all duration-200 cursor-pointer
+                                    ${activeFilter === cat
+                                      ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
+                                      : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/12 border-amber-900/15 hover:bg-white hover:text-paper hover:border-amber-900/30"
+                                    }
+                                  `}
+                                >
+                                  {cat}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Reset Filters */}
+                    {(activeFilter !== "Tümü" || searchQuery !== "" || sortBy !== "default") && (
+                      <div className="flex justify-end border-t dark:border-paper/10 border-amber-900/10 pt-3">
+                        <button
+                          onClick={() => {
+                            setActiveFilter("Tümü");
+                            setSearchQuery("");
+                            setSortBy("default");
+                          }}
+                          className="font-mono text-xs text-brush hover:underline cursor-pointer"
+                        >
+                          Filtreleri Sıfırla
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
 
         {/* ─── PINTEREST MASONRY GRID (Left-to-Right Row-First Masonry) ─── */}
