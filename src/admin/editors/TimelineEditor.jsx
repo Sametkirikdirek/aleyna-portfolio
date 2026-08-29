@@ -32,7 +32,10 @@ export default function TimelineEditor() {
   const save = async () => {
     setSaveStatus("saving");
     try {
-      await setContent("timeline", { images });
+      const payload = { images };
+      await setContent("timeline", payload);
+      localStorage.setItem("portfolio_cache_timeline", JSON.stringify(payload));
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch {
@@ -88,18 +91,6 @@ export default function TimelineEditor() {
         subtitle="Akış şeklinde görüntülenen kişisel ve sanatsal fotoğraflar"
         saveStatus={saveStatus}
         onSave={save}
-      />
-
-      <ImageAdjustModal
-        isOpen={adjustState.isOpen}
-        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
-        imageUrl={adjustState.imageUrl}
-        title="Zaman Yolculuğu Görseli Kırp & Hizala"
-        onSave={(newUrl) => {
-          if (adjustState.targetIdx !== null) {
-            updateImage(adjustState.targetIdx, "url", newUrl);
-          }
-        }}
       />
 
       <input
@@ -211,6 +202,19 @@ export default function TimelineEditor() {
           <p className="text-sm">Henüz görsel eklenmedi. "Görsel Ekle" butonuna tıklayın.</p>
         </div>
       )}
+
+      {/* Görsel Kırpma & Hizalama Modalı */}
+      <ImageAdjustModal
+        isOpen={adjustState.isOpen}
+        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={adjustState.imageUrl}
+        title="Zaman Yolculuğu Görseli Kırp & Hizala"
+        onSave={(newUrl) => {
+          if (adjustState.targetIdx !== null) {
+            updateImage(adjustState.targetIdx, "url", newUrl);
+          }
+        }}
+      />
     </div>
   );
 }

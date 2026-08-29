@@ -1,12 +1,302 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Scissors, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  Scissors,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUp,
+  ChevronsDown,
+} from "lucide-react";
+import { motion, Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
-  EditorHeader, Field, TextInput, TextArea, Card, SaveButton,
+  EditorHeader,
+  Field,
+  TextInput,
+  TextArea,
 } from "../components/AdminUI";
+
+/**
+ * Tekil Yazı Kartı (Framer Motion Physics-based Reorder Item)
+ */
+function WritingItem({
+  writing,
+  index,
+  total,
+  isOpen,
+  onToggleOpen,
+  onUpdate,
+  onRemove,
+  onMoveToTop,
+  onMoveUp,
+  onMoveDown,
+  onMoveToBottom,
+  onAdjustImage,
+  uploading,
+  fileInputRef,
+  setPendingIdx,
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={writing}
+      id={writing.id || String(index)}
+      dragListener={false}
+      dragControls={dragControls}
+      className={`rounded-2xl border transition-all duration-200 bg-[#161722] overflow-hidden select-none mb-3 ${
+        isOpen
+          ? "border-rose-500/50 shadow-xl shadow-rose-950/20"
+          : "border-white/10 hover:border-white/20"
+      }`}
+      whileDrag={{
+        scale: 1.02,
+        boxShadow: "0 25px 50px -12px rgba(244,63,94,0.4)",
+        borderColor: "rgba(244,63,94,0.9)",
+        zIndex: 50,
+      }}
+    >
+      {/* Kart Başlığı / Drag Handle Alanı */}
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer"
+        onClick={onToggleOpen}
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Fiziksel Sürükleme Tutamacı (Grip Handle) */}
+          <div
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              dragControls.start(e);
+            }}
+            className="p-2 -m-1 text-white/40 hover:text-rose-400 hover:bg-white/5 rounded-xl cursor-grab active:cursor-grabbing touch-none transition-colors shrink-0 flex items-center justify-center"
+            title="Tutup sürükleyerek sırayı değiştirin"
+          >
+            <GripVertical size={18} />
+          </div>
+
+          {/* Sıra Numarası Rozeti */}
+          <span className="font-mono text-xs font-bold text-rose-300 bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 rounded-lg shrink-0">
+            #{index + 1}
+          </span>
+
+          {/* Hızlı Yukarı / Aşağı Butonları */}
+          <div
+            className="flex items-center gap-0.5 shrink-0 bg-white/5 p-1 rounded-lg border border-white/5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              disabled={index === 0}
+              onClick={() => onMoveToTop(index)}
+              className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
+              title="En Başa Taşı"
+            >
+              <ChevronsUp size={12} />
+            </button>
+            <button
+              type="button"
+              disabled={index === 0}
+              onClick={() => onMoveUp(index)}
+              className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
+              title="1 Yukarı Taşı"
+            >
+              <ArrowUp size={12} />
+            </button>
+            <button
+              type="button"
+              disabled={index === total - 1}
+              onClick={() => onMoveDown(index)}
+              className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
+              title="1 Aşağı Taşı"
+            >
+              <ArrowDown size={12} />
+            </button>
+            <button
+              type="button"
+              disabled={index === total - 1}
+              onClick={() => onMoveToBottom(index)}
+              className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
+              title="En Sona Taşı"
+            >
+              <ChevronsDown size={12} />
+            </button>
+          </div>
+
+          {/* Kapak Önizleme Thumbnail */}
+          {writing.image && (
+            <img
+              src={writing.image}
+              alt={writing.title}
+              className="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0"
+            />
+          )}
+
+          {/* Başlık ve Bilgiler */}
+          <div className="min-w-0 flex-1 pr-2">
+            <h4 className="font-semibold text-sm text-white/90 truncate">
+              {writing.title || "Başlıksız Yazı"}
+            </h4>
+            <p className="text-xs text-white/40 font-mono truncate mt-0.5">
+              {writing.tag || "Genel"} · {writing.date || "Tarihsiz"}{" "}
+              {writing.readTime ? `· ${writing.readTime}` : ""}
+            </p>
+          </div>
+        </div>
+
+        {/* Aksiyonlar (Silme + Aç/Kapat İkonu) */}
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(index);
+            }}
+            className="text-white/30 hover:text-rose-400 hover:bg-rose-500/10 p-2 rounded-xl transition-colors cursor-pointer"
+            title="Yazıyı Sil"
+          >
+            <Trash2 size={16} />
+          </button>
+          <div className="text-white/40 p-1">
+            {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Açılır Düzenleme Formu */}
+      {isOpen && (
+        <div className="px-5 pb-6 border-t border-white/10 pt-5 space-y-5">
+          {/* Kapak Görseli Yükleme & Hizalama */}
+          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-white/10 bg-white/[0.02]">
+            <div
+              className="group/thumb relative w-28 h-28 rounded-2xl border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-black/40 transition-all shadow-md shrink-0"
+              onClick={() => {
+                if (writing.image) {
+                  onAdjustImage(writing.image, index);
+                } else {
+                  setPendingIdx(index);
+                  fileInputRef.current?.click();
+                }
+              }}
+              title="Görseli kırpmak ve hizalamak için çerçeveye tıklayın"
+            >
+              {writing.image ? (
+                <>
+                  <img
+                    src={writing.image}
+                    alt={writing.title}
+                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-mono gap-1">
+                    <Scissors size={14} className="text-rose-400" />
+                    <span>Hizala</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center text-white/30 gap-1">
+                  <Upload size={20} />
+                  <span className="text-[10px]">Kapak Foto</span>
+                </div>
+              )}
+              {uploading[index] && (
+                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5 text-center sm:text-left flex-1">
+              <p className="text-sm font-semibold text-white/90">
+                Kütüphane Kapak Görseli
+              </p>
+              <p className="text-xs text-white/50">
+                Kütüphane sekmesinde kitap kartının üzerinde görünecek kapak
+                resmi.
+              </p>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingIdx(index);
+                    fileInputRef.current?.click();
+                  }}
+                  className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/40 rounded-xl px-3.5 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-semibold"
+                >
+                  <Upload size={13} /> Görsel Yükle
+                </button>
+                {writing.image && (
+                  <button
+                    type="button"
+                    onClick={() => onAdjustImage(writing.image, index)}
+                    className="text-xs bg-white/10 text-white/90 hover:bg-white/15 border border-white/20 rounded-xl px-3.5 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-semibold"
+                  >
+                    <Scissors size={13} /> Kırp / Hizala
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <Field label="Başlık">
+              <TextInput
+                value={writing.title}
+                onChange={(v) => onUpdate(index, "title", v)}
+                placeholder="Örn: Sanat ve Kodun Diyaloğu"
+              />
+            </Field>
+            <Field label="Etiket / Kategori">
+              <TextInput
+                value={writing.tag}
+                onChange={(v) => onUpdate(index, "tag", v)}
+                placeholder="Atölye / Sanat / Düşünce"
+              />
+            </Field>
+            <Field label="Tarih">
+              <TextInput
+                value={writing.date}
+                onChange={(v) => onUpdate(index, "date", v)}
+                placeholder="Ağu 2026"
+              />
+            </Field>
+            <Field label="Okuma Süresi">
+              <TextInput
+                value={writing.readTime}
+                onChange={(v) => onUpdate(index, "readTime", v)}
+                placeholder="4 dk"
+              />
+            </Field>
+          </div>
+
+          <Field label="Özet / Liste Görünümü (Konusu)">
+            <TextArea
+              value={writing.excerpt}
+              onChange={(v) => onUpdate(index, "excerpt", v)}
+              rows={2}
+              placeholder="Yazının kısa özeti veya dikkat çeken alıntısı..."
+            />
+          </Field>
+
+          <Field label="Tam Metin (İçerik)">
+            <TextArea
+              value={writing.content || ""}
+              onChange={(v) => onUpdate(index, "content", v)}
+              rows={8}
+              placeholder="Yazının tüm metnini buraya girin..."
+            />
+          </Field>
+        </div>
+      )}
+    </Reorder.Item>
+  );
+}
 
 export default function WritingsEditor() {
   const { data, loading } = useWritings();
@@ -16,7 +306,6 @@ export default function WritingsEditor() {
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [pendingIdx, setPendingIdx] = useState(null);
-  const [draggedIdx, setDraggedIdx] = useState(null);
 
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
@@ -34,10 +323,17 @@ export default function WritingsEditor() {
   const save = async () => {
     setSaveStatus("saving");
     try {
-      await setContent("writings", { personalWritings: writings });
+      const payload = { personalWritings: writings };
+      await setContent("writings", payload);
+      localStorage.setItem(
+        "portfolio_cache_writings",
+        JSON.stringify(payload)
+      );
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -49,6 +345,17 @@ export default function WritingsEditor() {
       next[idx] = { ...next[idx], [key]: value };
       return next;
     });
+  };
+
+  const moveToTop = (idx) => {
+    if (idx === 0) return;
+    setWritings((prev) => {
+      const next = [...prev];
+      const item = next.splice(idx, 1)[0];
+      next.unshift(item);
+      return next;
+    });
+    setOpenIdx(0);
   };
 
   const moveUp = (idx) => {
@@ -77,26 +384,15 @@ export default function WritingsEditor() {
     else if (openIdx === idx + 1) setOpenIdx(idx);
   };
 
-  const handleDragStart = (e, idx) => {
-    setDraggedIdx(idx);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e, idx) => {
-    e.preventDefault();
-    if (draggedIdx === null || draggedIdx === idx) return;
+  const moveToBottom = (idx) => {
+    if (idx === writings.length - 1) return;
     setWritings((prev) => {
       const next = [...prev];
-      const item = next.splice(draggedIdx, 1)[0];
-      next.splice(idx, 0, item);
+      const item = next.splice(idx, 1)[0];
+      next.push(item);
       return next;
     });
-    if (openIdx === draggedIdx) setOpenIdx(idx);
-    setDraggedIdx(idx);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIdx(null);
+    setOpenIdx(writings.length - 1);
   };
 
   const addWriting = () => {
@@ -116,6 +412,7 @@ export default function WritingsEditor() {
   };
 
   const remove = (idx) => {
+    if (!window.confirm("Bu yazıyı silmek istediğinize emin misiniz?")) return;
     setWritings((prev) => prev.filter((_, i) => i !== idx));
     setOpenIdx(null);
   };
@@ -133,6 +430,14 @@ export default function WritingsEditor() {
     }
   };
 
+  const handleAdjustImage = (imageUrl, targetIdx) => {
+    setAdjustState({
+      isOpen: true,
+      imageUrl,
+      targetIdx,
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -145,24 +450,12 @@ export default function WritingsEditor() {
     <div className="space-y-7 max-w-5xl mx-auto text-white">
       <EditorHeader
         title="Yazılarım & Kütüphane"
-        subtitle="Kişisel blog yazıları, sıralama (sürükle-bırak) ve kütüphane kapak fotoğrafları"
+        subtitle="Kişisel blog yazıları, sıralama (fiziksel sürükle-bırak) ve kütüphane kapak fotoğrafları"
         saveStatus={saveStatus}
         onSave={save}
       />
 
-      <ImageAdjustModal
-        isOpen={adjustState.isOpen}
-        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
-        imageUrl={adjustState.imageUrl}
-        aspectRatio="card"
-        title="Kütüphane Kapak Görseli Kırp & Hizala"
-        onSave={(newUrl) => {
-          if (adjustState.targetIdx !== null) {
-            update(adjustState.targetIdx, "image", newUrl);
-          }
-        }}
-      />
-
+      {/* Gizli Dosya Seçici */}
       <input
         ref={fileInputRef}
         type="file"
@@ -176,180 +469,77 @@ export default function WritingsEditor() {
         }}
       />
 
-      <div className="flex justify-between items-center">
+      {/* Bilgilendirme ve Yeni Yazı Ekle Butonu */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs text-white/50">
-          <strong className="text-white/80">"Tutup Sürükleyerek"</strong> veya <strong className="text-white/80">ok butonlarıyla</strong> yazıları yukarı/aşağı sıralayabilir, içeriklerini düzenleyebilirsiniz.
+          <strong className="text-rose-300">Grip ikonunu</strong> tutarak
+          yazıları fiziksel olarak sürükleyebilir veya{" "}
+          <strong className="text-white/80">ok butonlarıyla</strong> sıralamayı
+          değiştirebilirsiniz.
         </p>
 
         <button
           onClick={addWriting}
-          className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer shrink-0"
+          className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl px-4 py-2 transition-all cursor-pointer shrink-0 font-semibold shadow-sm"
         >
-          <Plus size={15} /> Yeni Yazı Ekle
+          <Plus size={16} /> Yeni Yazı Ekle
         </button>
       </div>
 
-      <div className="space-y-4">
+      {/* Framer Motion Physics-based Reorder Group */}
+      <Reorder.Group
+        axis="y"
+        values={writings}
+        onReorder={setWritings}
+        className="space-y-3"
+      >
         {writings.map((w, idx) => (
-          <Card
-            key={w.id || idx}
-            draggable
-            onDragStart={(e) => handleDragStart(e, idx)}
-            onDragOver={(e) => handleDragOver(e, idx)}
-            onDragEnd={handleDragEnd}
-            className={`overflow-hidden transition-all duration-200 ${
-              draggedIdx === idx
-                ? "opacity-40 border-dashed border-rose-500 scale-[0.98]"
-                : "border-white/10 hover:border-white/20"
-            }`}
-          >
-            <div
-              className="flex items-center justify-between cursor-pointer py-1"
-              onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
-            >
-              <div className="flex items-center gap-3">
-                {/* Drag Handle & Reorder Controls */}
-                <div
-                  className="flex items-center gap-1 text-white/30 hover:text-white/80 cursor-grab active:cursor-grabbing p-1"
-                  onClick={(e) => e.stopPropagation()}
-                  title="Sürükleyip sırasını değiştirin"
-                >
-                  <GripVertical size={16} />
-                  <span className="font-mono text-[11px] text-rose-300/80 font-bold w-5">
-                    #{idx + 1}
-                  </span>
-                </div>
-
-                {/* Move Up / Down Arrow buttons */}
-                <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={idx === 0}
-                    onClick={() => moveUp(idx)}
-                    className="text-white/30 hover:text-white disabled:opacity-20 disabled:hover:text-white/30 p-0.5 transition-colors"
-                    title="Yukarı Taşı"
-                  >
-                    <ArrowUp size={12} />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={idx === writings.length - 1}
-                    onClick={() => moveDown(idx)}
-                    className="text-white/30 hover:text-white disabled:opacity-20 disabled:hover:text-white/30 p-0.5 transition-colors"
-                    title="Aşağı Taşı"
-                  >
-                    <ArrowDown size={12} />
-                  </button>
-                </div>
-
-                {w.image && (
-                  <img src={w.image} alt={w.title} className="w-10 h-10 rounded object-cover ml-1 shrink-0" />
-                )}
-                <div>
-                  <p className="font-semibold text-sm text-white/90 line-clamp-1">{w.title || "Başlıksız Yazı"}</p>
-                  <p className="text-xs text-white/40">{w.tag || "Genel"} · {w.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => { e.stopPropagation(); remove(idx); }}
-                  className="text-white/30 hover:text-rose-400 p-1"
-                  title="Yazıyı Sil"
-                >
-                  <Trash2 size={16} />
-                </button>
-                {openIdx === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </div>
-            </div>
-
-            {openIdx === idx && (
-              <div className="px-4 pb-5 border-t border-white/8 pt-4 space-y-4">
-                {/* Kapak Görseli Yükleme & Hizalama */}
-                <div className="flex items-center gap-5">
-                  <div
-                    className="group relative w-24 h-24 rounded-xl border-2 border-dashed border-white/20 hover:border-rose-500/60 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-white/[0.03] transition-all shadow-md shrink-0"
-                    onClick={() => {
-                      if (w.image) {
-                        setAdjustState({ isOpen: true, imageUrl: w.image, targetIdx: idx });
-                      } else {
-                        setPendingIdx(idx);
-                        fileInputRef.current?.click();
-                      }
-                    }}
-                    title="Görseli kırpmak ve hizalamak için çerçeveye tıklayın"
-                  >
-                    {w.image ? (
-                      <>
-                        <img src={w.image} alt={w.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-mono gap-1">
-                          <Scissors size={14} className="text-rose-400" />
-                          <span>Hizala</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center text-white/30">
-                        <Upload size={18} />
-                        <span className="text-[10px] mt-0.5">Kapak Foto</span>
-                      </div>
-                    )}
-                    {uploading[idx] && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-medium text-white/90">Kütüphane Kapak Görseli</p>
-                    <p className="text-xs text-white/40">Kütüphane sekmesinde kitap kartının üzerinde görünecek kapak resmi.</p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => { setPendingIdx(idx); fileInputRef.current?.click(); }}
-                        className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30 rounded-lg px-3 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-                      >
-                        <Upload size={13} /> Görsel Yükle
-                      </button>
-                      {w.image && (
-                        <button
-                          type="button"
-                          onClick={() => setAdjustState({ isOpen: true, imageUrl: w.image, targetIdx: idx })}
-                          className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-lg px-3 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-                        >
-                          ✂️ Fotoğrafı Hizala / Kırp
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  <Field label="Başlık">
-                    <TextInput value={w.title} onChange={(v) => update(idx, "title", v)} />
-                  </Field>
-                  <Field label="Etiket">
-                    <TextInput value={w.tag} onChange={(v) => update(idx, "tag", v)} placeholder="Atölye / Sanat / Düşünce" />
-                  </Field>
-                  <Field label="Tarih">
-                    <TextInput value={w.date} onChange={(v) => update(idx, "date", v)} placeholder="Haz 2026" />
-                  </Field>
-                  <Field label="Okuma Süresi">
-                    <TextInput value={w.readTime} onChange={(v) => update(idx, "readTime", v)} placeholder="4 dk" />
-                  </Field>
-                </div>
-
-                <Field label="Özet / Liste Görünümü (Konusu)">
-                  <TextArea value={w.excerpt} onChange={(v) => update(idx, "excerpt", v)} rows={2} />
-                </Field>
-
-                <Field label="Tam Metin (İçerik)">
-                  <TextArea value={w.content || ""} onChange={(v) => update(idx, "content", v)} rows={8} placeholder="Yazının tüm metnini buraya girin..." />
-                </Field>
-              </div>
-            )}
-          </Card>
+          <WritingItem
+            key={w.id || `writing-${idx}`}
+            writing={w}
+            index={idx}
+            total={writings.length}
+            isOpen={openIdx === idx}
+            onToggleOpen={() => setOpenIdx(openIdx === idx ? null : idx)}
+            onUpdate={update}
+            onRemove={remove}
+            onMoveToTop={moveToTop}
+            onMoveUp={moveUp}
+            onMoveDown={moveDown}
+            onMoveToBottom={moveToBottom}
+            onAdjustImage={handleAdjustImage}
+            uploading={uploading}
+            fileInputRef={fileInputRef}
+            setPendingIdx={setPendingIdx}
+          />
         ))}
-      </div>
+      </Reorder.Group>
+
+      {writings.length === 0 && (
+        <div className="text-center py-16 bg-white/[0.02] border border-white/10 rounded-2xl">
+          <p className="text-white/40 text-sm">Henüz yazı eklenmemiş.</p>
+          <button
+            onClick={addWriting}
+            className="mt-3 text-xs text-rose-400 hover:underline cursor-pointer"
+          >
+            İlk yazınızı ekleyin
+          </button>
+        </div>
+      )}
+
+      {/* Kapak Görseli Kırpma & Hizalama Modalı (z-[100]) */}
+      <ImageAdjustModal
+        isOpen={adjustState.isOpen}
+        onClose={() => setAdjustState((prev) => ({ ...prev, isOpen: false }))}
+        imageUrl={adjustState.imageUrl}
+        aspectRatio="card"
+        title="Kütüphane Kapak Görseli Kırp & Hizala"
+        onSave={(newUrl) => {
+          if (adjustState.targetIdx !== null) {
+            update(adjustState.targetIdx, "image", newUrl);
+          }
+        }}
+      />
     </div>
   );
 }

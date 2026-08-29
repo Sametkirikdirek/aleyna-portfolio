@@ -21,7 +21,10 @@ export default function AIProjectEditor() {
   const save = async () => {
     setSaveStatus("saving");
     try {
-      await setContent("aiProjects", { projects });
+      const payload = { projects };
+      await setContent("aiProjects", payload);
+      localStorage.setItem("portfolio_cache_aiProjects", JSON.stringify(payload));
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch {
