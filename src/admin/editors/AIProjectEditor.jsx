@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
 import { useAiProjects } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import {
@@ -31,6 +31,34 @@ export default function AIProjectEditor() {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
+  };
+
+  const moveUp = (idx, e) => {
+    e?.stopPropagation();
+    if (idx <= 0) return;
+    setProjects((prev) => {
+      const next = [...prev];
+      const temp = next[idx - 1];
+      next[idx - 1] = next[idx];
+      next[idx] = temp;
+      return next;
+    });
+    if (openIdx === idx) setOpenIdx(idx - 1);
+    else if (openIdx === idx - 1) setOpenIdx(idx);
+  };
+
+  const moveDown = (idx, e) => {
+    e?.stopPropagation();
+    if (idx >= projects.length - 1) return;
+    setProjects((prev) => {
+      const next = [...prev];
+      const temp = next[idx + 1];
+      next[idx + 1] = next[idx];
+      next[idx] = temp;
+      return next;
+    });
+    if (openIdx === idx) setOpenIdx(idx + 1);
+    else if (openIdx === idx + 1) setOpenIdx(idx);
   };
 
   const updateProject = (idx, key, value) => {
@@ -79,7 +107,7 @@ export default function AIProjectEditor() {
     <div className="space-y-7 max-w-5xl mx-auto">
       <EditorHeader
         title="Yapay Zeka Projeleri"
-        subtitle="GitHub projeleri ve öne çıkarılan çalışmalar"
+        subtitle="GitHub projeleri ve öne çıkarılan çalışmalar (Sıralamayı oklarla değiştirebilirsiniz)"
         saveStatus={saveStatus}
         onSave={save}
       />
@@ -87,7 +115,7 @@ export default function AIProjectEditor() {
       <div className="flex justify-end">
         <button
           onClick={addProject}
-          className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors"
+          className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer"
         >
           <Plus size={15} /> Yeni Proje Ekle
         </button>
@@ -95,35 +123,63 @@ export default function AIProjectEditor() {
 
       <div className="space-y-3">
         {projects.map((proj, idx) => (
-          <div key={proj.id} className="bg-white/[0.03] border border-white/8 rounded-xl overflow-hidden">
+          <div key={proj.id} className="bg-white/[0.03] border border-white/8 rounded-xl overflow-hidden transition-all">
             {/* Başlık satırı */}
             <div
-              className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-white/[0.03] transition-colors"
+              className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-white/[0.03] transition-colors select-none"
               onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <span className="font-mono text-xs text-white/30 font-bold w-5 shrink-0">
+                  #{idx + 1}
+                </span>
                 {proj.pinned && (
-                  <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0 font-medium">
                     Öne Çıkarılan
                   </span>
                 )}
-                <span className="text-sm font-medium text-white/80">
+                <span className="text-sm font-medium text-white/80 truncate">
                   {proj.title || "Yeni Proje"}
                 </span>
                 {proj.year && (
-                  <span className="text-white/30 text-xs">{proj.year}</span>
+                  <span className="text-white/30 text-xs shrink-0 font-mono">({proj.year})</span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Sıralama Okları (Yukarı / Aşağı) */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); removeProject(idx); }}
-                  className="text-white/20 hover:text-rose-400 transition-colors"
+                  type="button"
+                  disabled={idx === 0}
+                  onClick={(e) => moveUp(idx, e)}
+                  title="Yukarı Taşı"
+                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  <Trash2 size={14} />
+                  <ArrowUp size={15} />
                 </button>
+                <button
+                  type="button"
+                  disabled={idx === projects.length - 1}
+                  onClick={(e) => moveDown(idx, e)}
+                  title="Aşağı Taşı"
+                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <ArrowDown size={15} />
+                </button>
+
+                <div className="w-[1px] h-4 bg-white/10 mx-1" />
+
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeProject(idx); }}
+                  title="Projeyi Sil"
+                  className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={15} />
+                </button>
+
                 {openIdx === idx
-                  ? <ChevronUp size={15} className="text-white/40" />
-                  : <ChevronDown size={15} className="text-white/40" />}
+                  ? <ChevronUp size={16} className="text-white/50 ml-1" />
+                  : <ChevronDown size={16} className="text-white/50 ml-1" />}
               </div>
             </div>
 
