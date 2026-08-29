@@ -463,7 +463,7 @@ export default function Gallery() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-3 flex items-center gap-2"
+                className="font-mono text-xs tracking-[0.25em] uppercase text-brush-soft mb-3 flex items-center gap-2 font-bold"
               >
                 <Palette size={14} /> Galeri & Seçkiler
               </motion.p>
@@ -471,13 +471,17 @@ export default function Gallery() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="font-display text-3xl md:text-5xl lg:text-6xl text-paper leading-tight text-balance"
+                className="font-display text-3xl md:text-5xl lg:text-6xl text-paper leading-tight text-balance font-bold"
               >
                 {activeTab === "galeri" ? (
-                  <>
-                    Tuval ve Kodun <br className="hidden sm:block" />
-                    <span className="text-gradient-animated">Kesişimi</span>
-                  </>
+                  galleryData?.title ? (
+                    galleryData.title
+                  ) : (
+                    <>
+                      Tuval ve Kodun <br className="hidden sm:block" />
+                      <span className="text-gradient-animated">Kesişimi</span>
+                    </>
+                  )
                 ) : (
                   <>
                     Zaman Yolculuğu <br className="hidden sm:block" />
@@ -487,16 +491,20 @@ export default function Gallery() {
               </motion.h2>
             </div>
 
-            {/* Right Controls: Emblems + Filtrele & Ara */}
+            {/* Right Controls: Emblems */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="flex flex-col items-start md:items-end gap-3"
             >
-              <p className="font-sans text-sm text-paper/50 max-w-xs md:text-right">
-                Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
-                Kalp ikonuna dokunarak beğeninizi iletin.
+              <p className="font-sans text-sm text-paper/70 max-w-xs md:text-right font-medium">
+                {galleryData?.subtitle || (
+                  <>
+                    Esere dokunarak hikâyesini inceleyin.<br className="hidden sm:block" />
+                    Kalp ikonuna dokunarak beğeninizi iletin.
+                  </>
+                )}
               </p>
 
               <div className="flex items-center gap-3">
@@ -508,7 +516,7 @@ export default function Gallery() {
                     className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
                       activeTab === "galeri"
                         ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/50 border-brush shadow-md scale-105"
-                        : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/70 dark:border-paper/15 border-ink/15 hover:text-ink hover:bg-white hover:border-ink/30"
+                        : "dark:bg-paper/5 bg-[#fdfbf7]/80 dark:text-paper/60 text-paper/70 dark:border-paper/15 border-amber-900/15 hover:text-paper hover:bg-white hover:border-amber-900/30"
                     }`}
                   >
                     <CanvasIcon className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" />
@@ -526,7 +534,7 @@ export default function Gallery() {
                     className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
                       activeTab === "zaman-yolculugu"
                         ? "dark:bg-purple-500/20 bg-purple-600 text-white dark:text-purple-300 dark:border-purple-500/50 border-purple-600 shadow-md scale-105"
-                        : "dark:bg-paper/5 bg-white/70 dark:text-paper/60 text-ink/70 dark:border-paper/15 border-ink/15 hover:text-ink hover:bg-white hover:border-ink/30"
+                        : "dark:bg-paper/5 bg-[#fdfbf7]/80 dark:text-paper/60 text-paper/70 dark:border-paper/15 border-amber-900/15 hover:text-paper hover:bg-white hover:border-amber-900/30"
                     }`}
                   >
                     <PortalIcon className="w-5 h-5 animate-[spin_10s_linear_infinite] group-hover:animate-[spin_2.5s_linear_infinite] transition-transform" />
@@ -535,130 +543,9 @@ export default function Gallery() {
                     Zaman Yolculuğu
                   </div>
                 </div>
-
-                {/* Subtle Divider */}
-                <div className="w-px h-6 dark:bg-paper/15 bg-ink/15 mx-0.5" />
-
-                {/* Filtrele & Ara Accordion Button */}
-                <button
-                  onClick={() => setIsAccordionOpen((prev) => !prev)}
-                  className={`group inline-flex items-center gap-2 font-mono text-xs transition-all py-2.5 px-4 rounded-full border shadow-sm cursor-pointer ${
-                    isAccordionOpen || activeFilter !== "Tümü" || searchQuery !== ""
-                      ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/40 border-brush shadow-md font-semibold"
-                      : "dark:bg-paper/5 bg-white/70 dark:text-paper/70 text-ink/80 dark:border-paper/15 border-ink/15 hover:bg-white hover:border-ink/30"
-                  }`}
-                >
-                  <SlidersHorizontal size={13} />
-                  <span>Filtrele & Ara</span>
-                  {activeFilter !== "Tümü" && (
-                    <span className="bg-white text-brush dark:bg-rose-500 dark:text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">1</span>
-                  )}
-                  {isAccordionOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
               </div>
             </motion.div>
           </div>
-
-          {/* ─── Accordion Filter Bar ─── */}
-          <AnimatePresence>
-            {isAccordionOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                animate={{ opacity: 1, height: "auto", marginTop: 24 }}
-                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="overflow-hidden dark:bg-ink-soft/90 bg-[#fdfbf7]/90 dark:border-paper/12 border-amber-900/15 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
-              >
-                <div className="flex flex-col gap-5">
-                  {/* Search & Sort */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="relative flex items-center">
-                      <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Eser adı, teknik veya yılda ara..."
-                        className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="absolute right-3 text-paper/40 hover:text-paper"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-paper/60 shrink-0 font-medium">Sırala:</span>
-                      <div className="flex flex-wrap gap-1.5 flex-1">
-                        {[
-                          { id: "default", label: "Varsayılan" },
-                          { id: "likes", label: "❤️ Beğeniye Göre" },
-                          { id: "newest", label: "Yeniye Göre" },
-                          { id: "oldest", label: "Eskiye Göre" },
-                        ].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => setSortBy(s.id)}
-                            className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                              sortBy === s.id
-                                ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
-                                : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:text-paper"
-                            }`}
-                          >
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Technique Categories */}
-                  <div>
-                    <p className="font-mono text-xs text-paper/70 mb-2.5 flex items-center gap-1.5 font-semibold">
-                      <Layers size={13} className="text-brush" /> Teknik & Materyal Filtresi
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() => setActiveFilter(cat)}
-                          className={`
-                            font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
-                            ${activeFilter === cat
-                              ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
-                              : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/12 border-amber-900/15 hover:bg-white hover:text-paper hover:border-amber-900/30"
-                            }
-                          `}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Reset Filters */}
-                  {(activeFilter !== "Tümü" || searchQuery !== "" || sortBy !== "default") && (
-                    <div className="flex justify-end border-t border-paper/10 pt-3">
-                      <button
-                        onClick={() => {
-                          setActiveFilter("Tümü");
-                          setSearchQuery("");
-                          setSortBy("default");
-                        }}
-                        className="font-mono text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
-                      >
-                        Filtreleri Sıfırla
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </header>
 
         {/* ─── OPTION 1: "ENLER & ÖNE ÇIKAN ESERLER" SPOTLIGHT CAROUSEL ─── */}
@@ -690,7 +577,7 @@ export default function Gallery() {
             {/* Header Info */}
             <div className="flex items-center justify-between gap-3 mb-5 relative z-10">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-brush/20 bg-brush/15 dark:border-brush/40 border-brush/40 dark:text-brush-soft text-brush font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5 transition-colors duration-300">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/40 border-brush font-bold font-mono text-[10px] tracking-wider uppercase mb-1.5 shadow-sm transition-colors duration-300">
                   <Calendar size={11} /> AYIN TUVALLERİ
                 </div>
                 <h3 className="font-display text-xl sm:text-2xl md:text-3xl text-paper font-bold">
@@ -700,7 +587,7 @@ export default function Gallery() {
                   Kaydırarak tüm seçkileri görün
                 </p>
               </div>
-              <span className="shrink-0 font-mono text-[10px] dark:text-brush-soft text-brush dark:bg-brush/15 bg-brush/15 px-2.5 py-1 rounded-xl border dark:border-brush/30 border-brush/40 font-bold flex items-center gap-1.5 transition-colors duration-300">
+              <span className="shrink-0 font-mono text-[10px] dark:text-brush-soft text-amber-900 dark:bg-brush/15 bg-amber-500/15 px-2.5 py-1 rounded-xl border dark:border-brush/30 border-amber-900/20 font-bold flex items-center gap-1.5 transition-colors duration-300">
                 🔥 {monthlyArtworks.length} Seçki
               </span>
             </div>
@@ -735,15 +622,15 @@ export default function Gallery() {
                   </div>
 
                   {/* Details */}
-                  <div className="p-3 bg-gradient-to-t from-ink via-ink/90 to-transparent">
-                    <h4 className="font-display text-sm text-paper font-semibold group-hover:text-rose-300 transition-colors truncate">
+                  <div className="p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+                    <h4 className="font-display text-sm text-white font-semibold group-hover:text-brush-soft transition-colors truncate">
                       {item.title || "İsimsiz Eser"}
                     </h4>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="font-mono text-[10px] text-paper/50 truncate">
+                      <p className="font-mono text-[10px] text-white/70 truncate">
                         {item.medium || "Tuval Çalışması"}
                       </p>
-                      <span className="font-mono text-[10px] text-rose-400/80 shrink-0">
+                      <span className="font-mono text-[10px] text-amber-400 font-bold shrink-0">
                         {item.year}
                       </span>
                     </div>
@@ -751,6 +638,104 @@ export default function Gallery() {
                 </div>
               ))}
             </DragScrollStrip>
+          </motion.div>
+        )}
+
+        {/* ─── FİLTRELEME & ARAMA BARI (Ayın Tuvalleri'nin Hemen Altında & Grid'in Hemen Üstünde) ─── */}
+        {activeTab === "galeri" && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-8 overflow-hidden dark:bg-ink-soft/90 bg-[#fdfbf7]/90 dark:border-paper/12 border-amber-900/15 border rounded-2xl p-5 md:p-6 backdrop-blur-md shadow-xl"
+          >
+            <div className="flex flex-col gap-5">
+              {/* Search & Sort */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="relative flex items-center">
+                  <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Eser adı, teknik veya yılda ara..."
+                    className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 text-paper/40 hover:text-paper cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-paper/60 shrink-0 font-medium">Sırala:</span>
+                  <div className="flex flex-wrap gap-1.5 flex-1">
+                    {[
+                      { id: "default", label: "Varsayılan Sıra" },
+                      { id: "likes", label: "❤️ Beğeniye Göre" },
+                      { id: "newest", label: "Yeniye Göre" },
+                      { id: "oldest", label: "Eskiye Göre" },
+                    ].map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setSortBy(s.id)}
+                        className={`font-mono text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                          sortBy === s.id
+                            ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/40 bg-brush text-white border-brush font-semibold shadow-xs"
+                            : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:text-paper"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Technique Categories */}
+              <div>
+                <p className="font-mono text-xs text-paper/70 mb-2.5 flex items-center gap-1.5 font-semibold">
+                  <Layers size={13} className="text-brush" /> Teknik & Materyal Filtresi
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveFilter(cat)}
+                      className={`
+                        font-mono text-xs tracking-wide px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer
+                        ${activeFilter === cat
+                          ? "dark:bg-brush/25 dark:text-brush-soft dark:border-brush/50 bg-brush text-white border-brush shadow-md font-semibold"
+                          : "dark:bg-paper/5 bg-[#fdfbf7]/85 dark:text-paper/60 text-paper/75 dark:border-paper/12 border-amber-900/15 hover:bg-white hover:text-paper hover:border-amber-900/30"
+                        }
+                      `}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset Filters */}
+              {(activeFilter !== "Tümü" || searchQuery !== "" || sortBy !== "default") && (
+                <div className="flex justify-end border-t dark:border-paper/10 border-amber-900/10 pt-3">
+                  <button
+                    onClick={() => {
+                      setActiveFilter("Tümü");
+                      setSearchQuery("");
+                      setSortBy("default");
+                    }}
+                    className="font-mono text-xs text-brush hover:underline cursor-pointer"
+                  >
+                    Filtreleri Sıfırla
+                  </button>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
