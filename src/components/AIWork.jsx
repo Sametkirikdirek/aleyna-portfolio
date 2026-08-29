@@ -131,7 +131,7 @@ export default function AIWork() {
                 transition={{ duration: 0.4, delay: i * 0.05 }}
                 className={`group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl border backdrop-blur-md transition-all duration-500 ${
                   proj.pinned
-                    ? "dark:bg-gradient-to-b dark:from-ink-soft dark:via-ink-soft dark:to-circuit/[0.04] bg-[#fdfbf7]/90 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
+                    ? "dark:bg-ink-soft/90 bg-[#fdfbf7]/90 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
                     : "dark:bg-ink-soft/90 bg-[#fdfbf7]/80 border dark:border-paper/10 border-amber-900/15 hover:border-amber-900/30 hover:shadow-lg"
                 }`}
               >
@@ -144,14 +144,14 @@ export default function AIWork() {
                         {proj.pinnedTag || "Pinned"}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-black/[0.05] dark:text-paper/60 text-paper/85 border dark:border-paper/10 border-black/10 transition-colors duration-300 font-semibold">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-black/[0.05] dark:text-paper/70 text-paper/85 border dark:border-paper/10 border-black/10 transition-colors duration-300 font-semibold">
                         <Cpu size={11} />
                         {proj.category}
                       </span>
                     )}
 
                     {proj.metric && (
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-brush/20 bg-brush text-white dark:text-brush-soft border dark:border-brush/30 border-brush shadow-xs transition-colors duration-300">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-brush/20 bg-brush/10 text-brush dark:text-brush-soft border dark:border-brush/30 border-brush/20 shadow-xs transition-colors duration-300">
                         {proj.metric}
                       </span>
                     )}
