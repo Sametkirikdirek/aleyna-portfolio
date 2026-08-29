@@ -159,8 +159,8 @@ export default function AIProjectEditor() {
                     onChange={(v) => updateProject(idx, "stack", v.split(",").map((s) => s.trim()))}
                   />
                 </Field>
-                <Field label="GitHub / Kaynak Linki">
-                  <TextInput value={proj.link} onChange={(v) => updateProject(idx, "link", v)} placeholder="https://github.com/..." />
+                <Field label="GitHub / Kaynak Linki (Opsiyonel)">
+                  <TextInput value={proj.link} onChange={(v) => updateProject(idx, "link", v)} placeholder="https://github.com/... (boş bırakılabilir)" />
                 </Field>
                 {/* Öne çıkarılan toggle */}
                 <div className="flex items-center gap-3">

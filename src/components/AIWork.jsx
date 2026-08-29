@@ -118,89 +118,107 @@ export default function AIWork() {
         {/* ── Project Cards Grid ──────────────────────── */}
         <motion.div layout className="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
-            {filteredProjects.map((proj, i) => (
-              <motion.a
-                key={proj.id}
-                href={proj.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                layout
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                className={`group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl border backdrop-blur-md transition-all duration-500 ${
-                  proj.pinned
-                    ? "dark:bg-ink-soft/90 bg-[#fdfbf7]/90 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
-                    : "dark:bg-ink-soft/90 bg-[#fdfbf7]/80 border dark:border-paper/10 border-amber-900/15 hover:border-amber-900/30 hover:shadow-lg"
-                }`}
-              >
-                <div>
-                  {/* Top Bar inside Card */}
-                  <div className="flex items-start justify-between gap-2 mb-4">
-                    {proj.pinned ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-circuit/15 bg-blue-900/10 dark:text-circuit-soft text-[#1e3a8a] border dark:border-circuit/30 border-blue-900/25 font-bold transition-colors duration-300 shadow-xs">
-                        <Pin size={11} className="rotate-45 text-[#1e3a8a] dark:text-circuit-soft" />
-                        {proj.pinnedTag || "Pinned"}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-black/[0.05] dark:text-paper/70 text-paper/85 border dark:border-paper/10 border-black/10 transition-colors duration-300 font-semibold">
-                        <Cpu size={11} />
-                        {proj.category}
-                      </span>
-                    )}
+            {filteredProjects.map((proj, i) => {
+              const hasLink = Boolean(proj.link && proj.link.trim() !== "" && proj.link.trim() !== "#");
+              const CardWrapper = hasLink ? motion.a : motion.div;
+              const linkProps = hasLink
+                ? {
+                    href: proj.link,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  }
+                : {};
 
-                    {proj.metric && (
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-brush/20 bg-brush/10 text-brush dark:text-brush-soft border dark:border-brush/30 border-brush/20 shadow-xs transition-colors duration-300">
-                        {proj.metric}
-                      </span>
-                    )}
-                  </div>
+              return (
+                <CardWrapper
+                  key={proj.id}
+                  {...linkProps}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                  className={`group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl border backdrop-blur-md transition-all duration-500 ${
+                    hasLink ? "cursor-pointer" : "cursor-default"
+                  } ${
+                    proj.pinned
+                      ? "dark:bg-ink-soft/90 bg-[#fdfbf7]/90 border dark:border-circuit/30 border-blue-900/20 hover:border-blue-900/40 hover:shadow-xl"
+                      : "dark:bg-ink-soft/90 bg-[#fdfbf7]/80 border dark:border-paper/10 border-amber-900/15 hover:border-amber-900/30 hover:shadow-lg"
+                  }`}
+                >
+                  <div>
+                    {/* Top Bar inside Card */}
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      {proj.pinned ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-circuit/15 bg-blue-900/10 dark:text-circuit-soft text-[#1e3a8a] border dark:border-circuit/30 border-blue-900/25 font-bold transition-colors duration-300 shadow-xs">
+                          <Pin size={11} className="rotate-45 text-[#1e3a8a] dark:text-circuit-soft" />
+                          {proj.pinnedTag || "Pinned"}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider dark:bg-paper/5 bg-black/[0.05] dark:text-paper/70 text-paper/85 border dark:border-paper/10 border-black/10 transition-colors duration-300 font-semibold">
+                          <Cpu size={11} />
+                          {proj.category}
+                        </span>
+                      )}
 
-                  {/* Title & Company */}
-                  <div className="mt-2">
-                    <div className="flex items-center gap-2 text-paper/60 font-mono text-[11px] mb-1 font-medium">
-                      <span>{proj.company}</span>
-                      <span>•</span>
-                      <span>{proj.year}</span>
+                      {proj.metric && (
+                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold dark:bg-brush/20 bg-brush/10 text-brush dark:text-brush-soft border dark:border-brush/30 border-brush/20 shadow-xs transition-colors duration-300">
+                          {proj.metric}
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-display text-xl text-paper leading-snug group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft transition-colors font-bold">
-                      {proj.title}
-                    </h3>
+
+                    {/* Title & Company */}
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-paper/60 font-mono text-[11px] mb-1 font-medium">
+                        <span>{proj.company}</span>
+                        <span>•</span>
+                        <span>{proj.year}</span>
+                      </div>
+                      <h3 className={`font-display text-xl text-paper leading-snug transition-colors font-bold ${
+                        hasLink ? "group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft" : ""
+                      }`}>
+                        {proj.title}
+                      </h3>
+                    </div>
+
+                    {/* Summary Description */}
+                    <p className="mt-3 font-sans text-sm text-paper/75 leading-relaxed font-normal">
+                      {proj.summary}
+                    </p>
                   </div>
 
-                  {/* Summary Description */}
-                  <p className="mt-3 font-sans text-sm text-paper/75 leading-relaxed font-normal">
-                    {proj.summary}
-                  </p>
-                </div>
+                  {/* Footer of Card */}
+                  <div className="mt-8 pt-4 border-t dark:border-paper/10 border-black/10">
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {proj.stack && proj.stack.map((s) => (
+                        <span
+                          key={s}
+                          className={`font-mono text-[10px] px-2.5 py-1 rounded-md dark:bg-paper/[0.06] bg-black/[0.05] dark:text-paper/75 text-paper/85 font-medium transition-colors ${
+                            hasLink ? "group-hover:bg-blue-900/10 group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft" : ""
+                          }`}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
 
-                {/* Footer of Card */}
-                <div className="mt-8 pt-4 border-t dark:border-paper/10 border-black/10">
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {proj.stack.map((s) => (
-                      <span
-                        key={s}
-                        className="font-mono text-[10px] px-2.5 py-1 rounded-md dark:bg-paper/[0.06] bg-black/[0.05] dark:text-paper/75 text-paper/85 font-medium group-hover:bg-blue-900/10 group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft transition-colors"
-                      >
-                        {s}
+                    <div className="flex items-center justify-between font-mono text-xs text-paper/60">
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-paper/80">
+                        <CheckCircle2 size={12} className="text-[#1e3a8a] dark:text-circuit-soft" />
+                        {proj.role}
                       </span>
-                    ))}
+                      {hasLink && (
+                        <ArrowUpRight
+                          size={17}
+                          className="text-paper/50 group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft group-hover:translate-x-1 group-hover:-translate-y-1 transition-all"
+                        />
+                      )}
+                    </div>
                   </div>
-
-                  <div className="flex items-center justify-between font-mono text-xs text-paper/60">
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-paper/80">
-                      <CheckCircle2 size={12} className="text-[#1e3a8a] dark:text-circuit-soft" />
-                      {proj.role}
-                    </span>
-                    <ArrowUpRight
-                      size={17}
-                      className="text-paper/50 group-hover:text-[#1e3a8a] dark:group-hover:text-circuit-soft group-hover:translate-x-1 group-hover:-translate-y-1 transition-all"
-                    />
-                  </div>
-                </div>
-              </motion.a>
-            ))}
+                </CardWrapper>
+              );
+            })}
           </AnimatePresence>
         </motion.div>
       </div>
