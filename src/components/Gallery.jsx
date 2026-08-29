@@ -405,13 +405,41 @@ export default function Gallery() {
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
 
-  // Deterministic Left-to-Right Row-First Masonry (Instant 0ms, Zero-Jitter & No Stutter)
+  // Smart Synchronous Balanced Masonry:
+  // Dynamically places each item into the currently shortest column (0ms, zero re-renders)
+  // Ensures trailing tall items like 'The Eye Contact' naturally fill empty right columns!
   const masonryColumns = useMemo(() => {
     const count = Math.max(1, columnCount);
     const cols = Array.from({ length: count }, () => []);
+    const colHeights = Array(count).fill(0);
+
     processedItems.forEach((item, index) => {
-      cols[index % count].push({ item, index });
+      // Find the column index with the minimum accumulated height
+      let minColIdx = 0;
+      let minHeight = colHeights[0];
+      for (let c = 1; c < count; c++) {
+        if (colHeights[c] < minHeight) {
+          minHeight = colHeights[c];
+          minColIdx = c;
+        }
+      }
+
+      cols[minColIdx].push({ item, index });
+
+      // Synchronous height weight (taller items like The Eye Contact / Spirituel have higher weight)
+      let weight = 1.25;
+      const t = (item.title || "").toLowerCase();
+      if (t.includes("eye contact") || t.includes("spirituel") || t.includes("habersiz")) {
+        weight = 1.75;
+      } else if (item.size?.includes("120") || item.size?.includes("100")) {
+        weight = 1.45;
+      } else if (t.includes("kare") || item.size?.includes("90x90")) {
+        weight = 1.0;
+      }
+
+      colHeights[minColIdx] += weight;
     });
+
     return cols;
   }, [processedItems, columnCount]);
 
