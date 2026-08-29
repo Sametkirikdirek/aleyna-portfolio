@@ -292,6 +292,20 @@ export default function Gallery() {
   // Dynamic columns for Left-to-Right Row-First Masonry Layout
   const [columnCount, setColumnCount] = useState(4);
 
+  // Track natural aspect ratios of images to balance column heights dynamically
+  const [imgAspects, setImgAspects] = useState({});
+
+  const handleImageLoad = useCallback((idOrKey, e) => {
+    const img = e.currentTarget;
+    if (img && img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalHeight / img.naturalWidth;
+      setImgAspects((prev) => {
+        if (prev[idOrKey] && Math.abs(prev[idOrKey] - ratio) < 0.02) return prev;
+        return { ...prev, [idOrKey]: ratio };
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const updateCols = () => {
       const w = window.innerWidth;
@@ -408,15 +422,36 @@ export default function Gallery() {
     return list;
   }, [items, activeFilter, searchQuery, sortBy]);
 
-  // Distribute items row-by-row into columns (Left-to-Right Row-First Masonry)
+  // Smart Height-Balanced Masonry Distribution:
+  // Places each next item into the currently shortest column to keep column bottoms perfectly level and prevent trailing gaps
   const masonryColumns = useMemo(() => {
     const count = Math.max(1, columnCount);
     const cols = Array.from({ length: count }, () => []);
+    const colHeights = Array(count).fill(0);
+
     processedItems.forEach((item, index) => {
-      cols[index % count].push({ item, index });
+      // Find the column index with the minimum accumulated height
+      let minColIdx = 0;
+      let minHeight = colHeights[0];
+      for (let c = 1; c < count; c++) {
+        if (colHeights[c] < minHeight) {
+          minHeight = colHeights[c];
+          minColIdx = c;
+        }
+      }
+
+      cols[minColIdx].push({ item, index });
+
+      // Aspect ratio weight (portrait > 1, square = 1, landscape < 1) + card footer buffer
+      const key = item.id || item.image || item.title;
+      const ratio = imgAspects[key] || (item.image ? 1.25 : 1.25);
+      const estimatedHeight = ratio + 0.35; // ratio + card footer text and gap
+
+      colHeights[minColIdx] += estimatedHeight;
     });
+
     return cols;
-  }, [processedItems, columnCount]);
+  }, [processedItems, columnCount, imgAspects]);
 
   const active = lightboxCustomItem
     ? lightboxCustomItem
@@ -866,6 +901,9 @@ export default function Gallery() {
                             src={p.image}
                             alt={p.title}
                             loading="lazy"
+                            onLoad={(e) =>
+                              handleImageLoad(p.id || p.image || p.title, e)
+                            }
                             className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
