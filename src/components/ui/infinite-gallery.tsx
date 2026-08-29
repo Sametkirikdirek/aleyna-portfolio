@@ -1,309 +1,325 @@
-import type React from 'react';
-import { useRef, useMemo, useCallback, useEffect, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
-import * as THREE from 'three';
+/**
+ * InfiniteGallery — Tunnel-scroll 3D gallery
+ *
+ * Architecture:
+ *  - Camera sits at [0,0,0] looking toward -Z
+ *  - Planes live from worldZ = -NEAR to worldZ = -FAR (all in front of camera)
+ *  - Each frame, planes approach camera (Z increases toward 0)
+ *  - When a plane reaches the near clip it wraps back to the far end
+ *  - Velocity is stored in a shared ref accessible from both the fixed overlay
+ *    div AND the Three.js scene (solves the "overlay eats scroll events" problem)
+ */
 
-type ImageItem = string | { src: string; alt?: string };
+import type React from "react";
+import { useRef, useMemo, useEffect, Suspense, useCallback } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useTexture } from "@react-three/drei";
+import * as THREE from "three";
 
-interface InfiniteGalleryProps {
-	images: ImageItem[];
-	speed?: number;
-	autoPlaySpeed?: number;
-	idleDelay?: number;
-	visibleCount?: number;
-	className?: string;
-	style?: React.CSSProperties;
+// ─── Types ────────────────────────────────────────────────────────────────────
+type NormalizedImage = { src: string; alt: string };
+
+export interface InfiniteGalleryProps {
+  images: (string | { src: string; alt?: string })[];
+  speed?: number;         // scroll multiplier
+  autoPlaySpeed?: number; // units/s during autoplay
+  idleDelay?: number;     // ms before autoplay resumes
+  visibleCount?: number;  // simultaneous planes in scene
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-interface PlaneData {
-	index: number;
-	z: number;
-	imageIndex: number;
-	x: number;
-	y: number;
+// ─── Shared velocity object (created outside Canvas so both div & scene share) ─
+interface SharedState {
+  velocity: number;
+  isAutoPlay: boolean;
+  lastInteraction: number;
 }
 
-const DEPTH_RANGE = 60;
+// ─── Constants ────────────────────────────────────────────────────────────────
+const NEAR_CLIP = 1;    // planes disappear when closer than this
+const FAR_CLIP  = 40;   // planes spawn this far away
+const SPREAD_X  = 2.5;  // max horizontal scatter
+const SPREAD_Y  = 1.2;  // max vertical scatter
 
-// Simple lit material — no blur/fade trickery, just clean opacity
-function createSimpleMaterial(): THREE.MeshBasicMaterial {
-	return new THREE.MeshBasicMaterial({
-		transparent: true,
-		opacity: 1.0,
-		side: THREE.FrontSide,
-	});
-}
-
-function ImagePlane({
-	texture,
-	position,
-	scale,
-	opacity,
-}: {
-	texture: THREE.Texture;
-	position: [number, number, number];
-	scale: [number, number, number];
-	opacity: number;
-}) {
-	const matRef = useRef<THREE.MeshBasicMaterial>(null);
-
-	useEffect(() => {
-		if (matRef.current) {
-			matRef.current.map = texture;
-			matRef.current.needsUpdate = true;
-		}
-	}, [texture]);
-
-	useEffect(() => {
-		if (matRef.current) {
-			matRef.current.opacity = opacity;
-		}
-	}, [opacity]);
-
-	return (
-		<mesh position={position} scale={scale}>
-			<planeGeometry args={[1, 1, 1, 1]} />
-			<meshBasicMaterial
-				ref={matRef}
-				map={texture}
-				transparent
-				opacity={opacity}
-			/>
-		</mesh>
-	);
-}
-
-// ─── INTERNAL SCENE ─────────────────────────────────────────────────────────
-// Holds all planes and the scroll logic. Must be inside <Canvas>.
+// ─── Scene (runs inside Canvas) ───────────────────────────────────────────────
 function GalleryScene({
-	images,
-	speed = 1,
-	autoPlaySpeed = 0.3,
-	idleDelay = 3000,
-	visibleCount = 16,
+  images,
+  shared,
+  speed,
+  autoPlaySpeed,
+  idleDelay,
+  visibleCount,
 }: {
-	images: { src: string; alt: string }[];
-	speed?: number;
-	autoPlaySpeed?: number;
-	idleDelay?: number;
-	visibleCount?: number;
+  images: NormalizedImage[];
+  shared: React.MutableRefObject<SharedState>;
+  speed: number;
+  autoPlaySpeed: number;
+  idleDelay: number;
+  visibleCount: number;
 }) {
-	const { gl, invalidate } = useThree();
+  const { gl } = useThree();
+  const totalImages = images.length;
 
-	// ---------- Textures (loads all images) ----------
-	const textures = useTexture(images.map((img) => img.src));
+  // Load all textures
+  const textures = useTexture(images.map((img) => img.src));
 
-	const totalImages = images.length;
+  // Scatter offsets — deterministic per slot
+  const offsets = useMemo(
+    () =>
+      Array.from({ length: visibleCount }, (_, i) => ({
+        x: Math.sin((i * 2.618) % (Math.PI * 2)) * (i % 3) * (SPREAD_X / 3),
+        y: Math.cos((i * 1.618) % (Math.PI * 2)) * ((i % 2) * 0.5) * SPREAD_Y,
+      })),
+    [visibleCount]
+  );
 
-	// ---------- Velocity refs ----------
-	const velocityRef = useRef(autoPlaySpeed); // start moving immediately
-	const autoPlayRef = useRef(true);
-	const lastInteraction = useRef(Date.now() - idleDelay - 100); // start in autoplay
+  // Plane positions (in scene-space Z: positive = distance from camera)
+  const planes = useRef(
+    Array.from({ length: visibleCount }, (_, i) => ({
+      slot: i,
+      dist: NEAR_CLIP + (FAR_CLIP - NEAR_CLIP) * (i / visibleCount), // evenly spaced
+      imgIdx: i % totalImages,
+    }))
+  );
 
-	// ---------- Spatial offsets for scatter effect ----------
-	const spatialPositions = useMemo(() => {
-		return Array.from({ length: visibleCount }, (_, i) => {
-			const angle = (i * 2.618) % (Math.PI * 2);
-			const radius = (i % 3) * 1.0;
-			const x = Math.sin(angle) * radius * 2.5;
-			const y = Math.cos((i * 1.618) % (Math.PI * 2)) * 1.2;
-			return { x, y };
-		});
-	}, [visibleCount]);
+  // Also attach wheel to THIS canvas as a backup (in case the div listener misses)
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      shared.current.velocity += e.deltaY * 0.012 * speed;
+      shared.current.isAutoPlay = false;
+      shared.current.lastInteraction = Date.now();
+    },
+    [shared, speed]
+  );
 
-	// ---------- Plane Z positions cycling through all images ----------
-	const planesData = useRef<PlaneData[]>([]);
-	useMemo(() => {
-		if (totalImages === 0) { planesData.current = []; return; }
-		planesData.current = Array.from({ length: visibleCount }, (_, i) => ({
-			index: i,
-			z: (DEPTH_RANGE / visibleCount) * i,
-			imageIndex: i % totalImages,
-			x: spatialPositions[i]?.x ?? 0,
-			y: spatialPositions[i]?.y ?? 0,
-		}));
-	}, [visibleCount, totalImages, spatialPositions]);
+  useEffect(() => {
+    const cvs = gl.domElement;
+    cvs.addEventListener("wheel", handleWheel, { passive: false });
+    return () => cvs.removeEventListener("wheel", handleWheel);
+  }, [gl.domElement, handleWheel]);
 
-	// ---------- Wheel event on THIS canvas ----------
-	const handleWheel = useCallback(
-		(event: WheelEvent) => {
-			event.preventDefault();
-			event.stopPropagation();
-			velocityRef.current += event.deltaY * 0.015 * speed;
-			autoPlayRef.current = false;
-			lastInteraction.current = Date.now();
-			invalidate();
-		},
-		[speed, invalidate]
-	);
+  // Idle timer — runs inside scene so it has access to shared ref
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (
+        !shared.current.isAutoPlay &&
+        Date.now() - shared.current.lastInteraction > idleDelay
+      ) {
+        shared.current.isAutoPlay = true;
+      }
+    }, 500);
+    return () => clearInterval(t);
+  }, [shared, idleDelay]);
 
-	const handleKeyDown = useCallback(
-		(event: KeyboardEvent) => {
-			if (['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(event.key)) {
-				const dir = (event.key === 'ArrowDown' || event.key === 'ArrowRight') ? 1 : -1;
-				velocityRef.current += dir * 3 * speed;
-				autoPlayRef.current = false;
-				lastInteraction.current = Date.now();
-				invalidate();
-			}
-		},
-		[speed, invalidate]
-	);
+  useFrame((_s, delta) => {
+    const s = shared.current;
 
-	useEffect(() => {
-		const canvas = gl.domElement;
-		canvas.addEventListener('wheel', handleWheel, { passive: false });
-		window.addEventListener('keydown', handleKeyDown);
-		return () => {
-			canvas.removeEventListener('wheel', handleWheel);
-			window.removeEventListener('keydown', handleKeyDown);
-		};
-	}, [gl.domElement, handleWheel, handleKeyDown]);
+    // Auto-play: smoothly blend toward target speed
+    if (s.isAutoPlay) {
+      s.velocity += (autoPlaySpeed - s.velocity) * Math.min(1, delta * 3);
+    } else {
+      // Damp user-initiated scroll
+      s.velocity *= Math.pow(0.88, delta * 60);
+      if (Math.abs(s.velocity) < 0.001) s.velocity = 0;
+    }
 
-	// ---------- Auto-play idle timer ----------
-	useEffect(() => {
-		const interval = setInterval(() => {
-			if (!autoPlayRef.current && Date.now() - lastInteraction.current > idleDelay) {
-				autoPlayRef.current = true;
-			}
-		}, 500);
-		return () => clearInterval(interval);
-	}, [idleDelay]);
+    const vel = s.velocity;
+    if (vel === 0 && !s.isAutoPlay) return;
 
-	// ---------- useFrame: advance planes each frame ----------
-	useFrame((_state, delta) => {
-		if (totalImages === 0) return;
+    const range = FAR_CLIP - NEAR_CLIP;
 
-		// Auto-play: smoothly ramp velocity towards target
-		if (autoPlayRef.current) {
-			const target = autoPlaySpeed;
-			velocityRef.current += (target - velocityRef.current) * 0.05;
-		} else {
-			// Damping when user-controlled
-			velocityRef.current *= 0.92;
-		}
+    planes.current.forEach((p) => {
+      // Move plane toward camera (dist decreases)
+      p.dist -= vel * delta * 10;
 
-		const vel = velocityRef.current;
-		if (Math.abs(vel) < 0.0001) return;
+      // Wrap: if past camera, send to back; advance image index
+      if (p.dist < NEAR_CLIP) {
+        const wraps = Math.floor((NEAR_CLIP - p.dist) / range) + 1;
+        p.dist += range * wraps;
+        // Advance to a NEW image (skip by roughly totalImages/visibleCount slots)
+        const step = Math.max(1, Math.round(totalImages / visibleCount));
+        p.imgIdx = (p.imgIdx + step * wraps) % totalImages;
+      }
 
-		const halfRange = DEPTH_RANGE / 2;
+      // Wrap backward: if scrolling backward and plane is too far
+      if (p.dist > FAR_CLIP) {
+        const wraps = Math.floor((p.dist - FAR_CLIP) / range) + 1;
+        p.dist -= range * wraps;
+        const step = Math.max(1, Math.round(totalImages / visibleCount));
+        p.imgIdx = ((p.imgIdx - step * wraps) % totalImages + totalImages) % totalImages;
+      }
+    });
+  });
 
-		planesData.current.forEach((plane) => {
-			let newZ = plane.z + vel * delta * 12;
+  return (
+    <>
+      {planes.current.map((p) => {
+        const texture = textures[p.imgIdx % textures.length];
+        if (!texture) return null;
 
-			// Wrap around
-			if (newZ >= DEPTH_RANGE) {
-				const wraps = Math.floor(newZ / DEPTH_RANGE);
-				newZ -= DEPTH_RANGE * wraps;
-				// Advance image index so different images cycle through
-				plane.imageIndex = (plane.imageIndex + wraps * Math.max(1, Math.floor(totalImages / visibleCount))) % totalImages;
-			} else if (newZ < 0) {
-				const wraps = Math.ceil(-newZ / DEPTH_RANGE);
-				newZ += DEPTH_RANGE * wraps;
-				plane.imageIndex = ((plane.imageIndex - wraps * Math.max(1, Math.floor(totalImages / visibleCount))) % totalImages + totalImages) % totalImages;
-			}
+        // worldZ is negative (in front of camera)
+        const worldZ = -p.dist;
 
-			plane.z = newZ;
-		});
-	});
+        // Opacity: fade in when freshly spawned (dist > FAR*0.85) and fade out near camera
+        const normDist = (p.dist - NEAR_CLIP) / (FAR_CLIP - NEAR_CLIP); // 0=near, 1=far
+        let opacity = 1;
+        if (normDist > 0.85) {
+          // Far end: fade in as it enters
+          opacity = (1 - normDist) / 0.15;
+        } else if (normDist < 0.12) {
+          // Near end: fade out as it passes camera
+          opacity = normDist / 0.12;
+        }
+        opacity = Math.max(0, Math.min(1, opacity));
 
-	// ---------- Render: compute worldZ + opacity per plane ----------
-	if (totalImages === 0) return null;
+        // Perspective scale: larger when close
+        const pScale = 3.5 * (1 / (p.dist * 0.18 + 0.4));
+        const aspect = texture.image
+          ? texture.image.width / texture.image.height
+          : 1;
+        const w = aspect >= 1 ? pScale * aspect : pScale;
+        const h = aspect >= 1 ? pScale : pScale / aspect;
 
-	return (
-		<>
-			{planesData.current.map((plane) => {
-				const texture = textures[plane.imageIndex % textures.length];
-				if (!texture) return null;
+        const off = offsets[p.slot] ?? { x: 0, y: 0 };
 
-				const worldZ = plane.z - DEPTH_RANGE / 2;
-
-				// Fade: near camera (worldZ > -5) and far back (worldZ < -halfRange+5)
-				const normZ = (plane.z / DEPTH_RANGE); // 0→1
-				let opacity = 1;
-				// Fade in as it comes out from behind camera
-				if (normZ < 0.1) opacity = normZ / 0.1;
-				// Fade out as it goes back into the distance
-				else if (normZ > 0.8) opacity = 1 - (normZ - 0.8) / 0.2;
-
-				opacity = Math.max(0, Math.min(1, opacity));
-
-				const aspect = texture.image
-					? texture.image.width / texture.image.height
-					: 1;
-				const scale: [number, number, number] =
-					aspect > 1 ? [2.4 * aspect, 2.4, 1] : [2.4, 2.4 / aspect, 1];
-
-				return (
-					<ImagePlane
-						key={plane.index}
-						texture={texture}
-						position={[plane.x, plane.y, worldZ]}
-						scale={scale}
-						opacity={opacity}
-					/>
-				);
-			})}
-		</>
-	);
+        return (
+          <mesh
+            key={p.slot}
+            position={[off.x, off.y, worldZ]}
+            scale={[w, h, 1]}
+          >
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial
+              map={texture}
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })}
+    </>
+  );
 }
 
-// ─── FALLBACK (no WebGL) ─────────────────────────────────────────────────────
-function FallbackGallery({ images }: { images: ImageItem[] }) {
-	const normalized = useMemo(
-		() => images.map((img) => typeof img === 'string' ? { src: img, alt: '' } : img),
-		[images]
-	);
-	return (
-		<div className="flex flex-wrap gap-3 items-center justify-center h-full p-4 overflow-y-auto">
-			{normalized.map((img, i) => (
-				<img key={i} src={img.src} alt={img.alt} className="h-40 w-auto object-cover rounded-lg opacity-80" />
-			))}
-		</div>
-	);
-}
-
-// ─── PUBLIC EXPORT ────────────────────────────────────────────────────────────
+// ─── Public export ─────────────────────────────────────────────────────────────
 export default function InfiniteGallery({
-	images,
-	speed = 1,
-	autoPlaySpeed = 0.3,
-	idleDelay = 3000,
-	visibleCount = 16,
-	className = 'h-96 w-full',
-	style,
+  images,
+  speed = 1,
+  autoPlaySpeed = 0.3,
+  idleDelay = 3000,
+  visibleCount = 14,
+  className = "h-96 w-full",
+  style,
 }: InfiniteGalleryProps) {
-	const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-	const normalized = useMemo(
-		() => images.map((img) => typeof img === 'string' ? { src: img, alt: '' } : img),
-		[images]
-	);
+  // Shared state — lives outside Canvas so overlay div can write to it
+  const shared = useRef<SharedState>({
+    velocity: autoPlaySpeed * 0.5,
+    isAutoPlay: true,
+    lastInteraction: Date.now() - idleDelay - 100,
+  });
 
-	// Extra: also listen to wheel on the container so the overlay captures scroll
-	// (the Canvas may not bubble wheel events to its parent)
-	const velocityExternalRef = useRef(0); // not used directly; wheel on canvas handles it
+  const normalized = useMemo<NormalizedImage[]>(
+    () =>
+      images.map((img) =>
+        typeof img === "string" ? { src: img, alt: "" } : { src: img.src, alt: img.alt ?? "" }
+      ),
+    [images]
+  );
 
-	if (normalized.length === 0) return null;
+  // ── Wheel listener on the CONTAINER div (catches overlay scroll) ───────────
+  const handleContainerWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      shared.current.velocity += e.deltaY * 0.012 * speed;
+      shared.current.isAutoPlay = false;
+      shared.current.lastInteraction = Date.now();
+    },
+    [speed]
+  );
 
-	return (
-		<div ref={containerRef} className={className} style={{ ...style, touchAction: 'none' }}>
-			<Canvas
-				camera={{ position: [0, 0, 5], fov: 60 }}
-				gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-				frameloop="always"
-			>
-				<Suspense fallback={null}>
-					<GalleryScene
-						images={normalized}
-						speed={speed}
-						autoPlaySpeed={autoPlaySpeed}
-						idleDelay={idleDelay}
-						visibleCount={Math.min(visibleCount, normalized.length > 0 ? normalized.length : visibleCount)}
-					/>
-				</Suspense>
-			</Canvas>
-		</div>
-	);
+  // ── Keyboard listener ──────────────────────────────────────────────────────
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)) {
+        const dir = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+        shared.current.velocity += dir * 2.5 * speed;
+        shared.current.isAutoPlay = false;
+        shared.current.lastInteraction = Date.now();
+      }
+    },
+    [speed]
+  );
+
+  useEffect(() => {
+    const div = containerRef.current;
+    if (!div) return;
+    div.addEventListener("wheel", handleContainerWheel, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      div.removeEventListener("wheel", handleContainerWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleContainerWheel, handleKeyDown]);
+
+  // Touch support
+  const touchStartY = useRef(0);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      e.preventDefault();
+      const dy = touchStartY.current - e.touches[0].clientY;
+      shared.current.velocity += dy * 0.02 * speed;
+      shared.current.isAutoPlay = false;
+      shared.current.lastInteraction = Date.now();
+      touchStartY.current = e.touches[0].clientY;
+    },
+    [speed]
+  );
+
+  if (normalized.length === 0) return null;
+
+  const clampedVisible = Math.min(
+    Math.max(8, visibleCount),
+    normalized.length
+  );
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ ...style, touchAction: "none", cursor: "grab" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove as any}
+    >
+      <Canvas
+        camera={{ position: [0, 0, 0], fov: 65, near: 0.01, far: 200 }}
+        gl={{
+          antialias: false,
+          alpha: true,
+          powerPreference: "high-performance",
+        }}
+        frameloop="always"
+      >
+        <Suspense fallback={null}>
+          <GalleryScene
+            images={normalized}
+            shared={shared}
+            speed={speed}
+            autoPlaySpeed={autoPlaySpeed}
+            idleDelay={idleDelay}
+            visibleCount={clampedVisible}
+          />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
 }
