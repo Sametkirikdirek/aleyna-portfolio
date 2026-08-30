@@ -466,6 +466,7 @@ export default function WritingsEditor() {
     "Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden."
   );
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [headerSaveStatus, setHeaderSaveStatus] = useState("idle");
   const [openIdx, setOpenIdx] = useState(null);
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
@@ -625,6 +626,30 @@ export default function WritingsEditor() {
       console.error(err);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
+    }
+  };
+
+  const saveHeader = async () => {
+    setHeaderSaveStatus("saving");
+    try {
+      const payload = {
+        tag: headerTag,
+        title: headerTitle,
+        subtitle: headerSubtitle,
+        personalWritings: writings,
+      };
+      await setContent("writings", payload);
+      localStorage.setItem(
+        "portfolio_cache_writings",
+        JSON.stringify(payload)
+      );
+      window.dispatchEvent(new Event("portfolio_content_updated"));
+      setHeaderSaveStatus("saved");
+      setTimeout(() => setHeaderSaveStatus("idle"), 3000);
+    } catch (err) {
+      console.error(err);
+      setHeaderSaveStatus("error");
+      setTimeout(() => setHeaderSaveStatus("idle"), 3000);
     }
   };
 
@@ -812,8 +837,8 @@ export default function WritingsEditor() {
             </div>
           </div>
           <SaveButton
-            status={saveStatus}
-            onClick={save}
+            status={headerSaveStatus}
+            onClick={saveHeader}
             label="Başlığı Kaydet"
           />
         </div>
