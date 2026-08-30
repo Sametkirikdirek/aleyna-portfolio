@@ -626,14 +626,31 @@ export default function WritingsEditor() {
           if (savedDraft.headerTag !== undefined) setHeaderTag(savedDraft.headerTag);
           if (savedDraft.headerTitle !== undefined) setHeaderTitle(savedDraft.headerTitle);
           if (savedDraft.headerSubtitle !== undefined) setHeaderSubtitle(savedDraft.headerSubtitle);
+
+          const targetIdx =
+            savedDraft.targetIdx !== undefined ? savedDraft.targetIdx : 0;
+          const targetWriting =
+            (savedDraft.writings && savedDraft.writings[targetIdx]) || {};
+
+          let draftTitle =
+            savedDraft.draftTitle || targetWriting.title?.trim() || "Yazı";
+          let draftSnippet = savedDraft.draftSnippet || "";
+          if (!draftSnippet && targetWriting.content?.trim()) {
+            const clean = targetWriting.content.replace(/\s+/g, " ").trim();
+            draftSnippet = clean.length > 55 ? clean.slice(0, 55) + "..." : clean;
+          }
+
           setDraftInfo({
             hasDraft: true,
             savedAt: savedDraft.savedAt || "Az önce",
+            draftTitle: draftTitle,
+            draftSnippet: draftSnippet,
+            targetIdx: targetIdx,
             isSaving: false,
           });
           setHasUnsavedEdits(true);
           setShowDraftBanner(true);
-          setOpenIdx(0);
+          setOpenIdx(targetIdx);
           return;
         } else {
           // If draft is identical to server, clean the stale draft key!
@@ -655,7 +672,13 @@ export default function WritingsEditor() {
   }, [data]);
 
   // 2. Persist to LocalStorage whenever user makes edits
-  const persistDraftToStorage = (newWritings, newTag, newTitle, newSubtitle) => {
+  const persistDraftToStorage = (
+    newWritings,
+    newTag,
+    newTitle,
+    newSubtitle,
+    editedIdx = null
+  ) => {
     setHasUnsavedEdits(true);
     setDraftInfo((prev) => ({ ...prev, isSaving: true }));
 
@@ -666,12 +689,37 @@ export default function WritingsEditor() {
       second: "2-digit",
     });
 
+    const targetIdx =
+      editedIdx !== null ? editedIdx : openIdx !== null ? openIdx : 0;
+    const targetWriting = newWritings[targetIdx] || newWritings[0] || {};
+
+    let draftTitle = targetWriting.title?.trim() || "";
+    let draftSnippet = "";
+    if (targetWriting.content?.trim()) {
+      const cleanContent = targetWriting.content.replace(/\s+/g, " ").trim();
+      draftSnippet =
+        cleanContent.length > 55
+          ? cleanContent.slice(0, 55) + "..."
+          : cleanContent;
+    } else if (targetWriting.excerpt?.trim()) {
+      const cleanExcerpt = targetWriting.excerpt.replace(/\s+/g, " ").trim();
+      draftSnippet =
+        cleanExcerpt.length > 55
+          ? cleanExcerpt.slice(0, 55) + "..."
+          : cleanExcerpt;
+    }
+
     const draftPayload = {
       writings: newWritings,
       headerTag: newTag,
       headerTitle: newTitle,
       headerSubtitle: newSubtitle,
       savedAt: timeStr,
+      draftTitle:
+        draftTitle ||
+        (targetWriting.tag ? `${targetWriting.tag} Yazısı` : "Yazı"),
+      draftSnippet: draftSnippet,
+      targetIdx: targetIdx,
       timestamp: Date.now(),
     };
 
@@ -680,6 +728,9 @@ export default function WritingsEditor() {
       setDraftInfo({
         hasDraft: true,
         savedAt: timeStr,
+        draftTitle: draftPayload.draftTitle,
+        draftSnippet: draftPayload.draftSnippet,
+        targetIdx: targetIdx,
         isSaving: false,
       });
     } catch (e) {
@@ -777,7 +828,7 @@ export default function WritingsEditor() {
     setWritings((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [key]: value };
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, idx);
       return next;
     });
   };
@@ -803,7 +854,7 @@ export default function WritingsEditor() {
       const next = [...prev];
       const item = next.splice(idx, 1)[0];
       next.unshift(item);
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, 0);
       return next;
     });
     setOpenIdx(0);
@@ -816,7 +867,7 @@ export default function WritingsEditor() {
       const temp = next[idx - 1];
       next[idx - 1] = next[idx];
       next[idx] = temp;
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, idx - 1);
       return next;
     });
     if (openIdx === idx) setOpenIdx(idx - 1);
@@ -830,7 +881,7 @@ export default function WritingsEditor() {
       const temp = next[idx + 1];
       next[idx + 1] = next[idx];
       next[idx] = temp;
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, idx + 1);
       return next;
     });
     if (openIdx === idx) setOpenIdx(idx + 1);
@@ -843,7 +894,7 @@ export default function WritingsEditor() {
       const next = [...prev];
       const item = next.splice(idx, 1)[0];
       next.push(item);
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, next.length - 1);
       return next;
     });
     setOpenIdx(writings.length - 1);
@@ -865,7 +916,7 @@ export default function WritingsEditor() {
     };
     setWritings((prev) => {
       const next = [w, ...prev];
-      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle, 0);
       return next;
     });
     setOpenIdx(0);
@@ -920,17 +971,32 @@ export default function WritingsEditor() {
 
       {/* ─── Yerel Taslak Kurtarma Bildirim Kartı ─── */}
       {showDraftBanner && draftInfo.hasDraft && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-rose-500/10 to-transparent border border-emerald-500/30 flex items-center justify-between gap-4 flex-wrap animate-fadeIn shadow-lg">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-              <ShieldCheck size={18} />
+        <div className="p-4.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-[#161722] to-[#161722] border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn shadow-xl">
+          <div className="flex items-start gap-3.5 min-w-0">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0 mt-0.5">
+              <ShieldCheck size={20} />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white">
-                Kaydedilmemiş yerel taslağınız bulundu ve yüklendi
-              </p>
-              <p className="text-xs text-white/50 font-mono mt-0.5">
-                Son otomatik kayıt: {draftInfo.savedAt || "Az önce"} · Elektrik veya internet kopsa bile metniniz korunmuştur.
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-bold text-white">
+                  Kaydedilmemiş yerel taslağınız bulundu ve yüklendi
+                </p>
+                <span className="text-[11px] font-mono text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                  {draftInfo.savedAt || "Az önce"}
+                </span>
+              </div>
+
+              {/* Kaldığı yazının ismi veya metin kesiti */}
+              <p className="text-xs text-white/80 font-medium truncate max-w-xl">
+                <span className="text-emerald-400 font-mono font-semibold">Kaldığınız Yazı:</span>{" "}
+                <span className="font-semibold text-white bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                  {draftInfo.draftTitle ? `"${draftInfo.draftTitle}"` : "Başlıksız Yazı"}
+                </span>
+                {draftInfo.draftSnippet ? (
+                  <span className="text-white/50 italic ml-2 font-sans">
+                    — “{draftInfo.draftSnippet}”
+                  </span>
+                ) : null}
               </p>
             </div>
           </div>
@@ -940,16 +1006,23 @@ export default function WritingsEditor() {
               type="button"
               onClick={() => {
                 setShowDraftBanner(false);
-                setOpenIdx(0);
+                if (
+                  draftInfo.targetIdx !== undefined &&
+                  draftInfo.targetIdx !== null
+                ) {
+                  setOpenIdx(draftInfo.targetIdx);
+                } else {
+                  setOpenIdx(0);
+                }
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30 transition-colors cursor-pointer"
             >
               Taslakla Devam Et ✓
             </button>
             <button
               type="button"
               onClick={() => setConfirmRevertModal(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/20 text-white/70 hover:text-rose-300 text-xs font-mono border border-white/10 hover:border-rose-500/30 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-rose-500/20 text-white/70 hover:text-rose-300 text-xs font-mono border border-white/10 hover:border-rose-500/30 transition-colors cursor-pointer"
             >
               Yayındaki Haline Dön
             </button>

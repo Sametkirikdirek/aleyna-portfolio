@@ -281,6 +281,7 @@ export default function Writings() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data: writingsData } = useWritings();
+  const { data: profile } = useProfile();
   const allPersonalWritings = writingsData?.personalWritings || [];
   const personalWritings = allPersonalWritings.filter(
     (w) => w.hidden !== true && w.published !== false
