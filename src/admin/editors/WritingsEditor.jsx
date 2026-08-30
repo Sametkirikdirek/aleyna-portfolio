@@ -15,6 +15,7 @@ import {
   Minimize2,
   FileText,
   BookOpen,
+  Type,
 } from "lucide-react";
 import { motion, Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
@@ -417,6 +418,11 @@ function WritingItem({
 export default function WritingsEditor() {
   const { data, loading } = useWritings();
   const [writings, setWritings] = useState([]);
+  const [headerTag, setHeaderTag] = useState("Yazılar");
+  const [headerTitle, setHeaderTitle] = useState("Kelimelerle şekillenen düşünceler");
+  const [headerSubtitle, setHeaderSubtitle] = useState(
+    "Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden."
+  );
   const [saveStatus, setSaveStatus] = useState("idle");
   const [openIdx, setOpenIdx] = useState(null);
   const [uploading, setUploading] = useState({});
@@ -432,15 +438,25 @@ export default function WritingsEditor() {
   });
 
   useEffect(() => {
-    if (data && writings.length === 0) {
-      setWritings(data.personalWritings || []);
+    if (data) {
+      if (writings.length === 0 && data.personalWritings) {
+        setWritings(data.personalWritings);
+      }
+      if (data.tag !== undefined) setHeaderTag(data.tag);
+      if (data.title !== undefined) setHeaderTitle(data.title);
+      if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
     }
   }, [data]);
 
   const save = async () => {
     setSaveStatus("saving");
     try {
-      const payload = { personalWritings: writings };
+      const payload = {
+        tag: headerTag,
+        title: headerTitle,
+        subtitle: headerSubtitle,
+        personalWritings: writings,
+      };
       await setContent("writings", payload);
       localStorage.setItem(
         "portfolio_cache_writings",
@@ -567,10 +583,64 @@ export default function WritingsEditor() {
     <div className="space-y-7 max-w-5xl mx-auto text-white">
       <EditorHeader
         title="Yazılarım & Kütüphane"
-        subtitle="Kişisel blog yazıları, sıralama (fiziksel sürükle-bırak) ve kütüphane kapak fotoğrafları"
+        subtitle="Kişisel blog yazıları, sayfa başlığı/açıklaması ve kütüphane kapak fotoğrafları"
         saveStatus={saveStatus}
         onSave={save}
       />
+
+      {/* ─── Sayfa Başlık & Açıklama Ayarları (Header) ─── */}
+      <div className="rounded-2xl border border-white/10 bg-[#161722] p-5 space-y-4 shadow-lg">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <Type size={16} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                Yazılar Sayfası Başlık & Açıklama
+              </h3>
+              <p className="text-xs text-white/50">
+                Sitedeki /writings sayfasının en üstünde yer alan başlık ve açıklama metinleri
+              </p>
+            </div>
+          </div>
+          <SaveButton
+            status={saveStatus}
+            onClick={save}
+            label="Başlığı Kaydet"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div>
+            <Field label="Üst Kategori / Etiket">
+              <TextInput
+                value={headerTag}
+                onChange={setHeaderTag}
+                placeholder="Yazılar"
+              />
+            </Field>
+          </div>
+          <div className="md:col-span-2">
+            <Field label="Ana Başlık (H2)">
+              <TextInput
+                value={headerTitle}
+                onChange={setHeaderTitle}
+                placeholder="Kelimelerle şekillenen düşünceler"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <Field label="Alt Açıklama Metni">
+          <TextArea
+            value={headerSubtitle}
+            onChange={setHeaderSubtitle}
+            rows={2}
+            placeholder="Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden."
+          />
+        </Field>
+      </div>
 
       {/* Gizli Dosya Seçici */}
       <input

@@ -94,7 +94,13 @@ export function useAiProjects() {
 }
 
 export function useWritings() {
-  return useContent("writings", { personalWritings: fallbackWritings });
+  return useContent("writings", {
+    tag: "Yazılar",
+    title: "Kelimelerle şekillenen düşünceler",
+    subtitle:
+      "Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden.",
+    personalWritings: fallbackWritings,
+  });
 }
 
 export function useCv() {

@@ -318,14 +318,14 @@ export default function Writings() {
       <div className="max-w-5xl mx-auto">
         <header className="mb-10 md:mb-12">
           <p className="font-mono text-xs tracking-[0.25em] uppercase text-amber-900 dark:text-umber font-bold mb-4">
-            Yazılar
+            {writingsData?.tag || "Yazılar"}
           </p>
           <h2 className="font-display text-3xl md:text-5xl leading-tight text-balance text-paper font-bold">
-            Kelimelerle şekillenen düşünceler
+            {writingsData?.title || "Kelimelerle şekillenen düşünceler"}
           </h2>
           <p className="mt-4 font-sans text-sm text-paper/70 max-w-xl font-medium">
-            Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı
-            çizgi, aynı elden.
+            {writingsData?.subtitle ||
+              "Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden."}
           </p>
         </header>
 
