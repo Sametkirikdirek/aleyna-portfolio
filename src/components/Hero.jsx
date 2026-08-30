@@ -7,6 +7,7 @@ import RapunzelTreeCanvas from "./ui/RapunzelTreeCanvas";
 import SocialCards from "./ui/card-fan-carousel";
 import { useColorMode } from "../context/ColorModeContext";
 import { useProfile } from "../hooks/useContent";
+import DefaultPersonAvatar from "./ui/DefaultPersonAvatar";
 
 /* Inline SVG social icons */
 const GithubIcon = (props) => (
@@ -134,20 +135,22 @@ export default function Hero() {
           {/* Sol Taraf: Metinler & Butonlar (Sola Hizalı) */}
           <div className="flex flex-col items-start gap-6 text-left relative z-20">
             {/* 1. Profil Fotoğrafı Kapsülü (A&A Altında Hizalanmış & Büyütülmüş) */}
-            {profile.avatar && (
-              <motion.div
-                {...fadeUp(0)}
-                className="group relative cursor-pointer my-1 ml-0 sm:ml-1"
-              >
-                <div className="w-[115px] h-[180px] sm:w-[140px] sm:h-[225px] lg:w-[165px] lg:h-[265px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink">
+            <motion.div
+              {...fadeUp(0)}
+              className="group relative cursor-pointer my-1 ml-0 sm:ml-1"
+            >
+              <div className="w-[115px] h-[180px] sm:w-[140px] sm:h-[225px] lg:w-[165px] lg:h-[265px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink flex items-center justify-center">
+                {profile.avatar ? (
                   <img
                     src={profile.avatar}
                     alt={profile.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                </div>
-              </motion.div>
-            )}
+                ) : (
+                  <DefaultPersonAvatar />
+                )}
+              </div>
+            </motion.div>
 
             {/* 2. Roles pill row */}
             <motion.div {...fadeUp(0.08)} className="flex flex-wrap gap-2">

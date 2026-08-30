@@ -7,6 +7,7 @@ import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
   EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton, ConfirmModal,
 } from "../components/AdminUI";
+import DefaultPersonAvatar from "../../components/ui/DefaultPersonAvatar";
 
 export default function ProfileEditor() {
   const { data, loading } = useProfile();
@@ -421,9 +422,12 @@ export default function ProfileEditor() {
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center text-white/40 text-center p-2">
-                  <Upload size={20} />
-                  <span className="text-[10px] mt-1">Yükle</span>
+                <div className="relative w-full h-full flex flex-col items-center justify-center">
+                  <DefaultPersonAvatar />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-mono gap-1">
+                    <Upload size={18} className="text-rose-400" />
+                    <span>Fotoğraf Yükle</span>
+                  </div>
                 </div>
               )}
               {uploadingAvatar && (
@@ -437,7 +441,7 @@ export default function ProfileEditor() {
           <div className="space-y-4 flex-1">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-white/90">Anasayfa Profil Fotoğrafı (Rozet Avatar)</p>
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
@@ -446,13 +450,34 @@ export default function ProfileEditor() {
                   <Upload size={14} /> Görsel Yükle
                 </button>
                 {form.avatar && (
-                  <button
-                    type="button"
-                    onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
-                    className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-                  >
-                    <Scissors size={14} className="text-rose-400" /> Fotoğrafı Hizala
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
+                      className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                    >
+                      <Scissors size={14} className="text-rose-400" /> Fotoğrafı Hizala
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmModal({
+                          isOpen: true,
+                          title: "Profil Fotoğrafını Kaldır?",
+                          description: "Mevcut profil fotoğrafınız kaldırılacak ve sitede varsayılan rozet avatarı gösterilecektir.",
+                          confirmText: "Evet, Fotoğrafı Kaldır",
+                          variant: "danger",
+                          onConfirm: () => {
+                            setField("avatar", "");
+                          },
+                        });
+                      }}
+                      className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/25 rounded-xl px-3.5 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                      title="Mevcut profil fotoğrafını kaldır ve varsayılana dön"
+                    >
+                      <Trash2 size={13} className="text-red-400" /> Fotoğrafı Kaldır
+                    </button>
+                  </>
                 )}
               </div>
             </div>
