@@ -16,8 +16,9 @@ import {
   FileText,
   BookOpen,
   Type,
+  ShieldCheck,
 } from "lucide-react";
-import { motion, Reorder, useDragControls } from "framer-motion";
+import { Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
@@ -31,6 +32,41 @@ import {
   ConfirmModal,
 } from "../components/AdminUI";
 
+const DRAFT_STORAGE_KEY = "portfolio_writings_local_draft";
+
+/**
+ * Canlı Otomatik Taslak Durum Rozeti (Auto-Save Status Badge)
+ */
+function AutoSaveBadge({ draftInfo }) {
+  if (draftInfo?.isSaving) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 animate-pulse select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        Taslak kaydediliyor...
+      </span>
+    );
+  }
+
+  if (draftInfo?.hasDraft) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 select-none"
+        title="Yazdığınız her kelime elektrik/internet kesilse bile cihazınızın hafızasında güvende"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        Taslak cihazda güvende {draftInfo?.savedAt ? `(${draftInfo.savedAt})` : ""}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg bg-white/5 text-white/40 border border-white/10 select-none">
+      <ShieldCheck size={12} className="text-white/40" />
+      Canlı sürümle senkronize
+    </span>
+  );
+}
+
 /**
  * Tam Ekran Odaklanma & Yazım Modalı (Zen Mode)
  */
@@ -41,6 +77,7 @@ function ZenWritingModal({
   onUpdate,
   saveStatus,
   onSave,
+  draftInfo,
 }) {
   if (!isOpen || !writing) return null;
 
@@ -58,9 +95,12 @@ function ZenWritingModal({
             <BookOpen size={18} />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-white text-base truncate">
-              {writing.title || "Başlıksız Yazı"}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-white text-base truncate">
+                {writing.title || "Başlıksız Yazı"}
+              </h3>
+              <AutoSaveBadge draftInfo={draftInfo} />
+            </div>
             <p className="text-xs text-white/40 font-mono mt-0.5">
               Tam Ekran Yazım Modu · {wordCount} kelime · {charCount} karakter · ~{estimatedReadMinutes} dk okuma
             </p>
@@ -76,7 +116,7 @@ function ZenWritingModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors cursor-pointer border border-white/15"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors cursor-pointer border border-white/15"
           >
             <Minimize2 size={15} /> Kapat
           </button>
@@ -119,6 +159,7 @@ function WritingItem({
   onSave,
   saveStatus,
   onOpenZenMode,
+  draftInfo,
 }) {
   const dragControls = useDragControls();
 
@@ -158,19 +199,14 @@ function WritingItem({
               dragControls.start(e);
             }}
             className="p-2 -m-1 text-white/40 hover:text-rose-400 hover:bg-white/5 rounded-xl cursor-grab active:cursor-grabbing touch-none transition-colors shrink-0 flex items-center justify-center"
-            title="Tutup sürükleyerek sırayı değiştirin"
+            title="Sıralamayı değiştirmek için sürükleyin"
           >
             <GripVertical size={18} />
           </div>
 
-          {/* Sıra Numarası Rozeti */}
-          <span className="font-mono text-xs font-bold text-rose-300 bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 rounded-lg shrink-0">
-            #{index + 1}
-          </span>
-
-          {/* Hızlı Yukarı / Aşağı Butonları */}
+          {/* Hızlı Sıralama Okları (Tek Tıkla Yukarı/Aşağı) */}
           <div
-            className="flex items-center gap-0.5 shrink-0 bg-white/5 p-1 rounded-lg border border-white/5"
+            className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -187,7 +223,7 @@ function WritingItem({
               disabled={index === 0}
               onClick={() => onMoveUp(index)}
               className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
-              title="1 Yukarı Taşı"
+              title="Bir Yukarı Taşı"
             >
               <ArrowUp size={12} />
             </button>
@@ -196,7 +232,7 @@ function WritingItem({
               disabled={index === total - 1}
               onClick={() => onMoveDown(index)}
               className="text-white/40 hover:text-white disabled:opacity-20 p-1 transition-colors cursor-pointer"
-              title="1 Aşağı Taşı"
+              title="Bir Aşağı Taşı"
             >
               <ArrowDown size={12} />
             </button>
@@ -298,55 +334,59 @@ function WritingItem({
                 Kütüphane Kapak Görseli
               </p>
               <p className="text-xs text-white/50">
-                Kütüphane sekmesinde kitap kartının üzerinde görünecek kapak
-                resmi.
+                Görsel yüklendikten sonra üzerine tıklayarak odak noktasını ve
+                kırpmasını ayarlayabilirsiniz.
               </p>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingIdx(index);
-                    fileInputRef.current?.click();
-                  }}
-                  className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/40 rounded-xl px-3.5 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-semibold"
-                >
-                  <Upload size={13} /> Görsel Yükle
-                </button>
-                {writing.image && (
-                  <button
-                    type="button"
-                    onClick={() => onAdjustImage(writing.image, index)}
-                    className="text-xs bg-white/10 text-white/90 hover:bg-white/15 border border-white/20 rounded-xl px-3.5 py-1.5 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-semibold"
-                  >
-                    <Scissors size={13} /> Kırp / Hizala
-                  </button>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingIdx(index);
+                  fileInputRef.current?.click();
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 font-mono bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-lg border border-rose-500/20 transition-colors cursor-pointer mt-1"
+              >
+                <Upload size={12} />
+                <span>{writing.image ? "Görseli Değiştir" : "Görsel Yükle"}</span>
+              </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <Field label="Başlık">
-              <TextInput
-                value={writing.title}
-                onChange={(v) => onUpdate(index, "title", v)}
-                placeholder="Örn: Sanat ve Kodun Diyaloğu"
-              />
-            </Field>
-            <Field label="Etiket / Kategori">
+          {/* Form Alanları */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <Field label="Yazı Başlığı">
+                <TextInput
+                  value={writing.title}
+                  onChange={(v) => onUpdate(index, "title", v)}
+                  placeholder="Yazı başlığı..."
+                />
+              </Field>
+            </div>
+
+            <Field label="Kategori / Etiket">
               <TextInput
                 value={writing.tag}
                 onChange={(v) => onUpdate(index, "tag", v)}
-                placeholder="Atölye / Sanat / Düşünce"
+                placeholder="Örn: Sanat & Kod, Deneme, Felsefe"
               />
             </Field>
-            <Field label="Tarih">
+
+            <Field label="Yayın Tarihi">
               <TextInput
                 value={writing.date}
                 onChange={(v) => onUpdate(index, "date", v)}
-                placeholder="Ağu 2026"
+                placeholder="Örn: Ağustos 2026"
               />
             </Field>
+
+            <Field label="Dış Bağlantı (Medium Linki - İsteğe Bağlı)">
+              <TextInput
+                value={writing.url}
+                onChange={(v) => onUpdate(index, "url", v)}
+                placeholder="https://medium.com/@aleyna/..."
+              />
+            </Field>
+
             <Field label="Okuma Süresi">
               <TextInput
                 value={writing.readTime}
@@ -365,7 +405,7 @@ function WritingItem({
             />
           </Field>
 
-          {/* ─── Tam Metin / İçerik Alanı (Genişletilmiş & Hızlı Kaydet Butonlu) ─── */}
+          {/* ─── Tam Metin / İçerik Alanı (Genişletilmiş & Otomatik Taslak Korumalı) ─── */}
           <div className="space-y-2.5 pt-3 border-t border-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap">
@@ -376,6 +416,7 @@ function WritingItem({
                 <span className="font-mono text-[11px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
                   {wordCount} kelime · {charCount} karakter · ~{estimatedReadMinutes} dk okuma
                 </span>
+                <AutoSaveBadge draftInfo={draftInfo} />
               </div>
 
               <div className="flex items-center gap-2">
@@ -383,7 +424,7 @@ function WritingItem({
                 <button
                   type="button"
                   onClick={() => onOpenZenMode(index)}
-                  className="flex items-center gap-1.5 text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-xs"
                   title="Geniş Ekran / Odaklanma Modu (Dikkatsiz Yazım)"
                 >
                   <Maximize2 size={13} className="text-rose-400" />
@@ -431,11 +472,22 @@ export default function WritingsEditor() {
   const [pendingIdx, setPendingIdx] = useState(null);
   const [zenIdx, setZenIdx] = useState(null);
 
+  // Auto-save & Local Draft state
+  const [draftInfo, setDraftInfo] = useState({
+    hasDraft: false,
+    savedAt: null,
+    isSaving: false,
+  });
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const isInitialMount = useRef(true);
+
+  // Modals state
   const [confirmDelete, setConfirmDelete] = useState({
     isOpen: false,
     targetIdx: null,
     title: "",
   });
+  const [confirmRevertModal, setConfirmRevertModal] = useState(false);
 
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
@@ -444,16 +496,103 @@ export default function WritingsEditor() {
     targetIdx: null,
   });
 
+  // 1. Initial Mount: Check if a local draft exists in localStorage
+  useEffect(() => {
+    const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (savedDraftStr) {
+      try {
+        const savedDraft = JSON.parse(savedDraftStr);
+        if (savedDraft && savedDraft.writings && savedDraft.writings.length > 0) {
+          setWritings(savedDraft.writings);
+          if (savedDraft.headerTag) setHeaderTag(savedDraft.headerTag);
+          if (savedDraft.headerTitle) setHeaderTitle(savedDraft.headerTitle);
+          if (savedDraft.headerSubtitle) setHeaderSubtitle(savedDraft.headerSubtitle);
+          if (savedDraft.savedAt) {
+            setDraftInfo({
+              hasDraft: true,
+              savedAt: savedDraft.savedAt,
+              isSaving: false,
+            });
+            setShowDraftBanner(true);
+          }
+        }
+      } catch (e) {
+        console.error("Draft recovery error", e);
+      }
+    }
+  }, []);
+
+  // 2. Load from Firestore if no draft was recovered
   useEffect(() => {
     if (data) {
-      if (writings.length === 0 && data.personalWritings) {
+      const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!savedDraftStr) {
+        if (writings.length === 0 && data.personalWritings) {
+          setWritings(data.personalWritings);
+        }
+        if (data.tag !== undefined) setHeaderTag(data.tag);
+        if (data.title !== undefined) setHeaderTitle(data.title);
+        if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
+      } else if (writings.length === 0 && data.personalWritings) {
         setWritings(data.personalWritings);
       }
-      if (data.tag !== undefined) setHeaderTag(data.tag);
-      if (data.title !== undefined) setHeaderTitle(data.title);
-      if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
     }
   }, [data]);
+
+  // 3. Auto-save every edit to LocalStorage (Instant offline protection)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (writings.length === 0) return;
+
+    setDraftInfo((prev) => ({ ...prev, isSaving: true }));
+
+    const timeout = setTimeout(() => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      const draftPayload = {
+        writings,
+        headerTag,
+        headerTitle,
+        headerSubtitle,
+        savedAt: timeStr,
+        timestamp: Date.now(),
+      };
+
+      try {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload));
+        setDraftInfo({
+          hasDraft: true,
+          savedAt: timeStr,
+          isSaving: false,
+        });
+      } catch (e) {
+        console.error("Auto-save to localStorage failed", e);
+        setDraftInfo((prev) => ({ ...prev, isSaving: false }));
+      }
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [writings, headerTag, headerTitle, headerSubtitle]);
+
+  // 4. Tab Close / Refresh Protection
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (draftInfo.hasDraft) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [draftInfo.hasDraft]);
 
   const save = async () => {
     setSaveStatus("saving");
@@ -469,6 +608,16 @@ export default function WritingsEditor() {
         "portfolio_cache_writings",
         JSON.stringify(payload)
       );
+
+      // Clean local draft since it's now officially published in the cloud
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setDraftInfo({
+        hasDraft: false,
+        savedAt: null,
+        isSaving: false,
+      });
+      setShowDraftBanner(false);
+
       window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
@@ -477,6 +626,18 @@ export default function WritingsEditor() {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
+  };
+
+  const revertToPublished = () => {
+    if (data?.personalWritings) {
+      setWritings(data.personalWritings);
+      if (data.tag !== undefined) setHeaderTag(data.tag);
+      if (data.title !== undefined) setHeaderTitle(data.title);
+      if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
+    }
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setDraftInfo({ hasDraft: false, savedAt: null, isSaving: false });
+    setShowDraftBanner(false);
   };
 
   const update = (idx, key, value) => {
@@ -580,7 +741,7 @@ export default function WritingsEditor() {
     });
   };
 
-  if (loading) {
+  if (loading && writings.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-6 h-6 rounded-full border-2 border-rose-500 border-t-transparent animate-spin" />
@@ -589,13 +750,50 @@ export default function WritingsEditor() {
   }
 
   return (
-    <div className="space-y-7 max-w-5xl mx-auto text-white">
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* ─── Başlık & Üst Kaydet Butonu ─── */}
       <EditorHeader
-        title="Yazılarım & Kütüphane"
-        subtitle="Kişisel blog yazıları, sayfa başlığı/açıklaması ve kütüphane kapak fotoğrafları"
+        title="Kişisel Notlar & Yazılar"
+        subtitle="Düşünceler, denemeler ve teknik yazılar (Sıralamayı grip ile veya oklarla değiştirebilirsiniz)"
         saveStatus={saveStatus}
         onSave={save}
       />
+
+      {/* ─── Yerel Taslak Kurtarma Bildirim Kartı ─── */}
+      {showDraftBanner && draftInfo.hasDraft && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-rose-500/10 to-transparent border border-emerald-500/30 flex items-center justify-between gap-4 flex-wrap animate-fadeIn shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+              <ShieldCheck size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">
+                Kaydedilmemiş yerel taslağınız cihazınızdan otomatik yüklendi
+              </p>
+              <p className="text-xs text-white/50 font-mono mt-0.5">
+                Son otomatik kayıt: {draftInfo.savedAt || "Az önce"} · İnternetiniz kopsa bile metniniz korunmuştur.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowDraftBanner(false)}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30 transition-colors cursor-pointer"
+            >
+              Taslakla Devam Et ✓
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmRevertModal(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/20 text-white/70 hover:text-rose-300 text-xs font-mono border border-white/10 hover:border-rose-500/30 transition-colors cursor-pointer"
+            >
+              Yayındaki Haline Dön
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── Sayfa Başlık & Açıklama Ayarları (Header) ─── */}
       <div className="rounded-2xl border border-white/10 bg-[#161722] p-5 space-y-4 shadow-lg">
@@ -710,6 +908,7 @@ export default function WritingsEditor() {
             onSave={save}
             saveStatus={saveStatus}
             onOpenZenMode={(i) => setZenIdx(i)}
+            draftInfo={draftInfo}
           />
         ))}
       </Reorder.Group>
@@ -750,6 +949,7 @@ export default function WritingsEditor() {
         }}
         saveStatus={saveStatus}
         onSave={save}
+        draftInfo={draftInfo}
       />
 
       {/* Tatlı Silme Onay Modalı */}
@@ -771,6 +971,18 @@ export default function WritingsEditor() {
         confirmText="Evet, Sil"
         cancelText="Vazgeç"
         variant="danger"
+      />
+
+      {/* Yayındaki Haline Dönme Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmRevertModal}
+        onClose={() => setConfirmRevertModal(false)}
+        onConfirm={revertToPublished}
+        title="Yayındaki Orijinal Sürüme Dön?"
+        description="Cihazınızdaki kaydedilmemiş tüm yerel taslaklar silinecek ve sitede en son yayınlanmış olan resmi sürüme geri dönülecektir."
+        confirmText="Evet, Yayındakine Dön"
+        cancelText="Vazgeç"
+        variant="warning"
       />
     </div>
   );
