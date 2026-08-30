@@ -11,7 +11,9 @@ export default function WritingDetailPage() {
   const { data: profile } = useProfile();
 
   const personalWritings = writingsData?.personalWritings || [];
-  const article = personalWritings.find((w) => String(w.id) === String(id));
+  const article = personalWritings.find(
+    (w) => String(w.id) === String(id) && w.hidden !== true && w.published !== false
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

@@ -17,6 +17,8 @@ import {
   BookOpen,
   Type,
   ShieldCheck,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
@@ -95,7 +97,7 @@ function ZenWritingModal({
             <BookOpen size={18} />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold text-white text-base truncate">
                 {writing.title || "Başlıksız Yazı"}
               </h3>
@@ -167,6 +169,7 @@ function WritingItem({
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const charCount = text.length;
   const estimatedReadMinutes = Math.max(1, Math.ceil(wordCount / 180));
+  const isHidden = writing.hidden === true || writing.published === false;
 
   return (
     <Reorder.Item
@@ -258,9 +261,21 @@ function WritingItem({
 
           {/* Başlık ve Bilgiler */}
           <div className="min-w-0 flex-1 pr-2">
-            <h4 className="font-semibold text-sm text-white/90 truncate">
-              {writing.title || "Başlıksız Yazı"}
-            </h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-semibold text-sm text-white/90 truncate">
+                {writing.title || "Başlıksız Yazı"}
+              </h4>
+              {/* Görünürlük Rozeti */}
+              {isHidden ? (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                  Gizli (Taslak)
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                  Yayında
+                </span>
+              )}
+            </div>
             <p className="text-xs text-white/40 font-mono truncate mt-0.5">
               {writing.tag || "Genel"} · {writing.date || "Tarihsiz"}{" "}
               {writing.readTime ? `· ${writing.readTime}` : ""}
@@ -268,8 +283,30 @@ function WritingItem({
           </div>
         </div>
 
-        {/* Aksiyonlar (Silme + Aç/Kapat İkonu) */}
+        {/* Aksiyonlar (Görünürlük Değiştirme + Silme + Aç/Kapat) */}
         <div className="flex items-center gap-2 shrink-0 ml-2">
+          {/* Hızlı Görünürlük Butonu */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate(index, "hidden", !isHidden);
+              onUpdate(index, "published", isHidden);
+            }}
+            className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 text-xs font-mono ${
+              isHidden
+                ? "bg-white/5 hover:bg-emerald-500/20 text-white/40 hover:text-emerald-300 border-white/10 hover:border-emerald-500/30"
+                : "bg-emerald-500/10 hover:bg-amber-500/20 text-emerald-400 hover:text-amber-300 border-emerald-500/20 hover:border-amber-500/30"
+            }`}
+            title={
+              isHidden
+                ? "Bu yazı sitede GİZLİ. Ziyaretçilere açmak için tıklayın."
+                : "Bu yazı sitede YAYINDA. Ziyaretçilere gizlemek için tıklayın."
+            }
+          >
+            {isHidden ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+
           <button
             type="button"
             onClick={(e) => {
@@ -290,6 +327,48 @@ function WritingItem({
       {/* Açılır Düzenleme Formu */}
       {isOpen && (
         <div className="px-5 pb-6 border-t border-white/10 pt-5 space-y-5">
+          {/* Görünürlük & Yayın Durumu Paneli */}
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/10">
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-2.5 rounded-xl border ${
+                  isHidden
+                    ? "bg-amber-500/15 border-amber-500/25 text-amber-300"
+                    : "bg-emerald-500/15 border-emerald-500/25 text-emerald-300"
+                }`}
+              >
+                {isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {isHidden
+                    ? "Ziyaretçilere Gizli (Taslak Modu)"
+                    : "Sitede Yayında (Ziyaretçilere Açık)"}
+                </p>
+                <p className="text-xs text-white/50 mt-0.5">
+                  {isHidden
+                    ? "Bu yazı yalnızca bu admin panelinde görünür; kütüphaneyi gezen ziyaretçilere gösterilmez."
+                    : "Kütüphaneyi (/writings) gezen tüm ziyaretçiler bu yazıyı görebilir ve okuyabilir."}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                onUpdate(index, "hidden", !isHidden);
+                onUpdate(index, "published", isHidden);
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                isHidden
+                  ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-md shadow-emerald-950/30"
+                  : "bg-white/10 hover:bg-amber-500/20 text-white/70 hover:text-amber-300 border-white/10 hover:border-amber-500/30"
+              }`}
+            >
+              {isHidden ? "Sitede Yayınla" : "Siteden Gizle"}
+            </button>
+          </div>
+
           {/* Kapak Görseli Yükleme & Hizalama */}
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-white/10 bg-white/[0.02]">
             <div
@@ -405,7 +484,7 @@ function WritingItem({
             />
           </Field>
 
-          {/* ─── Tam Metin / İçerik Alanı (Genişletilmiş & Otomatik Taslak Korumalı) ─── */}
+          {/* ─── Tam Metin / İçerik Alanı ─── */}
           <div className="space-y-2.5 pt-3 border-t border-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap">
@@ -479,9 +558,8 @@ export default function WritingsEditor() {
     savedAt: null,
     isSaving: false,
   });
+  const [hasUnsavedEdits, setHasUnsavedEdits] = useState(false);
   const [showDraftBanner, setShowDraftBanner] = useState(false);
-  const isInitialMount = useRef(true);
-  const isDraftLoadedRef = useRef(false);
 
   // Modals state
   const [confirmDelete, setConfirmDelete] = useState({
@@ -498,122 +576,129 @@ export default function WritingsEditor() {
     targetIdx: null,
   });
 
-  const applyDraft = (customDraft = null) => {
-    let draft = customDraft;
-    if (!draft) {
-      const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (savedDraftStr) {
-        try {
-          draft = JSON.parse(savedDraftStr);
-        } catch (e) {
-          console.error("Draft parse error", e);
-        }
+  // Check if draft in localStorage has REAL differences compared to server data
+  const isDraftDifferentFromServer = (draftPayload, serverData) => {
+    if (!draftPayload || !serverData) return false;
+    const serverWritings = serverData.personalWritings || [];
+    const draftWritings = draftPayload.writings || [];
+    if (draftWritings.length !== serverWritings.length) return true;
+
+    // Check header
+    if (
+      draftPayload.headerTag !== (serverData.tag || "Yazılar") ||
+      draftPayload.headerTitle !== (serverData.title || "Kelimelerle şekillenen düşünceler") ||
+      draftPayload.headerSubtitle !== (serverData.subtitle || "")
+    ) {
+      return true;
+    }
+
+    // Check each writing content/title/excerpt
+    for (let i = 0; i < draftWritings.length; i++) {
+      const dw = draftWritings[i];
+      const sw = serverWritings[i];
+      if (!sw) return true;
+      if (
+        dw.title !== sw.title ||
+        dw.content !== sw.content ||
+        dw.excerpt !== sw.excerpt ||
+        dw.tag !== sw.tag ||
+        dw.date !== sw.date ||
+        dw.readTime !== sw.readTime ||
+        dw.hidden !== sw.hidden
+      ) {
+        return true;
       }
     }
-    if (draft && draft.writings && draft.writings.length > 0) {
-      setWritings(draft.writings);
-      if (draft.headerTag !== undefined) setHeaderTag(draft.headerTag);
-      if (draft.headerTitle !== undefined) setHeaderTitle(draft.headerTitle);
-      if (draft.headerSubtitle !== undefined) setHeaderSubtitle(draft.headerSubtitle);
-      setDraftInfo({
-        hasDraft: true,
-        savedAt: draft.savedAt || "Az önce",
-        isSaving: false,
-      });
-      // Açık kartı ilk yazıya odakla ki kullanıcı metnini doğrudan görsün
-      setOpenIdx(0);
-      setShowDraftBanner(false);
-      isDraftLoadedRef.current = true;
-    }
+    return false;
   };
 
-  // 1. Initial Mount: Check if a local draft exists in localStorage
+  // 1. Initial Mount & Data Sync
   useEffect(() => {
+    if (!data) return;
+
     const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (savedDraftStr) {
       try {
         const savedDraft = JSON.parse(savedDraftStr);
-        if (savedDraft && savedDraft.writings && savedDraft.writings.length > 0) {
-          applyDraft(savedDraft);
+        // Only consider it a draft if it differs from server data!
+        if (savedDraft && isDraftDifferentFromServer(savedDraft, data)) {
+          setWritings(savedDraft.writings || []);
+          if (savedDraft.headerTag !== undefined) setHeaderTag(savedDraft.headerTag);
+          if (savedDraft.headerTitle !== undefined) setHeaderTitle(savedDraft.headerTitle);
+          if (savedDraft.headerSubtitle !== undefined) setHeaderSubtitle(savedDraft.headerSubtitle);
+          setDraftInfo({
+            hasDraft: true,
+            savedAt: savedDraft.savedAt || "Az önce",
+            isSaving: false,
+          });
+          setHasUnsavedEdits(true);
           setShowDraftBanner(true);
+          setOpenIdx(0);
           return;
+        } else {
+          // If draft is identical to server, clean the stale draft key!
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
         }
       } catch (e) {
-        console.error("Draft recovery error", e);
+        console.error("Draft parsing error", e);
       }
     }
-  }, []);
 
-  // 2. Load from Firestore ONLY if no draft is active
-  useEffect(() => {
-    if (data && !isDraftLoadedRef.current) {
-      const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (!savedDraftStr) {
-        if (data.personalWritings) {
-          setWritings(data.personalWritings);
-        }
-        if (data.tag !== undefined) setHeaderTag(data.tag);
-        if (data.title !== undefined) setHeaderTitle(data.title);
-        if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
-      }
-    }
+    // Default clean load from Firestore
+    if (data.personalWritings) setWritings(data.personalWritings);
+    if (data.tag !== undefined) setHeaderTag(data.tag);
+    if (data.title !== undefined) setHeaderTitle(data.title);
+    if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
+    setHasUnsavedEdits(false);
+    setDraftInfo({ hasDraft: false, savedAt: null, isSaving: false });
+    setShowDraftBanner(false);
   }, [data]);
 
-  // 3. Auto-save every edit to LocalStorage (Instant offline protection)
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    if (writings.length === 0) return;
-
+  // 2. Persist to LocalStorage whenever user makes edits
+  const persistDraftToStorage = (newWritings, newTag, newTitle, newSubtitle) => {
+    setHasUnsavedEdits(true);
     setDraftInfo((prev) => ({ ...prev, isSaving: true }));
 
-    const timeout = setTimeout(() => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("tr-TR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
-      const draftPayload = {
-        writings,
-        headerTag,
-        headerTitle,
-        headerSubtitle,
+    const draftPayload = {
+      writings: newWritings,
+      headerTag: newTag,
+      headerTitle: newTitle,
+      headerSubtitle: newSubtitle,
+      savedAt: timeStr,
+      timestamp: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload));
+      setDraftInfo({
+        hasDraft: true,
         savedAt: timeStr,
-        timestamp: Date.now(),
-      };
+        isSaving: false,
+      });
+    } catch (e) {
+      console.error("Auto-save to localStorage failed", e);
+      setDraftInfo((prev) => ({ ...prev, isSaving: false }));
+    }
+  };
 
-      try {
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload));
-        setDraftInfo({
-          hasDraft: true,
-          savedAt: timeStr,
-          isSaving: false,
-        });
-        isDraftLoadedRef.current = true;
-      } catch (e) {
-        console.error("Auto-save to localStorage failed", e);
-        setDraftInfo((prev) => ({ ...prev, isSaving: false }));
-      }
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [writings, headerTag, headerTitle, headerSubtitle]);
-
-  // 4. Tab Close / Refresh Protection
+  // 3. Tab Close Protection (ONLY active if user has unsaved edits)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (draftInfo.hasDraft) {
+      if (hasUnsavedEdits && draftInfo.hasDraft) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [draftInfo.hasDraft]);
+  }, [hasUnsavedEdits, draftInfo.hasDraft]);
 
   const save = async () => {
     setSaveStatus("saving");
@@ -630,9 +715,9 @@ export default function WritingsEditor() {
         JSON.stringify(payload)
       );
 
-      // Clean local draft since it's now officially published in the cloud
+      // Clean local draft completely on publish
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      isDraftLoadedRef.current = false;
+      setHasUnsavedEdits(false);
       setDraftInfo({
         hasDraft: false,
         savedAt: null,
@@ -675,7 +760,6 @@ export default function WritingsEditor() {
   };
 
   const revertToPublished = () => {
-    isDraftLoadedRef.current = false;
     if (data?.personalWritings) {
       setWritings(data.personalWritings);
       if (data.tag !== undefined) setHeaderTag(data.tag);
@@ -683,6 +767,7 @@ export default function WritingsEditor() {
       if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
     }
     localStorage.removeItem(DRAFT_STORAGE_KEY);
+    setHasUnsavedEdits(false);
     setDraftInfo({ hasDraft: false, savedAt: null, isSaving: false });
     setShowDraftBanner(false);
     setOpenIdx(0);
@@ -692,8 +777,24 @@ export default function WritingsEditor() {
     setWritings((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [key]: value };
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
       return next;
     });
+  };
+
+  const handleSetHeaderTag = (val) => {
+    setHeaderTag(val);
+    persistDraftToStorage(writings, val, headerTitle, headerSubtitle);
+  };
+
+  const handleSetHeaderTitle = (val) => {
+    setHeaderTitle(val);
+    persistDraftToStorage(writings, headerTag, val, headerSubtitle);
+  };
+
+  const handleSetHeaderSubtitle = (val) => {
+    setHeaderSubtitle(val);
+    persistDraftToStorage(writings, headerTag, headerTitle, val);
   };
 
   const moveToTop = (idx) => {
@@ -702,6 +803,7 @@ export default function WritingsEditor() {
       const next = [...prev];
       const item = next.splice(idx, 1)[0];
       next.unshift(item);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
       return next;
     });
     setOpenIdx(0);
@@ -714,6 +816,7 @@ export default function WritingsEditor() {
       const temp = next[idx - 1];
       next[idx - 1] = next[idx];
       next[idx] = temp;
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
       return next;
     });
     if (openIdx === idx) setOpenIdx(idx - 1);
@@ -727,6 +830,7 @@ export default function WritingsEditor() {
       const temp = next[idx + 1];
       next[idx + 1] = next[idx];
       next[idx] = temp;
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
       return next;
     });
     if (openIdx === idx) setOpenIdx(idx + 1);
@@ -739,6 +843,7 @@ export default function WritingsEditor() {
       const next = [...prev];
       const item = next.splice(idx, 1)[0];
       next.push(item);
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
       return next;
     });
     setOpenIdx(writings.length - 1);
@@ -755,8 +860,14 @@ export default function WritingsEditor() {
       readTime: "",
       tag: "",
       url: "",
+      hidden: false,
+      published: true,
     };
-    setWritings((prev) => [w, ...prev]);
+    setWritings((prev) => {
+      const next = [w, ...prev];
+      persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+      return next;
+    });
     setOpenIdx(0);
   };
 
@@ -802,7 +913,7 @@ export default function WritingsEditor() {
       {/* ─── Başlık & Üst Kaydet Butonu ─── */}
       <EditorHeader
         title="Kişisel Notlar & Yazılar"
-        subtitle="Düşünceler, denemeler ve teknik yazılar (Sıralamayı grip ile veya oklarla değiştirebilirsiniz)"
+        subtitle="Düşünceler, denemeler ve teknik yazılar (Yazıları göz ikonuyla ziyaretçilere açıp gizleyebilirsiniz)"
         saveStatus={saveStatus}
         onSave={save}
       />
@@ -816,10 +927,10 @@ export default function WritingsEditor() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white">
-                Kaydedilmemiş yerel taslağınız cihazınızdan otomatik yüklendi
+                Kaydedilmemiş yerel taslağınız bulundu ve yüklendi
               </p>
               <p className="text-xs text-white/50 font-mono mt-0.5">
-                Son otomatik kayıt: {draftInfo.savedAt || "Az önce"} · İnternetiniz kopsa bile metniniz korunmuştur.
+                Son otomatik kayıt: {draftInfo.savedAt || "Az önce"} · Elektrik veya internet kopsa bile metniniz korunmuştur.
               </p>
             </div>
           </div>
@@ -827,7 +938,10 @@ export default function WritingsEditor() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => applyDraft()}
+              onClick={() => {
+                setShowDraftBanner(false);
+                setOpenIdx(0);
+              }}
               className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30 transition-colors cursor-pointer"
             >
               Taslakla Devam Et ✓
@@ -871,7 +985,7 @@ export default function WritingsEditor() {
             <Field label="Üst Kategori / Etiket">
               <TextInput
                 value={headerTag}
-                onChange={setHeaderTag}
+                onChange={handleSetHeaderTag}
                 placeholder="Yazılar"
               />
             </Field>
@@ -880,7 +994,7 @@ export default function WritingsEditor() {
             <Field label="Ana Başlık (H2)">
               <TextInput
                 value={headerTitle}
-                onChange={setHeaderTitle}
+                onChange={handleSetHeaderTitle}
                 placeholder="Kelimelerle şekillenen düşünceler"
               />
             </Field>
@@ -890,7 +1004,7 @@ export default function WritingsEditor() {
         <Field label="Alt Açıklama Metni">
           <TextArea
             value={headerSubtitle}
-            onChange={setHeaderSubtitle}
+            onChange={handleSetHeaderSubtitle}
             rows={2}
             placeholder="Medium'daki teknik yazılar ve atölyeden kişisel notlar — iki ayrı çizgi, aynı elden."
           />
@@ -915,9 +1029,8 @@ export default function WritingsEditor() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs text-white/50">
           <strong className="text-rose-300">Grip ikonunu</strong> tutarak
-          yazıları fiziksel olarak sürükleyebilir veya{" "}
-          <strong className="text-white/80">ok butonlarıyla</strong> sıralamayı
-          değiştirebilirsiniz.
+          yazıları sürükleyebilir, <strong className="text-emerald-400">Göz ikonuyla</strong> yazıları
+          ziyaretçilere açıp gizleyebilirsiniz.
         </p>
 
         <button
@@ -932,7 +1045,10 @@ export default function WritingsEditor() {
       <Reorder.Group
         axis="y"
         values={writings}
-        onReorder={setWritings}
+        onReorder={(newOrder) => {
+          setWritings(newOrder);
+          persistDraftToStorage(newOrder, headerTag, headerTitle, headerSubtitle);
+        }}
         className="space-y-3"
       >
         {writings.map((w, idx) => (
@@ -1008,9 +1124,11 @@ export default function WritingsEditor() {
         }
         onConfirm={() => {
           if (confirmDelete.targetIdx !== null) {
-            setWritings((prev) =>
-              prev.filter((_, i) => i !== confirmDelete.targetIdx)
-            );
+            setWritings((prev) => {
+              const next = prev.filter((_, i) => i !== confirmDelete.targetIdx);
+              persistDraftToStorage(next, headerTag, headerTitle, headerSubtitle);
+              return next;
+            });
             setOpenIdx(null);
           }
         }}

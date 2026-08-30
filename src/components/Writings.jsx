@@ -281,8 +281,10 @@ export default function Writings() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data: writingsData } = useWritings();
-  const { data: profile } = useProfile();
-  const personalWritings = writingsData?.personalWritings || [];
+  const allPersonalWritings = writingsData?.personalWritings || [];
+  const personalWritings = allPersonalWritings.filter(
+    (w) => w.hidden !== true && w.published !== false
+  );
   const mediumUrl = profile?.social?.medium || "https://medium.com/@aleynaaltunsu";
 
   const initialTab = searchParams.get("tab") || "medium";
