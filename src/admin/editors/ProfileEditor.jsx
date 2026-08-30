@@ -95,7 +95,7 @@ export default function ProfileEditor() {
         ? [prev.avatar]
         : [];
       const filteredHistory = existingHistory.filter((url) => url !== newAvatarUrl);
-      const updatedHistory = [newAvatarUrl, ...filteredHistory].slice(0, 3);
+      const updatedHistory = [newAvatarUrl, ...filteredHistory].slice(0, 9);
       return {
         ...prev,
         avatar: newAvatarUrl,
@@ -457,25 +457,26 @@ export default function ProfileEditor() {
               </div>
             </div>
 
-            {/* Son 3 Profil Fotoğrafı (Hızlı Değişim Vitrini) */}
+            {/* Son Profil Fotoğrafları Geçmişi (En fazla 9 adet) */}
             {form.avatarHistory && form.avatarHistory.length > 0 && (
               <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-mono font-semibold text-white/80">
-                    Son Profil Fotoğrafları (Geçmiş):
+                  <p className="text-xs font-mono font-semibold text-white/80 flex items-center gap-1.5">
+                    <span>Son Profil Fotoğrafları (Geçmiş):</span>
+                    <span className="text-[10px] text-white/40 font-normal">({form.avatarHistory.length}/9)</span>
                   </p>
                   <span className="text-[10px] font-mono text-white/40">
                     Tek tıkla aktif yapabilirsiniz
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   {form.avatarHistory.map((histUrl, hIdx) => {
                     const isCurrent = form.avatar === histUrl;
                     return (
                       <div
                         key={histUrl || hIdx}
                         onClick={() => setField("avatar", histUrl)}
-                        className={`group/hist relative w-14 h-20 rounded-full cursor-pointer overflow-hidden border-2 transition-all duration-200 shadow-md ${
+                        className={`group/hist relative w-12 h-18 sm:w-14 sm:h-20 rounded-full cursor-pointer overflow-hidden border-2 transition-all duration-200 shadow-md ${
                           isCurrent
                             ? "border-rose-500 ring-2 ring-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.35)] scale-105"
                             : "border-white/15 hover:border-white/40 opacity-60 hover:opacity-100"
@@ -487,10 +488,25 @@ export default function ProfileEditor() {
                           alt={`Profil ${hIdx + 1}`}
                           className="w-full h-full object-cover group-hover/hist:scale-105 transition-transform"
                         />
-                        {isCurrent && (
+                        {isCurrent ? (
                           <div className="absolute inset-0 bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-white text-[11px] font-bold">
                             ✓
                           </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setForm((prev) => ({
+                                ...prev,
+                                avatarHistory: (prev.avatarHistory || []).filter((_, i) => i !== hIdx),
+                              }));
+                            }}
+                            className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[8px] opacity-0 group-hover/hist:opacity-100 transition-opacity cursor-pointer"
+                            title="Geçmişten Kaldır"
+                          >
+                            ✕
+                          </button>
                         )}
                       </div>
                     );
