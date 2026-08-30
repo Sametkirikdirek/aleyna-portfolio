@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { profile } from "../data/content";
-
-const socialLinks = [
-  { label: "Medium", href: profile.social.medium },
-  { label: "GitHub", href: profile.social.github },
-  { label: "LinkedIn", href: profile.social.linkedin },
-  { label: "Instagram", href: profile.social.instagram },
-];
+import { useProfile } from "../hooks/useContent";
 
 export default function Footer() {
+  const { data: profile } = useProfile();
+
+  const socialLinks = [
+    { label: "Medium", href: profile?.social?.medium || "#" },
+    { label: "GitHub", href: profile?.social?.github || "#" },
+    { label: "LinkedIn", href: profile?.social?.linkedin || "#" },
+    { label: "Instagram", href: profile?.social?.instagram || "#" },
+  ];
   return (
     <section className="relative min-h-screen flex items-center px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink overflow-hidden">
       <div
