@@ -11,6 +11,10 @@ import {
   ArrowDown,
   ChevronsUp,
   ChevronsDown,
+  Maximize2,
+  Minimize2,
+  FileText,
+  BookOpen,
 } from "lucide-react";
 import { motion, Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
@@ -22,7 +26,74 @@ import {
   Field,
   TextInput,
   TextArea,
+  SaveButton,
 } from "../components/AdminUI";
+
+/**
+ * Tam Ekran Odaklanma & Yazım Modalı (Zen Mode)
+ */
+function ZenWritingModal({
+  isOpen,
+  onClose,
+  writing,
+  onUpdate,
+  saveStatus,
+  onSave,
+}) {
+  if (!isOpen || !writing) return null;
+
+  const text = writing.content || "";
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const charCount = text.length;
+  const estimatedReadMinutes = Math.max(1, Math.ceil(wordCount / 180));
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-2xl flex flex-col p-4 md:p-8 animate-fadeIn">
+      {/* Üst Araç Çubuğu */}
+      <div className="max-w-5xl w-full mx-auto flex items-center justify-between pb-4 border-b border-white/10 shrink-0 gap-4 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 shrink-0">
+            <BookOpen size={18} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-white text-base truncate">
+              {writing.title || "Başlıksız Yazı"}
+            </h3>
+            <p className="text-xs text-white/40 font-mono mt-0.5">
+              Tam Ekran Yazım Modu · {wordCount} kelime · {charCount} karakter · ~{estimatedReadMinutes} dk okuma
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <SaveButton
+            status={saveStatus}
+            onClick={onSave}
+            label="Kaydet & Yayınla"
+          />
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors cursor-pointer border border-white/15"
+          >
+            <Minimize2 size={15} /> Kapat
+          </button>
+        </div>
+      </div>
+
+      {/* Geniş Yazma Alanı */}
+      <div className="max-w-5xl w-full mx-auto flex-1 py-5 flex flex-col min-h-0">
+        <textarea
+          value={writing.content || ""}
+          onChange={(e) => onUpdate("content", e.target.value)}
+          placeholder="Düşüncelerinizi, hikayenizi veya makalenizi buraya yazın..."
+          className="w-full flex-1 bg-white/[0.02] border border-white/10 rounded-2xl p-6 md:p-8 text-white/90 text-base md:text-lg leading-relaxed font-sans placeholder:text-white/20 outline-none focus:border-rose-500/40 transition-all resize-none shadow-2xl"
+          autoFocus
+        />
+      </div>
+    </div>
+  );
+}
 
 /**
  * Tekil Yazı Kartı (Framer Motion Physics-based Reorder Item)
@@ -43,8 +114,16 @@ function WritingItem({
   uploading,
   fileInputRef,
   setPendingIdx,
+  onSave,
+  saveStatus,
+  onOpenZenMode,
 }) {
   const dragControls = useDragControls();
+
+  const text = writing.content || "";
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const charCount = text.length;
+  const estimatedReadMinutes = Math.max(1, Math.ceil(wordCount / 180));
 
   return (
     <Reorder.Item
@@ -284,14 +363,51 @@ function WritingItem({
             />
           </Field>
 
-          <Field label="Tam Metin (İçerik)">
-            <TextArea
-              value={writing.content || ""}
-              onChange={(v) => onUpdate(index, "content", v)}
-              rows={8}
-              placeholder="Yazının tüm metnini buraya girin..."
-            />
-          </Field>
+          {/* ─── Tam Metin / İçerik Alanı (Genişletilmiş & Hızlı Kaydet Butonlu) ─── */}
+          <div className="space-y-2.5 pt-3 border-t border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <label className="text-white/70 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText size={14} className="text-rose-400" />
+                  Tam Metin (İçerik)
+                </label>
+                <span className="font-mono text-[11px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
+                  {wordCount} kelime · {charCount} karakter · ~{estimatedReadMinutes} dk okuma
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Genişlet / Tam Ekran Yazım Butonu */}
+                <button
+                  type="button"
+                  onClick={() => onOpenZenMode(index)}
+                  className="flex items-center gap-1.5 text-xs font-mono text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-xs"
+                  title="Geniş Ekran / Odaklanma Modu (Dikkatsiz Yazım)"
+                >
+                  <Maximize2 size={13} className="text-rose-400" />
+                  <span>Tam Ekran Yaz</span>
+                </button>
+
+                {/* Yanında Hızlı Kaydet & Yayınla Butonu */}
+                <SaveButton
+                  status={saveStatus}
+                  onClick={onSave}
+                  label="Kaydet & Yayınla"
+                />
+              </div>
+            </div>
+
+            {/* Geniş, Rahat ve Yüksek Kontrastlı Metin Editörü */}
+            <div className="relative">
+              <textarea
+                value={writing.content || ""}
+                onChange={(e) => onUpdate(index, "content", e.target.value)}
+                rows={14}
+                placeholder="Yazının tüm metnini buraya girin... (Denemeler, düşünceler, atölye notları)"
+                className="w-full bg-black/40 border border-white/15 focus:border-rose-500/60 focus:ring-2 focus:ring-rose-500/20 rounded-2xl p-4 md:p-5 text-white/95 text-sm md:text-base placeholder:text-white/20 outline-none transition-all duration-200 resize-y leading-relaxed font-sans min-h-[300px] md:min-h-[380px] shadow-inner"
+              />
+            </div>
+          </div>
         </div>
       )}
     </Reorder.Item>
@@ -306,6 +422,7 @@ export default function WritingsEditor() {
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [pendingIdx, setPendingIdx] = useState(null);
+  const [zenIdx, setZenIdx] = useState(null);
 
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
@@ -511,6 +628,9 @@ export default function WritingsEditor() {
             uploading={uploading}
             fileInputRef={fileInputRef}
             setPendingIdx={setPendingIdx}
+            onSave={save}
+            saveStatus={saveStatus}
+            onOpenZenMode={(i) => setZenIdx(i)}
           />
         ))}
       </Reorder.Group>
@@ -539,6 +659,18 @@ export default function WritingsEditor() {
             update(adjustState.targetIdx, "image", newUrl);
           }
         }}
+      />
+
+      {/* Tam Ekran Odaklanma / Zen Yazım Modalı */}
+      <ZenWritingModal
+        isOpen={zenIdx !== null}
+        onClose={() => setZenIdx(null)}
+        writing={zenIdx !== null ? writings[zenIdx] : null}
+        onUpdate={(key, value) => {
+          if (zenIdx !== null) update(zenIdx, key, value);
+        }}
+        saveStatus={saveStatus}
+        onSave={save}
       />
     </div>
   );
