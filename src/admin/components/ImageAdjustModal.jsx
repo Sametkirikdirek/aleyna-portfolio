@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Crop, Scissors, Maximize2 } from "lucide-react";
+import { X, RefreshCw, Crop, Scissors, Maximize2, Trash2 } from "lucide-react";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 
 /**
@@ -17,6 +17,8 @@ export default function ImageAdjustModal({
   onClose,
   imageUrl,
   onSave,
+  onRemove,
+  removeLabel = "Fotoğrafı Kaldır",
   title = "Görsel Kırpma & Hizalama",
 }) {
   const imgRef = useRef(null);
@@ -399,6 +401,17 @@ export default function ImageAdjustModal({
               >
                 <RefreshCw size={13} /> Sıfırla
               </button>
+
+              {onRemove && (
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  className="px-3.5 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ml-1"
+                  title="Fotoğrafı kaldır ve varsayılana dön"
+                >
+                  <Trash2 size={13} className="text-red-400" /> {removeLabel}
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

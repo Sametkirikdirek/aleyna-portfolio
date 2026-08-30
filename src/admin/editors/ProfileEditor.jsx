@@ -394,6 +394,25 @@ export default function ProfileEditor() {
             updateHeroCard(adjustState.targetIdx, "imgUrl", newCroppedUrl);
           }
         }}
+        onRemove={
+          adjustState.targetType === "avatar"
+            ? () => {
+                setConfirmModal({
+                  isOpen: true,
+                  title: "Profil Fotoğrafını Kaldır?",
+                  description:
+                    "Mevcut profil fotoğrafınız kaldırılacak ve sitede varsayılan rozet avatarı gösterilecektir.",
+                  confirmText: "Evet, Fotoğrafı Kaldır",
+                  variant: "danger",
+                  onConfirm: () => {
+                    setField("avatar", "");
+                    setAdjustState((prev) => ({ ...prev, isOpen: false }));
+                  },
+                });
+              }
+            : undefined
+        }
+        removeLabel="Fotoğrafı Kaldır"
       />
 
       {/* Temel Bilgiler & Profil Fotoğrafı */}
@@ -450,34 +469,13 @@ export default function ProfileEditor() {
                   <Upload size={14} /> Görsel Yükle
                 </button>
                 {form.avatar && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
-                      className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-                    >
-                      <Scissors size={14} className="text-rose-400" /> Fotoğrafı Hizala
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConfirmModal({
-                          isOpen: true,
-                          title: "Profil Fotoğrafını Kaldır?",
-                          description: "Mevcut profil fotoğrafınız kaldırılacak ve sitede varsayılan rozet avatarı gösterilecektir.",
-                          confirmText: "Evet, Fotoğrafı Kaldır",
-                          variant: "danger",
-                          onConfirm: () => {
-                            setField("avatar", "");
-                          },
-                        });
-                      }}
-                      className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/25 rounded-xl px-3.5 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-                      title="Mevcut profil fotoğrafını kaldır ve varsayılana dön"
-                    >
-                      <Trash2 size={13} className="text-red-400" /> Fotoğrafı Kaldır
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
+                    className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                  >
+                    <Scissors size={14} className="text-rose-400" /> Fotoğrafı Hizala
+                  </button>
                 )}
               </div>
             </div>
@@ -485,14 +483,40 @@ export default function ProfileEditor() {
             {/* Son Profil Fotoğrafları Geçmişi (En fazla 9 adet) */}
             {form.avatarHistory && form.avatarHistory.length > 0 && (
               <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="text-xs font-mono font-semibold text-white/80 flex items-center gap-1.5">
                     <span>Son Profil Fotoğrafları (Geçmiş):</span>
                     <span className="text-[10px] text-white/40 font-normal">({form.avatarHistory.length}/9)</span>
                   </p>
-                  <span className="text-[10px] font-mono text-white/40">
-                    Tek tıkla aktif yapabilirsiniz
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono text-white/40 hidden sm:inline">
+                      Tek tıkla aktif yapabilirsiniz
+                    </span>
+                    {form.avatarHistory.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmModal({
+                            isOpen: true,
+                            title: "Fotoğraf Geçmişini Temizle?",
+                            description: "Geçmişte kaydedilmiş eski profil fotoğrafları silinecektir.",
+                            confirmText: "Geçmişi Temizle",
+                            variant: "danger",
+                            onConfirm: () => {
+                              setForm((prev) => ({
+                                ...prev,
+                                avatarHistory: prev.avatar ? [prev.avatar] : [],
+                              }));
+                            },
+                          });
+                        }}
+                        className="text-[11px] font-mono text-red-400/80 hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1"
+                        title="Tüm eski profil fotoğrafları geçmişini temizle"
+                      >
+                        <Trash2 size={11} /> Geçmişi Temizle
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   {form.avatarHistory.map((histUrl, hIdx) => {
@@ -513,26 +537,30 @@ export default function ProfileEditor() {
                           alt={`Profil ${hIdx + 1}`}
                           className="w-full h-full object-cover group-hover/hist:scale-105 transition-transform"
                         />
-                        {isCurrent ? (
+                        {isCurrent && (
                           <div className="absolute inset-0 bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-white text-[11px] font-bold">
                             ✓
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setForm((prev) => ({
-                                ...prev,
-                                avatarHistory: (prev.avatarHistory || []).filter((_, i) => i !== hIdx),
-                              }));
-                            }}
-                            className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-black/75 hover:bg-rose-600 text-white flex items-center justify-center text-[8px] opacity-0 group-hover/hist:opacity-100 transition-opacity cursor-pointer"
-                            title="Geçmişten Kaldır"
-                          >
-                            ✕
-                          </button>
                         )}
+                        {/* Geçmişten Kaldırma Butonu */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setForm((prev) => {
+                              const nextHist = (prev.avatarHistory || []).filter((_, i) => i !== hIdx);
+                              return {
+                                ...prev,
+                                avatar: isCurrent ? (nextHist[0] || "") : prev.avatar,
+                                avatarHistory: nextHist,
+                              };
+                            });
+                          }}
+                          className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 hover:bg-rose-600 text-white flex items-center justify-center text-[9px] opacity-0 group-hover/hist:opacity-100 transition-opacity cursor-pointer shadow-sm"
+                          title="Bu fotoğrafı geçmişten sil"
+                        >
+                          ✕
+                        </button>
                       </div>
                     );
                   })}
