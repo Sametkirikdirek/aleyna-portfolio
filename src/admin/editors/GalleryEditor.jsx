@@ -397,8 +397,8 @@ export default function GalleryEditor() {
                 setShowSearchPopup(true);
               }}
               onFocus={() => setShowSearchPopup(true)}
-              placeholder="Eser adı, teknik veya yılda ara... (Örn: Yağlı Boya, 2026)"
-              className="w-full bg-[#161722] border border-white/20 hover:border-white/35 focus:border-rose-500 rounded-xl pl-10 pr-24 py-2.5 text-xs sm:text-sm font-sans font-medium text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-all shadow-inner"
+              placeholder="Eser adı, teknik veya yıl ara..."
+              className="w-full bg-[#161722] border border-white/20 hover:border-white/35 focus:border-rose-500 rounded-xl pl-10 pr-10 focus:pr-24 py-2.5 text-xs sm:text-sm font-sans font-medium text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-all shadow-inner"
             />
 
             {/* Arama İçi Rozet & Temizle */}
