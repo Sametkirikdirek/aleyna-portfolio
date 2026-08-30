@@ -481,6 +481,7 @@ export default function WritingsEditor() {
   });
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const isInitialMount = useRef(true);
+  const isDraftLoadedRef = useRef(false);
 
   // Modals state
   const [confirmDelete, setConfirmDelete] = useState({
@@ -497,6 +498,35 @@ export default function WritingsEditor() {
     targetIdx: null,
   });
 
+  const applyDraft = (customDraft = null) => {
+    let draft = customDraft;
+    if (!draft) {
+      const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedDraftStr) {
+        try {
+          draft = JSON.parse(savedDraftStr);
+        } catch (e) {
+          console.error("Draft parse error", e);
+        }
+      }
+    }
+    if (draft && draft.writings && draft.writings.length > 0) {
+      setWritings(draft.writings);
+      if (draft.headerTag !== undefined) setHeaderTag(draft.headerTag);
+      if (draft.headerTitle !== undefined) setHeaderTitle(draft.headerTitle);
+      if (draft.headerSubtitle !== undefined) setHeaderSubtitle(draft.headerSubtitle);
+      setDraftInfo({
+        hasDraft: true,
+        savedAt: draft.savedAt || "Az önce",
+        isSaving: false,
+      });
+      // Açık kartı ilk yazıya odakla ki kullanıcı metnini doğrudan görsün
+      setOpenIdx(0);
+      setShowDraftBanner(false);
+      isDraftLoadedRef.current = true;
+    }
+  };
+
   // 1. Initial Mount: Check if a local draft exists in localStorage
   useEffect(() => {
     const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
@@ -504,18 +534,9 @@ export default function WritingsEditor() {
       try {
         const savedDraft = JSON.parse(savedDraftStr);
         if (savedDraft && savedDraft.writings && savedDraft.writings.length > 0) {
-          setWritings(savedDraft.writings);
-          if (savedDraft.headerTag) setHeaderTag(savedDraft.headerTag);
-          if (savedDraft.headerTitle) setHeaderTitle(savedDraft.headerTitle);
-          if (savedDraft.headerSubtitle) setHeaderSubtitle(savedDraft.headerSubtitle);
-          if (savedDraft.savedAt) {
-            setDraftInfo({
-              hasDraft: true,
-              savedAt: savedDraft.savedAt,
-              isSaving: false,
-            });
-            setShowDraftBanner(true);
-          }
+          applyDraft(savedDraft);
+          setShowDraftBanner(true);
+          return;
         }
       } catch (e) {
         console.error("Draft recovery error", e);
@@ -523,19 +544,17 @@ export default function WritingsEditor() {
     }
   }, []);
 
-  // 2. Load from Firestore if no draft was recovered
+  // 2. Load from Firestore ONLY if no draft is active
   useEffect(() => {
-    if (data) {
+    if (data && !isDraftLoadedRef.current) {
       const savedDraftStr = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (!savedDraftStr) {
-        if (writings.length === 0 && data.personalWritings) {
+        if (data.personalWritings) {
           setWritings(data.personalWritings);
         }
         if (data.tag !== undefined) setHeaderTag(data.tag);
         if (data.title !== undefined) setHeaderTitle(data.title);
         if (data.subtitle !== undefined) setHeaderSubtitle(data.subtitle);
-      } else if (writings.length === 0 && data.personalWritings) {
-        setWritings(data.personalWritings);
       }
     }
   }, [data]);
@@ -574,11 +593,12 @@ export default function WritingsEditor() {
           savedAt: timeStr,
           isSaving: false,
         });
+        isDraftLoadedRef.current = true;
       } catch (e) {
         console.error("Auto-save to localStorage failed", e);
         setDraftInfo((prev) => ({ ...prev, isSaving: false }));
       }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [writings, headerTag, headerTitle, headerSubtitle]);
@@ -612,6 +632,7 @@ export default function WritingsEditor() {
 
       // Clean local draft since it's now officially published in the cloud
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+      isDraftLoadedRef.current = false;
       setDraftInfo({
         hasDraft: false,
         savedAt: null,
@@ -654,6 +675,7 @@ export default function WritingsEditor() {
   };
 
   const revertToPublished = () => {
+    isDraftLoadedRef.current = false;
     if (data?.personalWritings) {
       setWritings(data.personalWritings);
       if (data.tag !== undefined) setHeaderTag(data.tag);
@@ -663,6 +685,7 @@ export default function WritingsEditor() {
     localStorage.removeItem(DRAFT_STORAGE_KEY);
     setDraftInfo({ hasDraft: false, savedAt: null, isSaving: false });
     setShowDraftBanner(false);
+    setOpenIdx(0);
   };
 
   const update = (idx, key, value) => {
@@ -804,7 +827,7 @@ export default function WritingsEditor() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => setShowDraftBanner(false)}
+              onClick={() => applyDraft()}
               className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-bold border border-emerald-500/30 transition-colors cursor-pointer"
             >
               Taslakla Devam Et ✓
