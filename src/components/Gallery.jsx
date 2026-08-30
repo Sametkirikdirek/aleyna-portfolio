@@ -269,10 +269,10 @@ export default function Gallery() {
   const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
   const [items, setItems] = useState([]);
 
-  // Use artworks directly to preserve Admin panel's exact custom ordering
+  // Use artworks directly to preserve Admin panel's exact custom ordering, filtering out hidden items for visitors
   const mergedArtworks = useMemo(() => {
-    if (!artworks || artworks.length === 0) return defaultPaintings;
-    return artworks;
+    const list = !artworks || artworks.length === 0 ? defaultPaintings : artworks;
+    return list.filter((item) => item.hidden !== true && item.published !== false);
   }, [artworks]);
 
   // Local Storage Visitor Likes Tracker

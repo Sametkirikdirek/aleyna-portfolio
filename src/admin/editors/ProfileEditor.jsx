@@ -55,6 +55,11 @@ export default function ProfileEditor() {
       setForm({
         name: data.name || "",
         avatar: data.avatar || "",
+        avatarHistory: Array.isArray(data.avatarHistory)
+          ? data.avatarHistory
+          : data.avatar
+          ? [data.avatar]
+          : [],
         tagline: data.tagline || "",
         bio: data.bio || "",
         location: data.location || "",
@@ -80,6 +85,24 @@ export default function ProfileEditor() {
       });
     }
   }, [data, form]);
+
+  const updateAvatarWithHistory = (newAvatarUrl) => {
+    if (!newAvatarUrl) return;
+    setForm((prev) => {
+      const existingHistory = Array.isArray(prev?.avatarHistory)
+        ? prev.avatarHistory
+        : prev?.avatar
+        ? [prev.avatar]
+        : [];
+      const filteredHistory = existingHistory.filter((url) => url !== newAvatarUrl);
+      const updatedHistory = [newAvatarUrl, ...filteredHistory].slice(0, 3);
+      return {
+        ...prev,
+        avatar: newAvatarUrl,
+        avatarHistory: updatedHistory,
+      };
+    });
+  };
 
   const save = async () => {
     setSaveStatus("saving");
@@ -188,10 +211,13 @@ export default function ProfileEditor() {
   };
 
   const removeExtendedBio = (idx) => {
+    const item = form.extendedBio?.[idx];
     setConfirmModal({
       isOpen: true,
-      title: "Biyografi Paragrafını Sil?",
-      description: "Bu biyografi paragrafı hakkımda sayfasından kaldırılacaktır.",
+      title: "Biyografi Başlığını Sil?",
+      description: item?.title
+        ? `"${item.title}" başlıklı biyografi paragrafı silinecektir.`
+        : "Bu biyografi paragrafı silinecektir.",
       confirmText: "Evet, Sil",
       variant: "danger",
       onConfirm: () => {
@@ -203,29 +229,68 @@ export default function ProfileEditor() {
     });
   };
 
+  const updateRole = (idx, value) => {
+    setForm((prev) => {
+      const roles = [...prev.roles];
+      roles[idx] = value;
+      return { ...prev, roles };
+    });
+  };
+
+  const addRole = () => {
+    setForm((prev) => ({
+      ...prev,
+      roles: [...prev.roles, ""],
+    }));
+  };
+
+  const removeRole = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      roles: prev.roles.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const updateSkill = (idx, value) => {
+    setForm((prev) => {
+      const skills = [...prev.skills];
+      skills[idx] = value;
+      return { ...prev, skills };
+    });
+  };
+
+  const addSkill = () => {
+    setForm((prev) => ({
+      ...prev,
+      skills: [...prev.skills, ""],
+    }));
+  };
+
+  const removeSkill = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== idx),
+    }));
+  };
+
   const updateTreeConfig = (key, value) => {
     setForm((prev) => ({
       ...prev,
       treeConfig: {
-        ...(prev.treeConfig || {
-          enabled: true,
-          leafColors: ["#e11d48", "#be123c", "#f43f5e", "#dc2626", "#fda4af"],
-          leafCount: 35,
-          speed: 1,
-        }),
+        ...(prev.treeConfig || {}),
         [key]: value,
       },
     }));
   };
 
-  const addLeafColor = () => {
+  const addLeafColor = (color = "#f43f5e") => {
     setForm((prev) => {
-      const currentColors = prev.treeConfig?.leafColors || ["#e11d48", "#be123c", "#f43f5e", "#dc2626"];
+      const leafColors = [...(prev.treeConfig?.leafColors || []), color];
       return {
         ...prev,
         treeConfig: {
           ...(prev.treeConfig || {}),
-          leafColors: [...currentColors, "#f43f5e"],
+          leafColors,
         },
       };
     });
@@ -276,7 +341,7 @@ export default function ProfileEditor() {
     setUploadingAvatar(true);
     try {
       const url = await uploadToCloudinary(file, "profile");
-      setField("avatar", url);
+      updateAvatarWithHistory(url);
     } catch (err) {
       console.error(err);
     } finally {
@@ -301,6 +366,19 @@ export default function ProfileEditor() {
         onSave={save}
       />
 
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((p) => ({ ...p, isOpen: false }))}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal((p) => ({ ...p, isOpen: false }));
+        }}
+      />
+
       {/* Image Adjust Modal */}
       <ImageAdjustModal
         isOpen={adjustState.isOpen}
@@ -310,7 +388,7 @@ export default function ProfileEditor() {
         title={adjustState.title}
         onSave={(newCroppedUrl) => {
           if (adjustState.targetType === "avatar") {
-            setField("avatar", newCroppedUrl);
+            updateAvatarWithHistory(newCroppedUrl);
           } else if (adjustState.targetType === "heroCard" && adjustState.targetIdx !== null) {
             updateHeroCard(adjustState.targetIdx, "imgUrl", newCroppedUrl);
           }
@@ -322,7 +400,7 @@ export default function ProfileEditor() {
         <SectionTitle>Temel Bilgiler & Profil Fotoğrafı (Avatar)</SectionTitle>
         <div className="flex flex-col md:flex-row gap-6 items-start mb-6 pb-6 border-b border-white/8">
           {/* Avatar Çerçevesi (Tıklanınca Fotoğraf Ayarlama Modalı Açılır) */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center">
             <div
               className="group relative w-28 h-44 rounded-full border-2 border-rose-500/40 hover:border-rose-400 cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-white/[0.03] transition-all shadow-xl hover:shadow-[0_0_25px_rgba(244,63,94,0.35)]"
               onClick={() => {
@@ -338,7 +416,8 @@ export default function ProfileEditor() {
                 <>
                   <img src={form.avatar} alt={form.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-mono gap-1">
-                    <span>✂️ Hizala & Kırp</span>
+                    <Scissors size={14} className="text-rose-400" />
+                    <span>Hizala & Kırp</span>
                   </div>
                 </>
               ) : (
@@ -353,32 +432,73 @@ export default function ProfileEditor() {
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-rose-300/80 font-mono">Çerçeveye Tıkla: Hizala ✂️</span>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-white/90">Anasayfa Profil Fotoğrafı (Rozet Avatar)</p>
-            <p className="text-xs text-white/40 leading-relaxed max-w-md">
-              <strong className="text-white/80">"Görsel Yükle"</strong> butonuna basarak yeni bir fotoğraf seçebilir, yüklenen <strong className="text-white/80">fotoğraf çerçevesine tıklayarak</strong> fotoğrafı dilediğiniz gibi kırpıp dikey/yatay odak noktalarını ayarlayabilirsiniz!
-            </p>
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30 rounded-lg px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
-              >
-                <Upload size={14} /> Görsel Yükle
-              </button>
-              {form.avatar && (
+          <div className="space-y-4 flex-1">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-white/90">Anasayfa Profil Fotoğrafı (Rozet Avatar)</p>
+              <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
-                  className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-lg px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="text-xs bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
                 >
-                  ✂️ Fotoğrafı Hizala
+                  <Upload size={14} /> Görsel Yükle
                 </button>
-              )}
+                {form.avatar && (
+                  <button
+                    type="button"
+                    onClick={() => openAdjustModal(form.avatar, "avatar", null, "capsule", "Profil Fotoğrafı Hizala & Kırp")}
+                    className="text-xs bg-white/5 text-white/80 hover:bg-white/10 border border-white/15 rounded-xl px-4 py-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
+                  >
+                    <Scissors size={14} className="text-rose-400" /> Fotoğrafı Hizala
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Son 3 Profil Fotoğrafı (Hızlı Değişim Vitrini) */}
+            {form.avatarHistory && form.avatarHistory.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-mono font-semibold text-white/80">
+                    Son Profil Fotoğrafları (Geçmiş):
+                  </p>
+                  <span className="text-[10px] font-mono text-white/40">
+                    Tek tıkla aktif yapabilirsiniz
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {form.avatarHistory.map((histUrl, hIdx) => {
+                    const isCurrent = form.avatar === histUrl;
+                    return (
+                      <div
+                        key={histUrl || hIdx}
+                        onClick={() => setField("avatar", histUrl)}
+                        className={`group/hist relative w-14 h-20 rounded-full cursor-pointer overflow-hidden border-2 transition-all duration-200 shadow-md ${
+                          isCurrent
+                            ? "border-rose-500 ring-2 ring-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.35)] scale-105"
+                            : "border-white/15 hover:border-white/40 opacity-60 hover:opacity-100"
+                        }`}
+                        title={isCurrent ? "Şu anki aktif profil fotoğrafı" : "Bu fotoğrafı aktif yap"}
+                      >
+                        <img
+                          src={histUrl}
+                          alt={`Profil ${hIdx + 1}`}
+                          className="w-full h-full object-cover group-hover/hist:scale-105 transition-transform"
+                        />
+                        {isCurrent && (
+                          <div className="absolute inset-0 bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-white text-[11px] font-bold">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <input
               ref={avatarInputRef}
               type="file"

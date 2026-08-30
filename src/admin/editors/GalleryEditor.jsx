@@ -16,6 +16,8 @@ import {
   Edit3,
   Palette,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
@@ -44,7 +46,7 @@ export default function GalleryEditor() {
 
   // Search & Filter state in Admin
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("all"); // 'all' | 'monthly' | 'spotlight'
+  const [filterType, setFilterType] = useState("all"); // 'all' | 'monthly' | 'spotlight' | 'hidden'
 
   // Artwork being edited in popup modal (original index in `artworks` array)
   const [editingIdx, setEditingIdx] = useState(null);
@@ -92,6 +94,10 @@ export default function GalleryEditor() {
     () => artworks.filter((a) => a.featuredInMonthly).length,
     [artworks]
   );
+  const hiddenCount = useMemo(
+    () => artworks.filter((a) => a.hidden === true || a.published === false).length,
+    [artworks]
+  );
 
   // Filtered artworks for the visual grid
   const filteredArtworks = useMemo(() => {
@@ -100,6 +106,7 @@ export default function GalleryEditor() {
       .filter((art) => {
         if (filterType === "monthly" && !art.featuredInMonthly) return false;
         if (filterType === "spotlight" && !art.featuredInSpotlight) return false;
+        if (filterType === "hidden" && !(art.hidden === true || art.published === false)) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const matchTitle = art.title && art.title.toLowerCase().includes(q);
@@ -373,6 +380,16 @@ export default function GalleryEditor() {
           >
             🏆 Öne Çıkanlar ({spotlightCount}/5)
           </button>
+          <button
+            onClick={() => setFilterType("hidden")}
+            className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+              filterType === "hidden"
+                ? "bg-amber-500/25 text-amber-300 border-amber-500/60 font-bold"
+                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+            }`}
+          >
+            <EyeOff size={12} /> Gizli Eserler ({hiddenCount})
+          </button>
         </div>
 
         {/* Action Buttons */}
@@ -398,7 +415,7 @@ export default function GalleryEditor() {
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-mono text-white/50 px-1">
           <span>
-            💡 <strong>İpucu:</strong> Bir esere tıklayarak detaylarını düzenleyin. ⬅️ ➡️ butonlarıyla eserlerin galerideki sırasını anında değiştirin.
+            💡 <strong>İpucu:</strong> Bir esere tıklayarak detaylarını düzenleyin. ⬅️ ➡️ butonlarıyla eserlerin sırasını değiştirin, Göz butonuyla gizleyip yayınlayın.
           </span>
           <span>{filteredArtworks.length} eser listeleniyor</span>
         </div>
@@ -413,6 +430,7 @@ export default function GalleryEditor() {
               const origIdx = art.originalIndex;
               const isFirst = origIdx === 0;
               const isLast = origIdx === artworks.length - 1;
+              const isHidden = art.hidden === true || art.published === false;
 
               return (
                 <div
@@ -420,6 +438,8 @@ export default function GalleryEditor() {
                   className={`group relative rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden bg-[#181920] ${
                     editingIdx === origIdx
                       ? "border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.35)] ring-2 ring-rose-500/40"
+                      : isHidden
+                      ? "border-amber-500/30 bg-[#14151a]"
                       : "border-white/10 hover:border-white/30 hover:shadow-lg"
                   }`}
                 >
@@ -430,6 +450,29 @@ export default function GalleryEditor() {
                     </span>
 
                     <div className="flex items-center gap-1">
+                      {/* Quick Visibility Toggle */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateArtwork(origIdx, "hidden", !isHidden);
+                          updateArtwork(origIdx, "published", isHidden);
+                        }}
+                        className={`p-1 rounded-md border transition-all cursor-pointer flex items-center gap-1 text-[10px] font-mono font-bold ${
+                          isHidden
+                            ? "bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-emerald-500/20 hover:text-emerald-300"
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-amber-500/20 hover:text-amber-300"
+                        }`}
+                        title={
+                          isHidden
+                            ? "Bu eser sitede GİZLİ. Ziyaretçilere açmak için tıklayın."
+                            : "Bu eser sitede YAYINDA. Gizlemek için tıklayın."
+                        }
+                      >
+                        {isHidden ? <EyeOff size={11} /> : <Eye size={11} />}
+                        <span>{isHidden ? "Gizli" : "Yayında"}</span>
+                      </button>
+
                       {art.featuredInMonthly && (
                         <span className="text-[11px]" title="Ayın Tuvali">
                           🔥
@@ -451,7 +494,9 @@ export default function GalleryEditor() {
                   {/* Thumbnail Image — Click to Edit */}
                   <div
                     onClick={() => setEditingIdx(origIdx)}
-                    className="relative aspect-[3/4] mx-2.5 rounded-xl overflow-hidden bg-black/40 border border-white/5 cursor-pointer group/thumb"
+                    className={`relative aspect-[3/4] mx-2.5 rounded-xl overflow-hidden bg-black/40 border border-white/5 cursor-pointer group/thumb ${
+                      isHidden ? "opacity-65 grayscale-[35%]" : ""
+                    }`}
                     title="Düzenlemek için tıklayın"
                   >
                     {art.image ? (
@@ -560,6 +605,50 @@ export default function GalleryEditor() {
 
             {/* Modal Content */}
             <div className="space-y-5">
+              {/* Görünürlük & Yayın Durumu Paneli */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/10">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2.5 rounded-xl border ${
+                      currentEditingArt.hidden
+                        ? "bg-amber-500/15 border-amber-500/25 text-amber-300"
+                        : "bg-emerald-500/15 border-emerald-500/25 text-emerald-300"
+                    }`}
+                  >
+                    {currentEditingArt.hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {currentEditingArt.hidden
+                        ? "Ziyaretçilere Gizli (Taslak Modu)"
+                        : "Sitede Yayında (Ziyaretçilere Açık)"}
+                    </p>
+                    <p className="text-xs text-white/50 mt-0.5">
+                      {currentEditingArt.hidden
+                        ? "Bu eser yalnızca admin panelinde görünür; sitedeki galeri ziyaretçilerine gösterilmez."
+                        : "Galeriyi (/gallery) gezen tüm ziyaretçiler bu eseri inceleyebilir."}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isCurrentlyHidden =
+                      currentEditingArt.hidden === true ||
+                      currentEditingArt.published === false;
+                    updateArtwork(editingIdx, "hidden", !isCurrentlyHidden);
+                    updateArtwork(editingIdx, "published", isCurrentlyHidden);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                    currentEditingArt.hidden
+                      ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/30 shadow-md shadow-emerald-950/30"
+                      : "bg-white/10 hover:bg-amber-500/20 text-white/70 hover:text-amber-300 border-white/10 hover:border-amber-500/30"
+                  }`}
+                >
+                  {currentEditingArt.hidden ? "Sitede Yayınla" : "Siteden Gizle"}
+                </button>
+              </div>
               {/* Image and Upload Controls */}
               <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl border border-white/10 bg-white/[0.02]">
                 <div
