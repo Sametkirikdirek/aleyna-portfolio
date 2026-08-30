@@ -5,7 +5,7 @@ import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
-  EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
+  EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton, ConfirmModal,
 } from "../components/AdminUI";
 
 export default function ProfileEditor() {
@@ -28,6 +28,14 @@ export default function ProfileEditor() {
     targetIdx: null,
     aspectRatio: "capsule",
     title: "Profil Fotoğrafı Ayarla & Kırp",
+  });
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    confirmText: "Evet, Sil",
+    variant: "danger",
+    onConfirm: () => {},
   });
 
   const openAdjustModal = (imageUrl, targetType, targetIdx = null, aspectRatio = "capsule", title = "Fotoğrafı Kırp & Hizala") => {
@@ -77,9 +85,12 @@ export default function ProfileEditor() {
     setSaveStatus("saving");
     try {
       await setContent("profile", form);
+      localStorage.setItem("portfolio_cache_profile", JSON.stringify(form));
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -105,11 +116,21 @@ export default function ProfileEditor() {
       ],
     }));
 
-  const removeExp = (idx) =>
-    setForm((prev) => ({
-      ...prev,
-      experiences: prev.experiences.filter((_, i) => i !== idx),
-    }));
+  const removeExp = (idx) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Deneyimi Sil?",
+      description: "Bu kariyer deneyimi profilinizden tamamen kaldırılacaktır.",
+      confirmText: "Evet, Sil",
+      variant: "danger",
+      onConfirm: () => {
+        setForm((prev) => ({
+          ...prev,
+          experiences: prev.experiences.filter((_, i) => i !== idx),
+        }));
+      },
+    });
+  };
 
   const updateHeroCard = (idx, key, value) => {
     setForm((prev) => {
@@ -130,10 +151,22 @@ export default function ProfileEditor() {
   };
 
   const removeHeroCard = (idx) => {
-    setForm((prev) => ({
-      ...prev,
-      heroCards: prev.heroCards.filter((_, i) => i !== idx),
-    }));
+    const card = form.heroCards?.[idx];
+    setConfirmModal({
+      isOpen: true,
+      title: "Hero Kartını Sil?",
+      description: card?.title
+        ? `"${card.title}" adlı 3D kart anasayfa vitrininden kaldırılacaktır.`
+        : "Bu 3D kart anasayfa vitrininden kaldırılacaktır.",
+      confirmText: "Evet, Sil",
+      variant: "danger",
+      onConfirm: () => {
+        setForm((prev) => ({
+          ...prev,
+          heroCards: prev.heroCards.filter((_, i) => i !== idx),
+        }));
+      },
+    });
   };
 
   const updateExtendedBio = (idx, key, value) => {
@@ -155,10 +188,19 @@ export default function ProfileEditor() {
   };
 
   const removeExtendedBio = (idx) => {
-    setForm((prev) => ({
-      ...prev,
-      extendedBio: (prev.extendedBio || []).filter((_, i) => i !== idx),
-    }));
+    setConfirmModal({
+      isOpen: true,
+      title: "Biyografi Paragrafını Sil?",
+      description: "Bu biyografi paragrafı hakkımda sayfasından kaldırılacaktır.",
+      confirmText: "Evet, Sil",
+      variant: "danger",
+      onConfirm: () => {
+        setForm((prev) => ({
+          ...prev,
+          extendedBio: (prev.extendedBio || []).filter((_, i) => i !== idx),
+        }));
+      },
+    });
   };
 
   const updateTreeConfig = (key, value) => {
@@ -711,6 +753,17 @@ export default function ProfileEditor() {
       <div className="flex justify-end">
         <SaveButton status={saveStatus} onClick={save} />
       </div>
+
+      {/* Tatlı Silme Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }

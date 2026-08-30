@@ -16,7 +16,7 @@ import { useTimeline } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 import ImageAdjustModal from "../components/ImageAdjustModal";
-import { EditorHeader } from "../components/AdminUI";
+import { EditorHeader, ConfirmModal } from "../components/AdminUI";
 
 export default function TimelineEditor() {
   const { data, loading } = useTimeline();
@@ -36,6 +36,15 @@ export default function TimelineEditor() {
 
   // Lightbox Preview Modal State
   const [previewImage, setPreviewImage] = useState(null);
+  // Confirm Modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    confirmText: "Evet, Sil",
+    variant: "danger",
+    onConfirm: () => {},
+  });
 
   const fileInputRef = useRef();
 
@@ -60,8 +69,8 @@ export default function TimelineEditor() {
     try {
       const payload = {
         images,
-        idleDelay: Math.round(idleDelay * 1000),   // store as ms
-        autoPlaySpeed: parseFloat(autoPlaySpeed.toFixed(2)),
+        idleDelay: Math.round(Number(idleDelay) * 1000),   // store as ms
+        autoPlaySpeed: Number(autoPlaySpeed),
       };
       await setContent("timeline", payload);
       localStorage.setItem("portfolio_cache_timeline", JSON.stringify(payload));
@@ -109,7 +118,7 @@ export default function TimelineEditor() {
   };
 
   // Tekil Görsel Sil
-  const removeImage = (idx) => {
+  const executeRemoveImage = (idx) => {
     const target = images[idx];
     setImages((prev) => prev.filter((_, i) => i !== idx));
     if (target?.id) {
@@ -117,33 +126,52 @@ export default function TimelineEditor() {
     }
   };
 
+  const removeImage = (idx) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Görseli Silmek İstiyor musunuz?",
+      description: "Bu fotoğraf Zaman Yolculuğu galerisinden tamamen kaldırılacaktır.",
+      confirmText: "Evet, Sil",
+      variant: "danger",
+      onConfirm: () => executeRemoveImage(idx),
+    });
+  };
+
   // Seçilenleri Toplu Sil
-  const removeSelected = () => {
-    if (selectedIds.length === 0) return;
-    if (
-      !window.confirm(
-        `Seçili ${selectedIds.length} adet görseli silmek istediğinize emin misiniz?`
-      )
-    ) {
-      return;
-    }
+  const executeRemoveSelected = () => {
     const toDelete = new Set(selectedIds);
     setImages((prev) => prev.filter((img) => !toDelete.has(img.id)));
     setSelectedIds([]);
   };
 
+  const removeSelected = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "Seçilen Görselleri Sil?",
+      description: `Seçtiğiniz ${selectedIds.length} adet görsel Zaman Yolculuğu galerisinden silinecektir.`,
+      confirmText: "Seçilenleri Sil",
+      variant: "danger",
+      onConfirm: executeRemoveSelected,
+    });
+  };
+
   // Tümünü Temizle
-  const removeAll = () => {
-    if (images.length === 0) return;
-    if (
-      !window.confirm(
-        "Zaman Yolculuğundaki TÜM görselleri silmek istediğinize emin misiniz?"
-      )
-    ) {
-      return;
-    }
+  const executeRemoveAll = () => {
     setImages([]);
     setSelectedIds([]);
+  };
+
+  const removeAll = () => {
+    if (images.length === 0) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "Tüm Görselleri Sil?",
+      description: "Zaman Yolculuğundaki tüm fotoğraflar listeden silinecektir.",
+      confirmText: "Tümünü Sil",
+      variant: "danger",
+      onConfirm: executeRemoveAll,
+    });
   };
 
   // Seçim Toggle
@@ -509,6 +537,17 @@ export default function TimelineEditor() {
             updateImageUrl(adjustState.targetIdx, newUrl);
           }
         }}
+      />
+
+      {/* ─── TATLI SİLME ONAY MODALI ─── */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
       />
     </div>
   );

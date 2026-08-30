@@ -28,6 +28,7 @@ import {
   TextInput,
   TextArea,
   SaveButton,
+  ConfirmModal,
 } from "../components/AdminUI";
 
 /**
@@ -430,6 +431,12 @@ export default function WritingsEditor() {
   const [pendingIdx, setPendingIdx] = useState(null);
   const [zenIdx, setZenIdx] = useState(null);
 
+  const [confirmDelete, setConfirmDelete] = useState({
+    isOpen: false,
+    targetIdx: null,
+    title: "",
+  });
+
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
     isOpen: false,
@@ -545,9 +552,11 @@ export default function WritingsEditor() {
   };
 
   const remove = (idx) => {
-    if (!window.confirm("Bu yazıyı silmek istediğinize emin misiniz?")) return;
-    setWritings((prev) => prev.filter((_, i) => i !== idx));
-    setOpenIdx(null);
+    setConfirmDelete({
+      isOpen: true,
+      targetIdx: idx,
+      title: writings[idx]?.title ? `"${writings[idx].title}"` : "Bu yazıyı",
+    });
   };
 
   const uploadImage = async (idx, file) => {
@@ -741,6 +750,27 @@ export default function WritingsEditor() {
         }}
         saveStatus={saveStatus}
         onSave={save}
+      />
+
+      {/* Tatlı Silme Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() =>
+          setConfirmDelete({ isOpen: false, targetIdx: null, title: "" })
+        }
+        onConfirm={() => {
+          if (confirmDelete.targetIdx !== null) {
+            setWritings((prev) =>
+              prev.filter((_, i) => i !== confirmDelete.targetIdx)
+            );
+            setOpenIdx(null);
+          }
+        }}
+        title="Bu Yazıyı Silmek İstiyor musunuz?"
+        description={`${confirmDelete.title} başlıklı yazı listenizden ve kütüphanenizden tamamen silinecektir.`}
+        confirmText="Evet, Sil"
+        cancelText="Vazgeç"
+        variant="danger"
       />
     </div>
   );

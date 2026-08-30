@@ -31,6 +31,7 @@ import {
   TextArea,
   Card,
   SaveButton,
+  ConfirmModal,
 } from "../components/AdminUI";
 
 export default function GalleryEditor() {
@@ -146,10 +147,8 @@ export default function GalleryEditor() {
     setSaveStatus("saving");
     try {
       const payload = {
-        title: headerTitle || "Tuval ve Kodun Kesişimi",
-        subtitle:
-          headerSubtitle ||
-          "Esere dokunarak hikâyesini inceleyin. Kalp ikonuna dokunarak beğeninizi iletin.",
+        title: headerTitle,
+        subtitle: headerSubtitle,
         artworks,
       };
       await setContent("gallery", payload);
@@ -164,14 +163,7 @@ export default function GalleryEditor() {
     }
   };
 
-  const resetAllLikes = async () => {
-    if (
-      !window.confirm(
-        "Tüm eserlerin beğeni sayılarını 0 yapmak istediğinize emin misiniz?"
-      )
-    ) {
-      return;
-    }
+  const executeResetAllLikes = async () => {
     const zeroed = artworks.map((art) => ({ ...art, likes: 0 }));
     setArtworks(zeroed);
     try {
@@ -184,33 +176,50 @@ export default function GalleryEditor() {
       localStorage.setItem("portfolio_cache_gallery", JSON.stringify(payload));
       await setContent("gallery", payload);
       window.dispatchEvent(new Event("portfolio_content_updated"));
-      alert("Tüm beğeni sayıları 0'a sıfırlandı!");
     } catch (err) {
       console.error("Sıfırlama hatası:", err);
     }
   };
 
+  const resetAllLikes = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Tüm Beğenileri Sıfırla?",
+      description:
+        "Galerideki tüm eserlerin beğeni sayaçları 0'a çekilecek ve canlıya kaydedilecektir.",
+      confirmText: "Evet, Sıfırla",
+      variant: "heart",
+      onConfirm: executeResetAllLikes,
+    });
+  };
+
   const updateArtwork = (idx, key, value) => {
     setArtworks((prev) => {
-      if (key === "featuredInSpotlight" && value === true) {
-        const count = prev.filter((a) => a.featuredInSpotlight).length;
-        if (count >= 5) {
-          alert("Öne Çıkanlar (Spotlight) vitrini için en fazla 5 eser seçebilirsiniz!");
-          return prev;
-        }
-      }
       const next = [...prev];
       next[idx] = { ...next[idx], [key]: value };
       return next;
     });
   };
 
-  const removeArtwork = (idx) => {
-    if (!window.confirm("Bu eseri galeriden silmek istediğinize emin misiniz?")) return;
+  const executeRemoveArtwork = (idx) => {
     setArtworks((prev) => prev.filter((_, i) => i !== idx));
     if (editingIdx === idx) {
       setEditingIdx(null);
     }
+  };
+
+  const removeArtwork = (idx) => {
+    const art = artworks[idx];
+    setConfirmModal({
+      isOpen: true,
+      title: "Bu Eseri Silmek İstiyor musunuz?",
+      description: art?.title
+        ? `"${art.title}" adlı eser galerinizden tamamen kaldırılacaktır.`
+        : "Bu eser galerinizden tamamen kaldırılacaktır.",
+      confirmText: "Evet, Sil",
+      variant: "danger",
+      onConfirm: () => executeRemoveArtwork(idx),
+    });
   };
 
   const addArtwork = () => {
@@ -790,6 +799,17 @@ export default function GalleryEditor() {
             updateArtwork(adjustState.targetIdx, "image", newUrl);
           }
         }}
+      />
+
+      {/* Tatlı Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        variant={confirmModal.variant}
       />
     </div>
   );

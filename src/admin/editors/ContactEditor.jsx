@@ -5,7 +5,7 @@ import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
 import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
-  EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
+  EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton, ConfirmModal,
 } from "../components/AdminUI";
 
 export default function ContactEditor() {
@@ -15,6 +15,11 @@ export default function ContactEditor() {
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [addingIdx, setAddingIdx] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({
+    isOpen: false,
+    targetIdx: null,
+    title: "",
+  });
 
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
@@ -32,6 +37,7 @@ export default function ContactEditor() {
           data.subtitle ||
           "İster bir tablo siparişi, ister bir yapay zeka projesi, ister sadece merhaba demek için — kapım açık. Tuval kadar net, kod kadar titiz bir iş birliği için yaz.",
         ctaText: data.ctaText || "E-POSTA GÖNDER",
+        address: data.address || "İstanbul, Türkiye",
         artworks: data.artworks || [],
       });
     }
@@ -41,9 +47,12 @@ export default function ContactEditor() {
     setSaveStatus("saving");
     try {
       await setContent("contact", form);
+      localStorage.setItem("portfolio_cache_contact", JSON.stringify(form));
+      window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -75,10 +84,20 @@ export default function ContactEditor() {
   };
 
   const removeArtwork = (idx) => {
+    setConfirmDelete({
+      isOpen: true,
+      targetIdx: idx,
+      title: form.artworks[idx]?.title ? `"${form.artworks[idx].title}"` : "Bu görseli",
+    });
+  };
+
+  const confirmRemove = () => {
+    const idx = confirmDelete.targetIdx;
     setForm((prev) => ({
       ...prev,
       artworks: prev.artworks.filter((_, i) => i !== idx),
     }));
+    setConfirmDelete({ isOpen: false, targetIdx: null, title: "" });
   };
 
   const uploadImage = async (idx, file) => {
@@ -295,6 +314,19 @@ export default function ContactEditor() {
           ))}
         </div>
       </Card>
+
+      {/* Tatlı Silme Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() =>
+          setConfirmDelete({ isOpen: false, targetIdx: null, title: "" })
+        }
+        onConfirm={confirmRemove}
+        title="Bu Görseli Silmek İstiyor musunuz?"
+        description={`${confirmDelete.title} iletişim sayfası arka plan vitrininden tamamen kaldırılacaktır.`}
+        confirmText="Evet, Sil"
+        variant="danger"
+      />
     </div>
   );
 }

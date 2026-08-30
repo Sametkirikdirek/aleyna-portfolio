@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, ExternalLink, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from "lucide-react";
 import { useAiProjects } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import {
-  EditorHeader, SectionTitle, Field, TextInput, TextArea, Card, SaveButton,
+  EditorHeader, Field, TextInput, TextArea, SaveButton, ConfirmModal,
 } from "../components/AdminUI";
 
 export default function AIProjectEditor() {
@@ -11,6 +11,11 @@ export default function AIProjectEditor() {
   const [projects, setProjects] = useState([]);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [openIdx, setOpenIdx] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({
+    isOpen: false,
+    targetIdx: null,
+    title: "",
+  });
 
   useEffect(() => {
     if (data && projects.length === 0) {
@@ -27,7 +32,8 @@ export default function AIProjectEditor() {
       window.dispatchEvent(new Event("portfolio_content_updated"));
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -91,8 +97,11 @@ export default function AIProjectEditor() {
   };
 
   const removeProject = (idx) => {
-    setProjects((prev) => prev.filter((_, i) => i !== idx));
-    setOpenIdx(null);
+    setConfirmDelete({
+      isOpen: true,
+      targetIdx: idx,
+      title: projects[idx]?.title ? `"${projects[idx].title}"` : "Bu projeyi",
+    });
   };
 
   if (loading) {
@@ -249,6 +258,26 @@ export default function AIProjectEditor() {
       <div className="flex justify-end">
         <SaveButton status={saveStatus} onClick={save} />
       </div>
+
+      {/* Tatlı Silme Onay Modalı */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() =>
+          setConfirmDelete({ isOpen: false, targetIdx: null, title: "" })
+        }
+        onConfirm={() => {
+          if (confirmDelete.targetIdx !== null) {
+            setProjects((prev) =>
+              prev.filter((_, i) => i !== confirmDelete.targetIdx)
+            );
+            setOpenIdx(null);
+          }
+        }}
+        title="Bu Projeyi Silmek İstiyor musunuz?"
+        description={`${confirmDelete.title} adlı yapay zekâ projesi listenizden tamamen silinecektir.`}
+        confirmText="Evet, Sil"
+        variant="danger"
+      />
     </div>
   );
 }
