@@ -19,6 +19,9 @@ import {
   Eye,
   EyeOff,
   ArrowUpDown,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
@@ -50,6 +53,7 @@ export default function GalleryEditor() {
   const [filterType, setFilterType] = useState("all"); // 'all' | 'monthly' | 'spotlight' | 'hidden'
   const [sortBy, setSortBy] = useState("order"); // 'order' | 'likes_desc' | 'likes_asc' | 'newest' | 'oldest'
   const [showSearchPopup, setShowSearchPopup] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Artwork being edited in popup modal (original index in `artworks` array)
   const [editingIdx, setEditingIdx] = useState(null);
@@ -501,8 +505,27 @@ export default function GalleryEditor() {
             )}
           </div>
 
-          {/* Sıralama Seçimi & Yeni Eser Butonu */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Kontrol Butonları Grubu (Filtrele Accordion + Sırala + Yeni Eser) */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+            {/* Filtrele Accordion Butonu */}
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-medium border transition-all cursor-pointer ${
+                isFilterOpen || filterType !== "all"
+                  ? "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm"
+                  : "bg-[#161722] text-white/70 hover:text-white border-white/15 hover:border-white/30"
+              }`}
+              title="Filtreleme Menüsünü Aç / Kapat"
+            >
+              <SlidersHorizontal size={13} />
+              <span>Filtrele</span>
+              {filterType !== "all" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+              )}
+              {isFilterOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+
             {/* Sıralama Dropdown */}
             <div className="flex items-center gap-1.5 bg-[#161722] border border-white/15 hover:border-white/30 rounded-xl px-3 py-2 transition-colors">
               <span className="font-mono text-xs text-white/50 shrink-0 flex items-center gap-1">
@@ -531,6 +554,7 @@ export default function GalleryEditor() {
               </select>
             </div>
 
+            {/* Yeni Eser Ekle Butonu */}
             <button
               onClick={addArtwork}
               className="flex items-center gap-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl px-4 py-2.5 transition-all shadow-md cursor-pointer shrink-0"
@@ -540,56 +564,79 @@ export default function GalleryEditor() {
           </div>
         </div>
 
-        {/* Alt Satır: Filtre Hapları (Pills) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-white/5">
-          <span className="text-[11px] font-mono text-white/40 mr-1 shrink-0">Filtrele:</span>
-          <button
-            onClick={() => setFilterType("all")}
-            className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-              filterType === "all"
-                ? "bg-rose-500/20 text-rose-300 border-rose-500/50 font-bold"
-                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            Tümü ({artworks.length})
-          </button>
-          <button
-            onClick={() => setFilterType("monthly")}
-            className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-              filterType === "monthly"
-                ? "bg-rose-500/25 text-rose-300 border-rose-500/60 font-bold"
-                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            🔥 Ayın Tuvalleri ({monthlyCount})
-          </button>
-          <button
-            onClick={() => setFilterType("spotlight")}
-            className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-              filterType === "spotlight"
-                ? "bg-amber-500/25 text-amber-300 border-amber-500/60 font-bold"
-                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            🏆 Öne Çıkanlar ({spotlightCount}/5)
-          </button>
-          <button
-            onClick={() => setFilterType("hidden")}
-            className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-              filterType === "hidden"
-                ? "bg-amber-500/25 text-amber-300 border-amber-500/60 font-bold"
-                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            <EyeOff size={12} /> Gizli Eserler ({hiddenCount})
-          </button>
-        </div>
+        {/* Accordion Paneli: Filtre Hapları (Açılıp Kapanabilir) */}
+        {isFilterOpen && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2.5 pb-0.5 border-t border-white/10 animate-in fade-in slide-in-from-top-1 duration-150">
+            <span className="text-[11px] font-mono text-white/50 mr-1 shrink-0 font-semibold">
+              Kategori:
+            </span>
+            <button
+              onClick={() => setFilterType("all")}
+              className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                filterType === "all"
+                  ? "bg-rose-500/20 text-rose-300 border-rose-500/50 font-bold"
+                  : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              Tümü ({artworks.length})
+            </button>
+            <button
+              onClick={() => setFilterType("monthly")}
+              className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                filterType === "monthly"
+                  ? "bg-rose-500/25 text-rose-300 border-rose-500/60 font-bold"
+                  : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              🔥 Ayın Tuvalleri ({monthlyCount})
+            </button>
+            <button
+              onClick={() => setFilterType("spotlight")}
+              className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                filterType === "spotlight"
+                  ? "bg-amber-500/25 text-amber-300 border-amber-500/60 font-bold"
+                  : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              🏆 Öne Çıkanlar ({spotlightCount}/5)
+            </button>
+            <button
+              onClick={() => setFilterType("hidden")}
+              className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                filterType === "hidden"
+                  ? "bg-amber-500/25 text-amber-300 border-amber-500/60 font-bold"
+                  : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              <EyeOff size={12} /> Gizli Eserler ({hiddenCount})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ─── 3. ESERLERİN GÖRSEL GRID'İ (Sitedeki Sırayla Birebir Eşleşen Grid Görünümü) ─── */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-white/50 px-1">
           <div className="flex items-center gap-2 flex-wrap">
+            {filterType !== "all" && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold">
+                <span>
+                  {filterType === "monthly"
+                    ? "🔥 Ayın Tuvalleri"
+                    : filterType === "spotlight"
+                    ? "🏆 Öne Çıkanlar"
+                    : "🔒 Gizli Eserler"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilterType("all")}
+                  className="hover:text-white cursor-pointer ml-1 font-bold"
+                  title="Filtreyi Kaldır"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
             {sortBy !== "order" ? (
               <span className="text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5">
                 <span>
