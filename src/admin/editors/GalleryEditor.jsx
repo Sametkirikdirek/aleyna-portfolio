@@ -51,6 +51,16 @@ export default function GalleryEditor() {
   // Artwork being edited in popup modal (original index in `artworks` array)
   const [editingIdx, setEditingIdx] = useState(null);
 
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    confirmText: "Evet, Sil",
+    variant: "danger",
+    onConfirm: () => {},
+  });
+
   // Image adjust modal state
   const [adjustState, setAdjustState] = useState({
     isOpen: false,
