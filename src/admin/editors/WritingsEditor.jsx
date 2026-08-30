@@ -6,7 +6,6 @@ import {
   ChevronUp,
   Upload,
   Scissors,
-  GripVertical,
   ArrowUp,
   ArrowDown,
   ChevronsUp,
@@ -20,7 +19,6 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { Reorder, useDragControls } from "framer-motion";
 import { useWritings } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
@@ -140,7 +138,7 @@ function ZenWritingModal({
 }
 
 /**
- * Tekil Yazı Kartı (Framer Motion Physics-based Reorder Item)
+ * Tekil Yazı Kartı (Temiz, Yaylanmasız ve Kararlı Akordeon)
  */
 function WritingItem({
   writing,
@@ -163,8 +161,6 @@ function WritingItem({
   onOpenZenMode,
   draftInfo,
 }) {
-  const dragControls = useDragControls();
-
   const text = writing.content || "";
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const charCount = text.length;
@@ -172,41 +168,19 @@ function WritingItem({
   const isHidden = writing.hidden === true || writing.published === false;
 
   return (
-    <Reorder.Item
-      value={writing}
-      id={writing.id || String(index)}
-      dragListener={false}
-      dragControls={dragControls}
-      className={`rounded-2xl border transition-all duration-200 bg-[#161722] overflow-hidden select-none mb-3 ${
+    <div
+      className={`rounded-2xl border transition-colors duration-150 bg-[#161722] overflow-hidden mb-3 ${
         isOpen
           ? "border-rose-500/50 shadow-xl shadow-rose-950/20"
           : "border-white/10 hover:border-white/20"
       }`}
-      whileDrag={{
-        scale: 1.02,
-        boxShadow: "0 25px 50px -12px rgba(244,63,94,0.4)",
-        borderColor: "rgba(244,63,94,0.9)",
-        zIndex: 50,
-      }}
     >
-      {/* Kart Başlığı / Drag Handle Alanı */}
+      {/* Kart Başlığı */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer"
+        className="flex items-center justify-between p-4 cursor-pointer select-none"
         onClick={onToggleOpen}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          {/* Fiziksel Sürükleme Tutamacı (Grip Handle) */}
-          <div
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              dragControls.start(e);
-            }}
-            className="p-2 -m-1 text-white/40 hover:text-rose-400 hover:bg-white/5 rounded-xl cursor-grab active:cursor-grabbing touch-none transition-colors shrink-0 flex items-center justify-center"
-            title="Sıralamayı değiştirmek için sürükleyin"
-          >
-            <GripVertical size={18} />
-          </div>
-
           {/* Hızlı Sıralama Okları (Tek Tıkla Yukarı/Aşağı) */}
           <div
             className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5 shrink-0"
@@ -532,7 +506,7 @@ function WritingItem({
           </div>
         </div>
       )}
-    </Reorder.Item>
+    </div>
   );
 }
 
@@ -1101,9 +1075,8 @@ export default function WritingsEditor() {
       {/* Bilgilendirme ve Yeni Yazı Ekle Butonu */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-xs text-white/50">
-          <strong className="text-rose-300">Grip ikonunu</strong> tutarak
-          yazıları sürükleyebilir, <strong className="text-emerald-400">Göz ikonuyla</strong> yazıları
-          ziyaretçilere açıp gizleyebilirsiniz.
+          <strong className="text-white/80">Ok butonlarıyla</strong> yazıları yukarı/aşağı taşıyabilir,{" "}
+          <strong className="text-emerald-400">Göz ikonuyla</strong> sitede yayınlayıp gizleyebilirsiniz.
         </p>
 
         <button
@@ -1114,16 +1087,8 @@ export default function WritingsEditor() {
         </button>
       </div>
 
-      {/* Framer Motion Physics-based Reorder Group */}
-      <Reorder.Group
-        axis="y"
-        values={writings}
-        onReorder={(newOrder) => {
-          setWritings(newOrder);
-          persistDraftToStorage(newOrder, headerTag, headerTitle, headerSubtitle);
-        }}
-        className="space-y-3"
-      >
+      {/* Yazı Kartları Listesi */}
+      <div className="space-y-3">
         {writings.map((w, idx) => (
           <WritingItem
             key={w.id || `writing-${idx}`}
@@ -1148,7 +1113,7 @@ export default function WritingsEditor() {
             draftInfo={draftInfo}
           />
         ))}
-      </Reorder.Group>
+      </div>
 
       {writings.length === 0 && (
         <div className="text-center py-16 bg-white/[0.02] border border-white/10 rounded-2xl">
