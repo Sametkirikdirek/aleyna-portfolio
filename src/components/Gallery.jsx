@@ -756,20 +756,20 @@ export default function Gallery() {
                     {/* Arama ve Sıralama Satırı */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="relative flex items-center">
-                        <Search size={16} className="absolute left-3.5 text-paper/40 pointer-events-none" />
+                        <Search size={16} className="absolute left-3.5 text-paper/50 pointer-events-none" />
                         <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Eser adı, teknik veya yılda ara..."
-                          className="w-full dark:bg-paper/5 bg-white/95 border dark:border-paper/15 border-amber-900/20 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-paper placeholder:text-paper/40 focus:outline-none focus:border-brush transition-colors shadow-xs"
+                          className="w-full dark:bg-paper/10 bg-white border dark:border-paper/25 border-amber-900/25 rounded-xl pl-10 pr-10 py-2.5 text-sm font-sans font-medium text-paper placeholder:text-paper/45 focus:outline-none focus:border-brush focus:ring-2 focus:ring-brush/20 transition-all shadow-sm"
                         />
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
-                            className="absolute right-3 text-paper/40 hover:text-paper cursor-pointer"
+                            className="absolute right-3 text-paper/50 hover:text-paper cursor-pointer p-1"
                           >
-                            <X size={14} />
+                            <X size={15} />
                           </button>
                         )}
                       </div>

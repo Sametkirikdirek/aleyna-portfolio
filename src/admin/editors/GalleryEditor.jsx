@@ -18,6 +18,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  ArrowUpDown,
 } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
@@ -44,9 +45,11 @@ export default function GalleryEditor() {
   const fileInputRef = useRef();
   const [addingIdx, setAddingIdx] = useState(null);
 
-  // Search & Filter state in Admin
+  // Search, Sort & Filter state in Admin
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all"); // 'all' | 'monthly' | 'spotlight' | 'hidden'
+  const [sortBy, setSortBy] = useState("order"); // 'order' | 'likes_desc' | 'likes_asc' | 'newest' | 'oldest'
+  const [showSearchPopup, setShowSearchPopup] = useState(false);
 
   // Artwork being edited in popup modal (original index in `artworks` array)
   const [editingIdx, setEditingIdx] = useState(null);
@@ -98,10 +101,29 @@ export default function GalleryEditor() {
     () => artworks.filter((a) => a.hidden === true || a.published === false).length,
     [artworks]
   );
+  const totalLikes = useMemo(
+    () => artworks.reduce((acc, art) => acc + (art.likes || 0), 0),
+    [artworks]
+  );
 
-  // Filtered artworks for the visual grid
-  const filteredArtworks = useMemo(() => {
+  // Live matching search results for popup dropdown
+  const liveSearchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
     return artworks
+      .map((art, originalIndex) => ({ ...art, originalIndex }))
+      .filter((art) => {
+        const matchTitle = art.title && art.title.toLowerCase().includes(q);
+        const matchMedium = art.medium && art.medium.toLowerCase().includes(q);
+        const matchYear = art.year && art.year.toString().includes(q);
+        const matchNote = art.note && art.note.toLowerCase().includes(q);
+        return matchTitle || matchMedium || matchYear || matchNote;
+      });
+  }, [artworks, searchQuery]);
+
+  // Filtered and Sorted artworks for the visual grid
+  const filteredArtworks = useMemo(() => {
+    let list = artworks
       .map((art, originalIndex) => ({ ...art, originalIndex }))
       .filter((art) => {
         if (filterType === "monthly" && !art.featuredInMonthly) return false;
@@ -117,7 +139,19 @@ export default function GalleryEditor() {
         }
         return true;
       });
-  }, [artworks, searchQuery, filterType]);
+
+    if (sortBy === "likes_desc") {
+      list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    } else if (sortBy === "likes_asc") {
+      list.sort((a, b) => (a.likes || 0) - (b.likes || 0));
+    } else if (sortBy === "newest") {
+      list.sort((a, b) => (parseInt(b.year, 10) || 0) - (parseInt(a.year, 10) || 0));
+    } else if (sortBy === "oldest") {
+      list.sort((a, b) => (parseInt(a.year, 10) || 0) - (parseInt(b.year, 10) || 0));
+    }
+
+    return list;
+  }, [artworks, searchQuery, filterType, sortBy]);
 
   const toggleFeatured = (id) => {
     setArtworks((prev) =>
@@ -324,32 +358,191 @@ export default function GalleryEditor() {
             />
           </Field>
         </div>
+
+        {/* Beğeni İstatistiği & Sıfırlama Alanı */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 mt-4 border-t border-white/10 text-xs font-mono">
+          <div className="flex items-center gap-2 text-white/70">
+            <Heart size={14} className="text-rose-400 fill-rose-400/20" />
+            <span>
+              Sitedeki Toplam Beğeni: <strong className="text-white font-bold">{totalLikes}</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={resetAllLikes}
+            className="flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl px-3 py-1.5 transition-colors cursor-pointer"
+            title="Tüm eserlerin beğeni sayılarını 0 yap"
+          >
+            <Heart size={12} className="text-amber-400" /> Beğenileri Sıfırla
+          </button>
+        </div>
       </Card>
 
-      {/* ─── 2. HIZLI ARAMA, FİLTRELEME VE YENİ ESER BUTONLARI ─── */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md">
-        {/* Search input */}
-        <div className="relative flex-1 max-w-md">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Eser adı, teknik veya yılda ara..."
-            className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-rose-500 rounded-xl pl-10 pr-9 py-2.5 text-xs font-mono text-white placeholder:text-white/30 focus:outline-none transition-colors"
-          />
-          {searchQuery && (
+      {/* ─── 2. HIZLI ARAMA, SIRALAMA, FİLTRELEME VE YENİ ESER ─── */}
+      <div className="space-y-3 p-4 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md">
+        {/* Üst Satır: Geniş & Net Arama Çubuğu + Sıralama Seçeneği + Yeni Eser Butonu */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Arama Girişi & Canlı Sonuç Dropdown/Pop-up */}
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchPopup(true);
+              }}
+              onFocus={() => setShowSearchPopup(true)}
+              placeholder="Eser adı, teknik veya yılda ara... (Örn: Yağlı Boya, 2026)"
+              className="w-full bg-[#161722] border border-white/20 hover:border-white/35 focus:border-rose-500 rounded-xl pl-10 pr-24 py-2.5 text-xs sm:text-sm font-sans font-medium text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-all shadow-inner"
+            />
+
+            {/* Arama İçi Rozet & Temizle */}
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              {searchQuery && (
+                <span className="font-mono text-[10px] text-rose-300 bg-rose-500/20 px-2 py-0.5 rounded-md font-semibold">
+                  {liveSearchResults.length} sonuç
+                </span>
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setShowSearchPopup(false);
+                  }}
+                  className="p-1 rounded text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Aramayı Temizle"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Canlı Arama Sonuçları Popup / Dropdown */}
+            {showSearchPopup && searchQuery.trim() !== "" && (
+              <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#161724] border border-white/15 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 p-2">
+                <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-mono text-white/50 border-b border-white/10">
+                  <span className="text-white/80 font-bold">
+                    Arama Eşleşmeleri ({liveSearchResults.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSearchPopup(false)}
+                    className="hover:text-white text-white/40 text-[10px] cursor-pointer"
+                  >
+                    Kapat ✕
+                  </button>
+                </div>
+
+                {liveSearchResults.length === 0 ? (
+                  <div className="py-6 text-center text-xs font-mono text-white/40">
+                    "{searchQuery}" ile eşleşen eser bulunamadı.
+                  </div>
+                ) : (
+                  <div className="max-h-72 overflow-y-auto space-y-1 py-1 pr-1">
+                    {liveSearchResults.map((art) => (
+                      <div
+                        key={art.id || art.originalIndex}
+                        onClick={() => {
+                          setEditingIdx(art.originalIndex);
+                          setShowSearchPopup(false);
+                        }}
+                        className="flex items-center justify-between gap-3 p-2.5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-12 rounded-lg overflow-hidden bg-black/40 border border-white/10 shrink-0">
+                            {art.image ? (
+                              <img
+                                src={art.image}
+                                alt={art.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white/20 text-[9px]">
+                                Görsel Yok
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-rose-300 transition-colors truncate">
+                              {art.title || "İsimsiz Eser"}
+                            </p>
+                            <p className="text-[11px] font-mono text-white/50 truncate mt-0.5">
+                              #{art.originalIndex + 1} · {art.year || "2026"} {art.medium ? `· ${art.medium}` : ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {art.likes > 0 && (
+                            <span className="text-[11px] font-mono text-amber-400 font-bold flex items-center gap-0.5 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                              <Heart size={11} className="fill-amber-400" /> {art.likes}
+                            </span>
+                          )}
+                          <span
+                            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                              art.hidden
+                                ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                            }`}
+                          >
+                            {art.hidden ? "Gizli" : "Yayında"}
+                          </span>
+                          <span className="text-xs font-mono text-rose-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                            Düzenle →
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sıralama Seçimi & Yeni Eser Butonu */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Sıralama Dropdown */}
+            <div className="flex items-center gap-1.5 bg-[#161722] border border-white/15 hover:border-white/30 rounded-xl px-3 py-2 transition-colors">
+              <span className="font-mono text-xs text-white/50 shrink-0 flex items-center gap-1">
+                <ArrowUpDown size={12} /> Sırala:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-xs font-mono font-medium text-white focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="order" className="bg-[#181924] text-white">
+                  Varsayılan (Sitedeki Sıra)
+                </option>
+                <option value="likes_desc" className="bg-[#181924] text-white">
+                  ❤️ En Çok Beğenilenler (Azalan)
+                </option>
+                <option value="likes_asc" className="bg-[#181924] text-white">
+                  🤍 En Az Beğenilenler (Artan)
+                </option>
+                <option value="newest" className="bg-[#181924] text-white">
+                  📅 En Yeni Eserler
+                </option>
+                <option value="oldest" className="bg-[#181924] text-white">
+                  📜 En Eski Eserler
+                </option>
+              </select>
+            </div>
+
             <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+              onClick={addArtwork}
+              className="flex items-center gap-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl px-4 py-2.5 transition-all shadow-md cursor-pointer shrink-0"
             >
-              <X size={14} />
+              <Plus size={15} /> Yeni Eser Ekle
             </button>
-          )}
+          </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        {/* Alt Satır: Filtre Hapları (Pills) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-white/5">
+          <span className="text-[11px] font-mono text-white/40 mr-1 shrink-0">Filtrele:</span>
           <button
             onClick={() => setFilterType("all")}
             className={`font-mono text-xs px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
@@ -391,33 +584,40 @@ export default function GalleryEditor() {
             <EyeOff size={12} /> Gizli Eserler ({hiddenCount})
           </button>
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={resetAllLikes}
-            className="flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 transition-colors cursor-pointer"
-            title="Tüm eserlerin beğeni sayılarını 0 yap"
-          >
-            <Heart size={13} className="text-amber-400" /> Beğenileri Sıfırla
-          </button>
-
-          <button
-            onClick={addArtwork}
-            className="flex items-center gap-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl px-4 py-2.5 transition-all shadow-md cursor-pointer shrink-0"
-          >
-            <Plus size={15} /> Yeni Eser Ekle
-          </button>
-        </div>
       </div>
 
       {/* ─── 3. ESERLERİN GÖRSEL GRID'İ (Sitedeki Sırayla Birebir Eşleşen Grid Görünümü) ─── */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-mono text-white/50 px-1">
-          <span>
-            💡 <strong>İpucu:</strong> Bir esere tıklayarak detaylarını düzenleyin. ⬅️ ➡️ butonlarıyla eserlerin sırasını değiştirin, Göz butonuyla gizleyip yayınlayın.
-          </span>
-          <span>{filteredArtworks.length} eser listeleniyor</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-white/50 px-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            {sortBy !== "order" ? (
+              <span className="text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5">
+                <span>
+                  ⚠️{" "}
+                  {sortBy === "likes_desc"
+                    ? "❤️ En Çok Beğenilenler (Azalan)"
+                    : sortBy === "likes_asc"
+                    ? "🤍 En Az Beğenilenler (Artan)"
+                    : sortBy === "newest"
+                    ? "📅 En Yeni Eserler"
+                    : "📜 En Eski Eserler"}{" "}
+                  sıralamasındasınız.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSortBy("order")}
+                  className="underline hover:text-white cursor-pointer ml-1 font-bold"
+                >
+                  Varsayılan Sıraya Dön
+                </button>
+              </span>
+            ) : (
+              <span>
+                💡 <strong>İpucu:</strong> Bir esere tıklayarak detaylarını düzenleyin. ⬅️ ➡️ butonlarıyla eserlerin sırasını değiştirin, Göz butonuyla gizleyip yayınlayın.
+              </span>
+            )}
+          </div>
+          <span className="shrink-0">{filteredArtworks.length} eser listeleniyor</span>
         </div>
 
         {filteredArtworks.length === 0 ? (
