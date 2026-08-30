@@ -8,7 +8,7 @@ import {
   CheckSquare,
   Square,
   X,
-  Sparkles,
+  Sliders,
   Loader2,
   Image as ImageIcon,
 } from "lucide-react";
@@ -230,7 +230,7 @@ export default function TimelineEditor() {
       {/* ─── ANİMASYON AYARLARI PANELİ ─── */}
       <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
         <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-2">
-          <Sparkles size={13} className="text-rose-400" />
+          <Sliders size={13} className="text-rose-400" />
           Zaman Yolculuğu Animasyon Ayarları
         </p>
         <div className="grid sm:grid-cols-2 gap-5">
@@ -478,7 +478,7 @@ export default function TimelineEditor() {
       {images.length === 0 && !isUploading && (
         <div className="border-2 border-dashed border-white/15 rounded-3xl p-12 md:p-16 flex flex-col items-center justify-center text-center gap-4 bg-white/[0.01]">
           <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <Sparkles size={32} />
+            <ImageIcon size={32} />
           </div>
           <div>
             <h4 className="text-base font-semibold text-white/90">

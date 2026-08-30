@@ -2,9 +2,10 @@ import { useState } from "react";
 import {
   Loader2,
   CheckCircle2,
+  Check,
   AlertTriangle,
   Trash2,
-  Sparkles,
+  Info,
   X,
   Heart,
   HelpCircle,
@@ -43,7 +44,7 @@ export function ConfirmModal({
     },
     info: {
       iconBg: "bg-cyan-500/15 border-cyan-500/30 text-cyan-400 shadow-cyan-950/30",
-      icon: <Sparkles size={24} />,
+      icon: <Info size={24} />,
       confirmBtn:
         "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-950/40",
       glow: "bg-cyan-500/20",
@@ -140,7 +141,7 @@ export function SaveButton({ status, onClick, label = "Kaydet & Yayınla" }) {
   const labels = {
     idle: label,
     saving: "Kaydediliyor…",
-    saved: "Canlıya Alındı ✨",
+    saved: "Kaydedildi",
     error: "Hata — Tekrar Dene",
   };
 
@@ -152,7 +153,7 @@ export function SaveButton({ status, onClick, label = "Kaydet & Yayınla" }) {
       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 shadow-lg cursor-pointer active:scale-95 shrink-0 ${styles[status]}`}
     >
       {status === "saving" && <Loader2 size={15} className="animate-spin" />}
-      {status === "saved" && <Sparkles size={15} className="text-amber-200 animate-bounce" />}
+      {status === "saved" && <Check size={16} className="text-white" strokeWidth={2.5} />}
       {status === "idle" && <CheckCircle2 size={15} className="opacity-80" />}
       {labels[status]}
     </button>

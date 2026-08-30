@@ -14,8 +14,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Edit3,
-  Layers,
-  Sparkles,
   Palette,
   Check,
 } from "lucide-react";

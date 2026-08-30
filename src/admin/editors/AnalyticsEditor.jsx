@@ -20,7 +20,7 @@ import {
   Flame,
   Clock,
   ArrowUpRight,
-  Sparkles,
+  Layers,
   MapPin,
   History,
 } from "lucide-react";
@@ -379,7 +379,7 @@ export default function AnalyticsEditor() {
         <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-400" />
+              <Layers size={18} className="text-amber-400" />
               Sitedeki İçerik Envanteri
             </h3>
             <span className="text-xs text-white/40 font-mono">Gerçek Zamanlı</span>
