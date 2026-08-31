@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Mail, MapPin, RefreshCw } from "lucide-react";
+import { Mail, RefreshCw } from "lucide-react";
 import { GithubIcon, LinkedinIcon, InstagramIcon, MediumIcon } from "./SocialIcons";
 
 export interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -140,32 +140,25 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
             </motion.main>
           </div>
 
-          <motion.footer className="mt-8 sm:mt-10 w-full space-y-3.5 pt-6 border-t border-border/40" variants={itemVariants}>
-            {/* İletişim Bilgileri (E-posta & Konum) */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 font-mono text-xs text-muted-foreground">
+          <motion.footer className="mt-8 sm:mt-10 w-full pt-6 border-t border-border/40" variants={itemVariants}>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              {/* E-posta Butonu (Amblemli) */}
               {contactInfo?.email && (
                 <a
                   href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(contactInfo.email)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-border/50 bg-background/40 hover:border-primary/50 hover:bg-primary/5 hover:text-foreground transition-all duration-200 shadow-xs"
+                  className="group flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-border/60 bg-background/50 hover:border-primary/60 hover:bg-primary/10 hover:text-foreground text-foreground/80 font-mono text-xs transition-all duration-200 shadow-xs hover:shadow-sm active:scale-95"
+                  title="E-posta Gönder"
                 >
-                  <Mail className="h-4 w-4 shrink-0 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="truncate">{contactInfo.email}</span>
+                  <Mail className="w-3.5 h-3.5 shrink-0 text-primary group-hover:scale-110 transition-transform duration-200" />
+                  <span className="font-medium truncate">{contactInfo.email}</span>
                 </a>
               )}
-              {contactInfo?.address && (
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-border/50 bg-background/40 text-muted-foreground shadow-xs">
-                  <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                  <span>{contactInfo.address}</span>
-                </div>
-              )}
-            </div>
 
-            {/* Sosyal Medya Linkleri: Yan yana Amblemlerle */}
-            {socialLinks && socialLinks.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-0.5">
-                {socialLinks.map((s) => {
+              {/* Sosyal Medya Linkleri: Yan yana Amblemlerle */}
+              {socialLinks &&
+                socialLinks.map((s) => {
                   const getIcon = (label: string) => {
                     const l = label.toLowerCase();
                     if (l.includes("github")) return <GithubIcon className="w-3.5 h-3.5" />;
@@ -189,8 +182,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                     </a>
                   );
                 })}
-              </div>
-            )}
+            </div>
           </motion.footer>
         </div>
 
