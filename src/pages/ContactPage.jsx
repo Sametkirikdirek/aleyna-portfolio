@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/ui/hero-section-2";
-import { useProfile, useCv, useContact } from "../hooks/useContent";
+import { useProfile, useContact } from "../hooks/useContent";
 
 export default function ContactPage() {
   const { data: profile } = useProfile();
-  const { data: cv } = useCv();
   const { data: contact } = useContact();
 
   const artworks = contact?.artworks || [];
@@ -16,20 +15,15 @@ export default function ContactPage() {
     { label: "Instagram", href: profile?.social?.instagram || "#" },
   ];
 
-  const cvLinks = {
-    tr: cv?.tr || profile?.cv?.tr || "/docs/Aleyna_Altunsu_CV_TR.pdf",
-    en: cv?.en || profile?.cv?.en || "/docs/Aleyna_Altunsu_CV_EN.pdf",
-  };
-
   const [artwork, setArtwork] = useState(null);
 
   // Her sayfa açılışında veya artworks güncellendiğinde rastgele bir resim seçilsin
   useEffect(() => {
-    if (artworks.length > 0) {
-      const randomIndex = Math.floor(Math.random() * artworks.length);
-      setArtwork(artworks[randomIndex]);
+    if (contact?.artworks && contact.artworks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * contact.artworks.length);
+      setArtwork(contact.artworks[randomIndex]);
     }
-  }, [artworks]);
+  }, [contact?.artworks]);
 
   const handleRefreshArtwork = () => {
     if (artworks.length <= 1) return;
@@ -69,29 +63,19 @@ export default function ContactPage() {
         artwork={artwork || {}}
         onRefreshArtwork={handleRefreshArtwork}
         contactInfo={{
-          website: "aleynaaltunsu.com",
           email: profile?.email || "hello@aleynaaltunsu.com",
           address: profile?.location || "İstanbul, Türkiye",
         }}
+        socialLinks={socialLinks}
       />
 
-      <section className="border-t border-border bg-ink px-6 py-10 md:px-10">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 font-mono text-xs text-paper/50">
-            {socialLinks.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-circuit-soft"
-              >
-                {s.label}
-              </a>
-            ))}
-          </div>
-          <p className="font-mono text-[11px] text-paper/30">
-            © {new Date().getFullYear()} {profile.name}. Tüm hakları saklıdır.
+      <section className="border-t border-border/40 bg-ink px-6 py-6 md:px-10">
+        <div className="mx-auto flex max-w-5xl flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <p className="font-mono text-xs text-paper/50">
+            {profile?.name || "Aleyna Altunsu"} · {profile?.location || "İstanbul, Türkiye"}
+          </p>
+          <p className="font-mono text-[11px] text-paper/35">
+            © {new Date().getFullYear()} {profile?.name || "Aleyna Altunsu"}. Tüm hakları saklıdır.
           </p>
         </div>
       </section>

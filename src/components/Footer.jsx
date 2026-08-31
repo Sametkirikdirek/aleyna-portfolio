@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { useProfile } from "../hooks/useContent";
+import { GithubIcon, LinkedinIcon, InstagramIcon, MediumIcon } from "./ui/SocialIcons";
 
 export default function Footer() {
   const { data: profile } = useProfile();
 
   const socialLinks = [
-    { label: "Medium", href: profile?.social?.medium || "#" },
-    { label: "GitHub", href: profile?.social?.github || "#" },
-    { label: "LinkedIn", href: profile?.social?.linkedin || "#" },
-    { label: "Instagram", href: profile?.social?.instagram || "#" },
+    { label: "Medium", href: profile?.social?.medium || "#", icon: <MediumIcon className="w-3.5 h-3.5" /> },
+    { label: "GitHub", href: profile?.social?.github || "#", icon: <GithubIcon className="w-3.5 h-3.5" /> },
+    { label: "LinkedIn", href: profile?.social?.linkedin || "#", icon: <LinkedinIcon className="w-3.5 h-3.5" /> },
+    { label: "Instagram", href: profile?.social?.instagram || "#", icon: <InstagramIcon className="w-3.5 h-3.5" /> },
   ];
   return (
     <section className="relative min-h-screen flex items-center px-6 md:px-10 pt-28 pb-24 md:pt-32 md:pb-32 bg-ink overflow-hidden">
@@ -58,7 +59,7 @@ export default function Footer() {
           href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profile?.email || "hello@aleynaaltunsu.com")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-9 inline-flex items-center gap-2 px-7 py-3.5 bg-brush text-paper font-sans text-sm rounded-full hover:bg-brush-soft transition-colors"
+          className="mt-9 inline-flex items-center gap-2 px-7 py-3.5 bg-brush text-paper font-sans text-sm rounded-full hover:bg-brush-soft transition-colors shadow-lg hover:shadow-brush/30"
         >
           {profile.email}
           <ArrowUpRight size={16} />
@@ -69,7 +70,7 @@ export default function Footer() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16 flex flex-wrap justify-center gap-x-8 gap-y-3 font-mono text-xs text-paper/50"
+          className="mt-14 flex flex-wrap justify-center items-center gap-2.5 sm:gap-3"
         >
           {socialLinks.map((s) => (
             <a
@@ -77,9 +78,12 @@ export default function Footer() {
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-circuit-soft transition-colors"
+              className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-paper/10 bg-paper/[0.03] hover:border-brush hover:bg-brush/10 text-paper/75 hover:text-paper font-mono text-xs transition-all duration-200 shadow-xs active:scale-95"
             >
-              {s.label}
+              <span className="text-brush-soft group-hover:scale-110 transition-transform">
+                {s.icon}
+              </span>
+              <span>{s.label}</span>
             </a>
           ))}
         </motion.div>
