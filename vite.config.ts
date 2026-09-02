@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
                 env.CLOUDINARY_UPLOAD_PRESET ||
                 env.VITE_CLOUDINARY_UPLOAD_PRESET ||
                 process.env.CLOUDINARY_UPLOAD_PRESET ||
-                "REMOVED_UPLOAD_PRESET";
+                "aleyna_prod_upload";
 
               const uploadData = new FormData();
               uploadData.append("file", file);

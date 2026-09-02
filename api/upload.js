@@ -38,7 +38,7 @@ export default async function handler(request) {
     const uploadPreset =
       process.env.CLOUDINARY_UPLOAD_PRESET ||
       process.env.VITE_CLOUDINARY_UPLOAD_PRESET ||
-      "REMOVED_UPLOAD_PRESET";
+      "aleyna_prod_upload";
 
     const uploadPayload = new FormData();
     uploadPayload.append("file", file);
