@@ -1,30 +1,40 @@
 /**
- * Cloudinary üzerinden dosya yükleme yardımcısı.
- * Firebase Storage yerine kullanılır (ücretsiz, kredi kartı gerektirmez).
+ * Güvenli Dosya Yükleme Servisi.
+ *
+ * İstemci tarafında hiçbir gizli upload_preset veya Cloudinary kimliği tutulmaz.
+ * Tüm yüklemeler sunucu tarafındaki güvenli /api/upload uç noktası üzerinden gerçekleştirilir.
  *
  * @param {File} file - Yüklenecek dosya (resim veya PDF)
- * @param {string} folder - Cloudinary klasörü (örn: "gallery", "cv", "timeline")
- * @returns {Promise<string>} - Yüklenen dosyanın URL'si
+ * @param {string} folder - Hedef klasör (örn: "gallery", "cv", "timeline", "profile", "writings")
+ * @returns {Promise<string>} - Yüklenen dosyanın güvenli URL'si
  */
 export async function uploadToCloudinary(file, folder = "portfolio") {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "REMOVED_CLOUD_NAME";
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "REMOVED_UPLOAD_PRESET";
-
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
   formData.append("folder", folder);
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-    { method: "POST", body: formData }
-  );
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
 
   if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error?.message || "Yükleme başarısız");
+    let errorMessage = "Dosya yüklenemedi";
+    try {
+      const errData = await response.json();
+      errorMessage = errData.error || errData.message || errorMessage;
+    } catch {
+      // JSON parse edilemezse varsayılan mesajı kullan
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
-  return data.secure_url; // https://res.cloudinary.com/...
+  const fileUrl = data.url || data.secure_url;
+
+  if (!fileUrl) {
+    throw new Error("Yükleme tamamlandı ancak dosya URL'si alınamadı");
+  }
+
+  return fileUrl;
 }
