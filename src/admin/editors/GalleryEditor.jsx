@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
 } from "lucide-react";
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
@@ -44,6 +45,7 @@ export default function GalleryEditor() {
   const [headerTitle, setHeaderTitle] = useState("");
   const [headerSubtitle, setHeaderSubtitle] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [saveErrorMsg, setSaveErrorMsg] = useState("");
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
   const [addingIdx, setAddingIdx] = useState(null);
@@ -198,6 +200,7 @@ export default function GalleryEditor() {
 
   const save = async () => {
     setSaveStatus("saving");
+    setSaveErrorMsg("");
     try {
       const payload = {
         title: headerTitle,
@@ -210,8 +213,17 @@ export default function GalleryEditor() {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err) {
-      console.error(err);
+      console.error("Galeri kaydedilirken hata:", err);
       setSaveStatus("error");
+      const isAuth =
+        err?.code === "permission-denied" ||
+        err?.message?.includes("permission") ||
+        err?.message?.includes("insufficient");
+      setSaveErrorMsg(
+        isAuth
+          ? "Oturum süreniz dolmuş veya yetki hatası oluştu. Lütfen sağ üstten 'Çıkış Yap' butonuna basıp tekrar giriş yapın."
+          : `Galeri kaydedilemedi: ${err?.message || "Bilinmeyen hata"}`
+      );
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
   };
@@ -300,6 +312,7 @@ export default function GalleryEditor() {
       updateArtwork(idx, "image", url);
     } catch (err) {
       console.error("Yükleme hatası:", err);
+      alert("Görsel yüklenemedi: " + (err?.message || "Lütfen dosya boyutunu veya formatını kontrol edin."));
     } finally {
       setUploading((prev) => ({ ...prev, [idx]: false }));
     }
@@ -323,6 +336,28 @@ export default function GalleryEditor() {
         saveStatus={saveStatus}
         onSave={save}
       />
+
+      {/* ─── Hata Bildirim Kartı ─── */}
+      {saveErrorMsg && (
+        <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-between gap-4 animate-fadeIn shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">
+              <AlertTriangle size={18} />
+            </div>
+            <p className="text-sm font-semibold text-rose-200">
+              {saveErrorMsg}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSaveErrorMsg("")}
+            className="p-1.5 rounded-lg text-rose-300/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+            title="Kapat"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Hidden File Input */}
       <input

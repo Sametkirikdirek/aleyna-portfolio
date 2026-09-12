@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { useWritings } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
@@ -520,6 +522,7 @@ export default function WritingsEditor() {
   );
   const [saveStatus, setSaveStatus] = useState("idle");
   const [headerSaveStatus, setHeaderSaveStatus] = useState("idle");
+  const [saveErrorMsg, setSaveErrorMsg] = useState("");
   const [openIdx, setOpenIdx] = useState(null);
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
@@ -566,7 +569,7 @@ export default function WritingsEditor() {
       return true;
     }
 
-    // Check each writing content/title/excerpt
+    // Check each writing content/title/excerpt/image/status
     for (let i = 0; i < draftWritings.length; i++) {
       const dw = draftWritings[i];
       const sw = serverWritings[i];
@@ -578,7 +581,10 @@ export default function WritingsEditor() {
         dw.tag !== sw.tag ||
         dw.date !== sw.date ||
         dw.readTime !== sw.readTime ||
-        dw.hidden !== sw.hidden
+        dw.image !== sw.image ||
+        dw.url !== sw.url ||
+        dw.hidden !== sw.hidden ||
+        dw.published !== sw.published
       ) {
         return true;
       }
@@ -727,6 +733,7 @@ export default function WritingsEditor() {
 
   const save = async () => {
     setSaveStatus("saving");
+    setSaveErrorMsg("");
     try {
       const payload = {
         tag: headerTag,
@@ -754,14 +761,24 @@ export default function WritingsEditor() {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err) {
-      console.error(err);
+      console.error("Yazılar kaydedilirken hata:", err);
       setSaveStatus("error");
+      const isAuth =
+        err?.code === "permission-denied" ||
+        err?.message?.includes("permission") ||
+        err?.message?.includes("insufficient");
+      setSaveErrorMsg(
+        isAuth
+          ? "Oturum süreniz dolmuş veya yetki hatası oluştu. Lütfen sağ üstten 'Çıkış Yap' butonuna basıp tekrar giriş yapın."
+          : `Kayıt başarısız oldu: ${err?.message || "Bilinmeyen hata"}`
+      );
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
   };
 
   const saveHeader = async () => {
     setHeaderSaveStatus("saving");
+    setSaveErrorMsg("");
     try {
       const payload = {
         tag: headerTag,
@@ -778,8 +795,17 @@ export default function WritingsEditor() {
       setHeaderSaveStatus("saved");
       setTimeout(() => setHeaderSaveStatus("idle"), 3000);
     } catch (err) {
-      console.error(err);
+      console.error("Başlık kaydedilirken hata:", err);
       setHeaderSaveStatus("error");
+      const isAuth =
+        err?.code === "permission-denied" ||
+        err?.message?.includes("permission") ||
+        err?.message?.includes("insufficient");
+      setSaveErrorMsg(
+        isAuth
+          ? "Oturum süreniz dolmuş veya yetki hatası oluştu. Lütfen sağ üstten 'Çıkış Yap' butonuna basıp tekrar giriş yapın."
+          : `Başlık kaydı başarısız oldu: ${err?.message || "Bilinmeyen hata"}`
+      );
       setTimeout(() => setHeaderSaveStatus("idle"), 3000);
     }
   };
@@ -911,7 +937,8 @@ export default function WritingsEditor() {
       const url = await uploadToCloudinary(file, "writings");
       update(idx, "image", url);
     } catch (err) {
-      console.error(err);
+      console.error("Yazı görseli yükleme hatası:", err);
+      alert("Görsel yüklenemedi: " + (err?.message || "Lütfen dosya boyutunu veya internet bağlantınızı kontrol edin."));
     } finally {
       setUploading((prev) => ({ ...prev, [idx]: false }));
     }
@@ -942,6 +969,28 @@ export default function WritingsEditor() {
         saveStatus={saveStatus}
         onSave={save}
       />
+
+      {/* ─── Hata Bildirim Kartı ─── */}
+      {saveErrorMsg && (
+        <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-between gap-4 animate-fadeIn shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">
+              <AlertTriangle size={18} />
+            </div>
+            <p className="text-sm font-semibold text-rose-200">
+              {saveErrorMsg}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSaveErrorMsg("")}
+            className="p-1.5 rounded-lg text-rose-300/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+            title="Kapat"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ─── Yerel Taslak Kurtarma Bildirim Kartı ─── */}
       {showDraftBanner && draftInfo.hasDraft && (

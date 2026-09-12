@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Scissors } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronUp, Upload, Scissors, AlertTriangle, X } from "lucide-react";
 import { useProfile } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
@@ -13,6 +13,7 @@ export default function ProfileEditor() {
   const { data, loading } = useProfile();
   const [form, setForm] = useState(null);
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [saveErrorMsg, setSaveErrorMsg] = useState("");
   const [openExp, setOpenExp] = useState(null);
   const [uploading, setUploading] = useState({});
   const fileInputRef = useRef();
@@ -107,6 +108,7 @@ export default function ProfileEditor() {
 
   const save = async () => {
     setSaveStatus("saving");
+    setSaveErrorMsg("");
     try {
       await setContent("profile", form);
       localStorage.setItem("portfolio_cache_profile", JSON.stringify(form));
@@ -114,8 +116,17 @@ export default function ProfileEditor() {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } catch (err) {
-      console.error(err);
+      console.error("Profil kaydedilirken hata:", err);
       setSaveStatus("error");
+      const isAuth =
+        err?.code === "permission-denied" ||
+        err?.message?.includes("permission") ||
+        err?.message?.includes("insufficient");
+      setSaveErrorMsg(
+        isAuth
+          ? "Oturum süreniz dolmuş veya yetki hatası oluştu. Lütfen sağ üstten 'Çıkış Yap' butonuna basıp tekrar giriş yapın."
+          : `Profil kaydedilemedi: ${err?.message || "Bilinmeyen hata"}`
+      );
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
   };
@@ -331,7 +342,8 @@ export default function ProfileEditor() {
       const url = await uploadToCloudinary(file, "hero");
       updateHeroCard(idx, "imgUrl", url);
     } catch (err) {
-      console.error(err);
+      console.error("Kart görseli yükleme hatası:", err);
+      alert("Görsel yüklenemedi: " + (err?.message || "Lütfen dosya boyutunu veya formatını kontrol edin."));
     } finally {
       setUploading((prev) => ({ ...prev, [idx]: false }));
     }
@@ -344,7 +356,8 @@ export default function ProfileEditor() {
       const url = await uploadToCloudinary(file, "profile");
       updateAvatarWithHistory(url);
     } catch (err) {
-      console.error(err);
+      console.error("Profil fotoğrafı yükleme hatası:", err);
+      alert("Profil fotoğrafı yüklenemedi: " + (err?.message || "Lütfen dosya boyutunu veya formatını kontrol edin."));
     } finally {
       setUploadingAvatar(false);
     }
@@ -366,6 +379,28 @@ export default function ProfileEditor() {
         saveStatus={saveStatus}
         onSave={save}
       />
+
+      {/* ─── Hata Bildirim Kartı ─── */}
+      {saveErrorMsg && (
+        <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-between gap-4 animate-fadeIn shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">
+              <AlertTriangle size={18} />
+            </div>
+            <p className="text-sm font-semibold text-rose-200">
+              {saveErrorMsg}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSaveErrorMsg("")}
+            className="p-1.5 rounded-lg text-rose-300/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+            title="Kapat"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}

@@ -9,31 +9,65 @@
  * @returns {Promise<string>} - Yüklenen dosyanın güvenli URL'si
  */
 export async function uploadToCloudinary(file, folder = "portfolio") {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("folder", folder);
+  // 1. Öncelikli Yöntem: Sunucu tarafı /api/upload uç noktası
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
 
-  const response = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-  if (!response.ok) {
+    if (response.ok) {
+      const data = await response.json();
+      const fileUrl = data.url || data.secure_url;
+      if (fileUrl) return fileUrl;
+    } else {
+      console.warn(
+        "/api/upload uç noktası hata verdi, doğrudan yedek yükleme deneniyor...",
+        response.status
+      );
+    }
+  } catch (serverErr) {
+    console.warn(
+      "/api/upload uç noktasına erişilemedi, doğrudan yedek yükleme deneniyor...",
+      serverErr
+    );
+  }
+
+  // 2. Güvenilir Yedek Yöntem: Doğrudan Cloudinary İmzasız Yükleme
+  // Sunucusuz fonksiyon çalışmazsa, Vercel ortam değişkeni eksikse veya soğuk başlangıç hatası olursa devreye girer
+  const directPayload = new FormData();
+  directPayload.append("file", file);
+  directPayload.append("upload_preset", "aleyna_prod_upload");
+  directPayload.append("folder", folder);
+
+  const directResponse = await fetch(
+    "https://api.cloudinary.com/v1_1/mxepbe4r/auto/upload",
+    {
+      method: "POST",
+      body: directPayload,
+    }
+  );
+
+  if (!directResponse.ok) {
     let errorMessage = "Dosya yüklenemedi";
     try {
-      const errData = await response.json();
-      errorMessage = errData.error || errData.message || errorMessage;
+      const errData = await directResponse.json();
+      errorMessage = errData.error?.message || errData.message || errorMessage;
     } catch {
       // JSON parse edilemezse varsayılan mesajı kullan
     }
     throw new Error(errorMessage);
   }
 
-  const data = await response.json();
-  const fileUrl = data.url || data.secure_url;
+  const result = await directResponse.json();
+  const fileUrl = result.secure_url || result.url;
 
   if (!fileUrl) {
-    throw new Error("Yükleme tamamlandı ancak dosya URL'si alınamadı");
+    throw new Error("Yükleme tamamlandı ancak dosya bağlantısı alınamadı");
   }
 
   return fileUrl;

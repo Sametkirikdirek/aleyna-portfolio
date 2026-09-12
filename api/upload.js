@@ -34,7 +34,7 @@ export default async function handler(request) {
     const cloudName =
       process.env.CLOUDINARY_CLOUD_NAME ||
       process.env.VITE_CLOUDINARY_CLOUD_NAME ||
-      "REMOVED_CLOUD_NAME";
+      "mxepbe4r";
     const uploadPreset =
       process.env.CLOUDINARY_UPLOAD_PRESET ||
       process.env.VITE_CLOUDINARY_UPLOAD_PRESET ||

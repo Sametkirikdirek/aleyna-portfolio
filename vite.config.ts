@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => {
                 env.CLOUDINARY_CLOUD_NAME ||
                 env.VITE_CLOUDINARY_CLOUD_NAME ||
                 process.env.CLOUDINARY_CLOUD_NAME ||
-                "REMOVED_CLOUD_NAME";
+                "mxepbe4r";
               const uploadPreset =
                 env.CLOUDINARY_UPLOAD_PRESET ||
                 env.VITE_CLOUDINARY_UPLOAD_PRESET ||

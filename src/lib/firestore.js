@@ -37,7 +37,11 @@ export async function getContent(docId) {
  */
 export async function setContent(docId, data) {
   const ref = doc(db, "content", docId);
-  await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+  // Veriyi JSON serileştirmesiyle sanitize et (undefined değerleri güvenle temizle)
+  const cleanData = JSON.parse(
+    JSON.stringify(data, (_, v) => (v === undefined ? null : v))
+  );
+  await setDoc(ref, { ...cleanData, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 /**
