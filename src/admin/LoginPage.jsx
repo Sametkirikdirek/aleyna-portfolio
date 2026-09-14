@@ -45,8 +45,13 @@ export default function LoginPage() {
         <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 backdrop-blur-xl shadow-2xl">
           {/* Logo / Başlık */}
           <div className="flex flex-col items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
-              <Lock size={20} className="text-rose-400" />
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-full bg-rose-500/30 blur-md" />
+              <img
+                src="/logo.png"
+                alt="Aleyna Altunsu"
+                className="relative w-16 h-16 rounded-full object-cover border-2 border-rose-500/40 shadow-xl"
+              />
             </div>
             <div className="text-center">
               <h1 className="text-white font-semibold text-lg tracking-tight">Admin Girişi</h1>

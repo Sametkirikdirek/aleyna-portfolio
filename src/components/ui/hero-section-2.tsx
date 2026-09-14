@@ -93,20 +93,26 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
           <div>
             <motion.header className="mb-8 sm:mb-12" variants={itemVariants}>
               {logo && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5 sm:gap-4">
                   {logo.url ? (
-                    <img
-                      src={logo.url}
-                      alt={logo.alt}
-                      className="mr-1 h-8 w-8 rounded-full object-cover"
-                    />
+                    <div className="relative group/logo shrink-0">
+                      <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md opacity-75 group-hover/logo:opacity-100 transition-opacity" />
+                      <img
+                        src={logo.url}
+                        alt={logo.alt}
+                        className="relative h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover border-2 border-primary/40 shadow-xl hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   ) : (
                     <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                   )}
                   <div>
                     {logo.text && (
-                      <p className="font-display text-base sm:text-lg font-bold text-foreground">{logo.text}</p>
+                      <p className="font-display text-base sm:text-xl font-bold text-foreground tracking-wide leading-tight">{logo.text}</p>
                     )}
+                    <span className="font-mono text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest block mt-0.5">
+                      Kişisel Portfolyo & Atölye
+                    </span>
                   </div>
                 </div>
               )}

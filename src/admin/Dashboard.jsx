@@ -64,10 +64,17 @@ export default function Dashboard() {
         } md:translate-x-0 md:fixed md:top-0 md:left-0 md:h-screen md:w-64 md:z-30`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/8">
-          <div>
-            <p className="font-semibold text-sm tracking-tight">Admin Paneli</p>
-            <p className="text-white/40 text-xs mt-0.5 truncate max-w-[160px]">{user?.email}</p>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src="/logo.png"
+              alt="Aleyna Altunsu"
+              className="w-9 h-9 rounded-full object-cover border border-white/15 shadow-sm shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="font-semibold text-sm tracking-tight text-white">Admin Paneli</p>
+              <p className="text-white/40 text-xs mt-0.5 truncate max-w-[140px]">{user?.email}</p>
+            </div>
           </div>
           <button
             className="md:hidden text-white/40 hover:text-white cursor-pointer"

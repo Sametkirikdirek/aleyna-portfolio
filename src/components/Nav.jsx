@@ -69,8 +69,16 @@ export default function Nav() {
       }`}
     >
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 md:px-10 h-16 md:h-20">
-        <Link to="/" className="font-display text-xl font-bold tracking-widest text-paper hover:text-brush-soft transition-colors outline-none focus:outline-none focus-visible:outline-none">
-          A&A
+        <Link
+          to="/"
+          className="group flex items-center gap-2.5 font-display text-lg sm:text-xl font-bold tracking-widest text-paper hover:text-brush-soft transition-colors outline-none focus:outline-none focus-visible:outline-none select-none"
+        >
+          <img
+            src="/logo.png"
+            alt="Aleyna Altunsu Logo"
+            className="w-8 h-8 md:w-9 md:h-9 rounded-full object-cover border border-paper/20 group-hover:border-brush-soft/60 group-hover:scale-105 shadow-sm transition-all duration-300 shrink-0"
+          />
+          <span className="tracking-widest">A&A</span>
         </Link>
 
         {/* Desktop Header */}

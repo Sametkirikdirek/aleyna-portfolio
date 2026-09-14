@@ -43,7 +43,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-background">
       <HeroSection
         logo={{
-          url: "",
+          url: "/logo.png",
           alt: profile?.name || "Aleyna Altunsu",
           text: profile?.name || "Aleyna Altunsu",
         }}

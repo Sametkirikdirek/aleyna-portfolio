@@ -20,6 +20,20 @@ export default function Footer() {
       />
 
       <div className="relative max-w-3xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, amount: 0.6 }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto mb-6 w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-brush/40 shadow-2xl shadow-brush/20 hover:border-brush hover:scale-105 transition-all duration-300"
+        >
+          <img
+            src="/logo.png"
+            alt="Aleyna Altunsu Logo"
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
