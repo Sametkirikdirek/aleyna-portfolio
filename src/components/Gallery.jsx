@@ -1186,15 +1186,16 @@ export default function Gallery() {
                     </h3>
                   </div>
 
-                  {/* Lightbox Heart Like Button */}
+                  {/* Lightbox Heart Like Button (Kompakt Çember) */}
                   <button
                     onClick={(e) => toggleLike(active.id, e)}
-                    className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full border text-xs font-mono font-semibold transition-all cursor-pointer shrink-0 shadow-md ${
+                    className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm ${
                       userLikes.includes(active.id)
-                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.5)] scale-105"
-                        : "bg-paper/10 text-paper/85 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:bg-paper/15"
+                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.5)] scale-105"
+                        : "bg-paper/10 text-paper/85 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:bg-paper/15 hover:scale-105"
                     }`}
                     title={userLikes.includes(active.id) ? "Beğeniyi Kaldır" : "Eseri Beğen"}
+                    aria-label="Eseri Beğen"
                   >
                     <Heart
                       size={15}
@@ -1204,7 +1205,6 @@ export default function Gallery() {
                           : "text-rose-400"
                       }
                     />
-                    <span>{userLikes.includes(active.id) ? "Beğenildi" : "Beğen"}</span>
                   </button>
                 </div>
 
