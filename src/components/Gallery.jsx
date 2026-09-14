@@ -197,30 +197,50 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
   );
 }
 
-// ─── 3D Tilt Card ───────────────────────────────────────────
+// ─── 3D Tilt Card (Optimized for 120 FPS on Touch & Desktop) ─
 function TiltCard({ children, className = "", onClick, style }) {
   const cardRef = useRef(null);
   const [transform, setTransform] = useState("");
   const [glarePos, setGlarePos] = useState({ x: 50, y: 50 });
   const [isHovering, setIsHovering] = useState(false);
+  const rafId = useRef(null);
+
+  // Touch device check (bypasses heavy mouse event listeners on mobile for native 120 FPS scroll)
+  const isTouchDevice = typeof window !== "undefined" && (
+    "ontouchstart" in window ||
+    (navigator && navigator.maxTouchPoints > 0) ||
+    window.innerWidth < 768
+  );
 
   const handleMouseMove = useCallback((e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -6;
-    const rotateY = ((x - centerX) / centerX) * 6;
-    setTransform(`perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
-    setGlarePos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
-  }, []);
+    if (isTouchDevice) return;
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+
+    rafId.current = requestAnimationFrame(() => {
+      const card = cardRef.current;
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -4;
+      const rotateY = ((x - centerX) / centerX) * 4;
+      setTransform(`perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
+      setGlarePos({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    });
+  }, [isTouchDevice]);
 
   const handleMouseLeave = useCallback(() => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
     setTransform("");
     setIsHovering(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
   }, []);
 
   return (
@@ -230,25 +250,28 @@ function TiltCard({ children, className = "", onClick, style }) {
       style={{
         ...style,
         transform: transform || undefined,
-        transition: isHovering ? "transform 0.1s ease-out" : "transform 0.45s ease-out",
-        transformStyle: isHovering ? "preserve-3d" : undefined,
+        transition: isHovering ? "transform 0.1s ease-out" : "transform 0.4s cubic-bezier(0.2, 0, 0, 1)",
+        transformStyle: isHovering && !isTouchDevice ? "preserve-3d" : undefined,
         willChange: isHovering ? "transform" : "auto",
+        touchAction: "pan-y",
       }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={() => setIsHovering(true)}
+      onMouseMove={isTouchDevice ? undefined : handleMouseMove}
+      onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
+      onMouseEnter={isTouchDevice ? undefined : () => setIsHovering(true)}
       onClick={onClick}
     >
       {children}
-      {/* Glare */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-xl z-20"
-        style={{
-          opacity: isHovering ? 0.12 : 0,
-          transition: "opacity 0.3s",
-          background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,0.55) 0%, transparent 55%)`,
-        }}
-      />
+      {/* Glare (Desktop only) */}
+      {!isTouchDevice && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl z-20"
+          style={{
+            opacity: isHovering ? 0.12 : 0,
+            transition: "opacity 0.3s",
+            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,0.55) 0%, transparent 55%)`,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -298,11 +321,22 @@ export default function Gallery() {
   useEffect(() => {
     const updateCols = () => {
       const w = window.innerWidth;
-      setColumnCount(w < 640 ? 1 : w < 1024 ? 2 : w < 1280 ? 3 : 4);
+      // Mobilde (telefonlarda) 2 sütunlu Pinterest düzeni, tablet ve masaüstünde 2, 3 ve 4 sütun
+      setColumnCount(w < 640 ? 2 : w < 1024 ? 2 : w < 1280 ? 3 : 4);
     };
     updateCols();
-    window.addEventListener("resize", updateCols);
-    return () => window.removeEventListener("resize", updateCols);
+
+    let resizeTimer;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateCols, 80);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   // Sync items state whenever mergedArtworks updates
@@ -508,7 +542,7 @@ export default function Gallery() {
   }, [timelineImagesList]);
 
   return (
-    <section className="min-h-screen px-3 sm:px-6 md:px-10 pt-24 sm:pt-28 pb-20 md:pt-32 md:pb-32 bg-ink text-paper">
+    <section className="min-h-screen px-2.5 sm:px-6 md:px-10 pt-24 sm:pt-28 pb-20 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
         {/* ─── Header & Controls ─── */}
         <header className="mb-8 md:mb-12">
@@ -872,12 +906,11 @@ export default function Gallery() {
           </div>
         )}
 
-        {/* ─── PINTEREST MASONRY GRID (Fast & Smooth 60fps) ─── */}
-        <div className="flex gap-4 sm:gap-5 items-start">
+        {/* ─── PINTEREST MASONRY GRID (Fast & Smooth 60/120fps) ─── */}
+        <div className="flex gap-2.5 sm:gap-4 md:gap-5 items-start">
           {masonryColumns.map((col, colIdx) => (
-            <div key={colIdx} className="flex-1 flex flex-col gap-4 sm:gap-5 min-w-0">
+            <div key={colIdx} className="flex-1 flex flex-col gap-2.5 sm:gap-4 md:gap-5 min-w-0">
               {col.map(({ item: p, index: i }) => {
-                const isLiked = userLikes.includes(p.id);
                 return (
                   <motion.div
                     key={p.id || i}
@@ -885,19 +918,20 @@ export default function Gallery() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: Math.min((i % 6) * 0.03, 0.2) }}
                     className="w-full"
+                    style={{ contentVisibility: "auto", containIntrinsicSize: "0 350px" }}
                   >
                     <TiltCard
-                      className="group relative rounded-xl overflow-hidden text-left bg-ink-soft border border-paper/10 cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-brush/10 hover:border-brush-soft/40 transition-shadow duration-300"
+                      className="group relative rounded-2xl overflow-hidden text-left bg-ink-soft/90 border border-amber-900/15 dark:border-paper/10 cursor-pointer shadow-md hover:shadow-2xl hover:shadow-brush/15 hover:border-brush-soft/40 transition-all duration-300"
                       onClick={() => setActiveIdx(i)}
                     >
-                      {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio) */}
+                      {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio, temiz ve engelsiz) */}
                       {p.image ? (
                         <img
                           src={p.image}
-                          alt={p.title}
+                          alt={p.title || "Eser"}
                           loading="lazy"
                           decoding="async"
-                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.03]"
+                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.025]"
                           onError={(e) => {
                             e.currentTarget.style.display = "none";
                           }}
@@ -912,64 +946,25 @@ export default function Gallery() {
                         </div>
                       )}
 
-                        {/* Heart / Like Button (Icon only, no like count number shown to visitors) */}
-                        <button
-                          onClick={(e) => toggleLike(p.id, e)}
-                          className={`absolute top-3 right-3 z-20 p-2.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md flex items-center justify-center ${
-                            isLiked
-                              ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.6)] scale-110"
-                              : "bg-ink/75 text-paper/70 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:scale-105"
-                          }`}
-                          title={isLiked ? "Beğeniyi Kaldır" : "Eseri Beğen"}
-                        >
-                          <Heart
-                            size={14}
-                            className={
-                              isLiked ? "fill-white text-white" : "text-rose-400"
-                            }
-                          />
-                        </button>
+                      {/* Büyüt / İncele İkonu (Masaüstü hover'da zarifçe belirir) */}
+                      <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="p-2 sm:p-2.5 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/20 inline-flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                          <Maximize2 size={13} />
+                        </span>
+                      </div>
 
-                        {/* Büyüt İkonu */}
-                        <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <span className="p-2 rounded-full backdrop-blur-md bg-ink/75 text-paper border border-paper/15 inline-flex items-center justify-center shadow-lg">
-                            <Maximize2 size={13} />
-                          </span>
-                        </div>
-
-                        {/* Animasyonlu Çerçeve Glow */}
-                        <div
-                          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
-                          style={{
-                            boxShadow:
-                              "inset 0 0 30px rgba(217,112,79,0.15), inset 0 0 60px rgba(107,163,166,0.08)",
-                          }}
-                        />
-
-                        {/* Alt Bilgi Overlay */}
-                        <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
-                          <div className="backdrop-blur-md dark:bg-ink/85 bg-[#fdfbf7]/95 border dark:border-paper/10 border-amber-900/15 rounded-lg px-3 py-2.5 transition-all duration-300 group-hover:border-brush/40 flex items-center justify-between shadow-md">
-                            <div className="min-w-0 flex-1 pr-2">
-                              <h3 className="font-display text-sm sm:text-base text-paper font-bold leading-snug group-hover:text-brush transition-colors duration-300 truncate">
-                                {p.title || "İsimsiz Eser"}
-                              </h3>
-                              {p.medium && (
-                                <p className="font-mono text-[10px] dark:text-paper/60 text-paper/75 font-medium mt-0.5 truncate">
-                                  {p.medium}
-                                </p>
-                              )}
-                            </div>
-                            {p.year && (
-                              <span className="font-mono text-[10px] shrink-0 font-bold dark:text-brush-soft text-amber-900 dark:bg-brush/15 bg-amber-500/15 px-2 py-0.5 rounded-md border dark:border-brush/30 border-amber-900/20">
-                                {p.year}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </TiltCard>
-                    </motion.div>
-                  );
-                })}
+                      {/* Animasyonlu Çerçeve Glow */}
+                      <div
+                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
+                        style={{
+                          boxShadow:
+                            "inset 0 0 25px rgba(217,112,79,0.15), inset 0 0 50px rgba(107,163,166,0.08)",
+                        }}
+                      />
+                    </TiltCard>
+                  </motion.div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -1191,17 +1186,25 @@ export default function Gallery() {
                     </h3>
                   </div>
 
-                  {/* Lightbox Heart Like Button (Icon only, no number shown) */}
+                  {/* Lightbox Heart Like Button */}
                   <button
                     onClick={(e) => toggleLike(active.id, e)}
-                    className={`p-2.5 rounded-full border transition-all cursor-pointer shrink-0 flex items-center justify-center ${
+                    className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full border text-xs font-mono font-semibold transition-all cursor-pointer shrink-0 shadow-md ${
                       userLikes.includes(active.id)
-                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)] scale-110"
-                        : "bg-paper/10 text-paper/80 border-paper/15 hover:text-rose-400 hover:border-rose-500/40"
+                        ? "bg-rose-600 text-white border-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.5)] scale-105"
+                        : "bg-paper/10 text-paper/85 border-paper/20 hover:text-rose-400 hover:border-rose-500/40 hover:bg-paper/15"
                     }`}
                     title={userLikes.includes(active.id) ? "Beğeniyi Kaldır" : "Eseri Beğen"}
                   >
-                    <Heart size={16} className={userLikes.includes(active.id) ? "fill-white text-white" : "text-rose-400"} />
+                    <Heart
+                      size={15}
+                      className={
+                        userLikes.includes(active.id)
+                          ? "fill-white text-white animate-[pulse_0.4s_ease]"
+                          : "text-rose-400"
+                      }
+                    />
+                    <span>{userLikes.includes(active.id) ? "Beğenildi" : "Beğen"}</span>
                   </button>
                 </div>
 
