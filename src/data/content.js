@@ -310,6 +310,16 @@ export const contactArtworks = [
 // Medium yazıları — otomatik RSS ile çekilir; ağ hatasında yedek liste.
 export const mediumWritingsFallback = [
   {
+    id: "w0",
+    title: "LLMOps: Üretim Ortamında Büyük Dil Modellerini Yönetmek Bölüm 1",
+    excerpt:
+      "Yapay zeka dünyası hızla gelişirken, Büyük Dil Modellerini (LLM) projelerimize entegre etmek kadar bu modelleri üretim ortamında (production) sürdürülebilir, güvenli ve ölçeklenebilir kılmak da kritik hale geliyor.",
+    date: "Eyl 2026",
+    readTime: "7 dk",
+    tag: "Yapay Zeka",
+    url: "https://medium.com/@aleynaaltunsu/llmops-%C3%BCretim-ortam%C4%B1nda-b%C3%BCy%C3%BCk-dil-modellerini-y%C3%B6netmek-b%C3%B6l%C3%BCm-1-f315a2b9ac2a",
+  },
+  {
     id: "w1",
     title:
       "Vision Transformer Mimarilerinde Dikkat Savaşları: ViT, Swin, Deformable Attention, Q-Former ve…",

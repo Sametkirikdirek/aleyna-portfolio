@@ -7,7 +7,7 @@ import {
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
 
-const FEED_SOURCES = ["/medium-posts.json", "/api/medium"];
+const FEED_SOURCES = ["/api/medium", "/medium-posts.json"];
 
 const TABS = [
   { id: "medium", label: "Medium", icon: BookOpen },
@@ -51,33 +51,57 @@ function formatRssItem(item, idx) {
   };
 }
 
+async function fetchJsonWithTimeout(url, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
 async function loadMediumArticles(mediumUrl = "https://medium.com/@aleynaaltunsu") {
   // Extract handle: "@aleynaaltunsu"
   const handleMatch = mediumUrl.match(/@([\w.-]+)/);
   const handle = handleMatch ? `@${handleMatch[1]}` : "@aleynaaltunsu";
 
-  // 1. Live RSS to JSON
+  // 1. Birinci Öncelik: Kendi /api/medium uç noktamız (Medium RSS'ini anlık ve aracısız çeker)
   try {
-    const rssUrl = encodeURIComponent(`https://medium.com/feed/${handle}`);
-    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
-        return data.items.map(formatRssItem);
-      }
+    const data = await fetchJsonWithTimeout(`/api/medium?t=${Date.now()}`, 5000);
+    if (Array.isArray(data?.posts) && data.posts.length > 0) {
+      return data.posts;
     }
   } catch (err) {
-    console.warn("Medium RSS live fetch error, falling back to local sources:", err);
+    console.warn("/api/medium uç noktasına erişilemedi, statik json deneniyor:", err);
   }
 
-  // 2. Local fallback sources
-  for (const source of FEED_SOURCES) {
-    try {
-      return await fetchWithTimeout(source);
-    } catch {
-      // try next source
+  // 2. İkinci Öncelik: Dağıtım anında kaydedilen yerel /medium-posts.json
+  try {
+    const data = await fetchJsonWithTimeout(`/medium-posts.json?t=${Date.now()}`, 4000);
+    if (Array.isArray(data?.posts) && data.posts.length > 0) {
+      return data.posts;
     }
+  } catch (err) {
+    console.warn("medium-posts.json okunamadı, üçüncü parti RSS köprüsü deneniyor:", err);
   }
+
+  // 3. Üçüncü Öncelik: Harici rss2json servisi (Yedek)
+  try {
+    const rssUrl = encodeURIComponent(`https://medium.com/feed/${handle}`);
+    const data = await fetchJsonWithTimeout(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`, 5000);
+    if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
+      return data.items.map(formatRssItem);
+    }
+  } catch (err) {
+    console.warn("Tüm canlı Medium kaynakları başarısız oldu, yerel fallback yükleniyor:", err);
+  }
+
+  // 4. Son Çare: Kod içi statik yedek
   return mediumWritingsFallback;
 }
 

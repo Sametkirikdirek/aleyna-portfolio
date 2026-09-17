@@ -1,5 +1,9 @@
 import { fetchMediumPosts } from "../lib/mediumFeed.js";
 
+export const config = {
+  runtime: "edge",
+};
+
 export default async function handler(_request) {
   try {
     const posts = await fetchMediumPosts();
@@ -8,7 +12,7 @@ export default async function handler(_request) {
       { posts, source: "medium", count: posts.length },
       {
         headers: {
-          "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400",
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
         },
       }
     );
