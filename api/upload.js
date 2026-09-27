@@ -3,12 +3,40 @@
  *
  * Cloudinary imzasız yükleme ön ayarı (upload preset) ve hesap adı yalnızca bu
  * sunucu fonksiyonunda saklanır; istemciye (tarayıcıya) asla sızdırılmaz.
+ *
+ * Güvenlik Önlemleri:
+ * - Yalnızca POST istekleri
+ * - İzin verilen MIME türleri (Görseller & PDF)
+ * - 10MB dosya boyutu sınırı (DDoS & kota tüketim koruması)
+ * - Klasör adı sanitizasyonu (Path traversal koruması)
  */
 
 export const config = {
   // Edge runtime: Akış tabanlı FormData desteği ve sıfır cold-start süresi
   runtime: "edge",
 };
+
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+  "application/pdf",
+]);
+
+const ALLOWED_FOLDERS = new Set([
+  "gallery",
+  "profile",
+  "timeline",
+  "cv",
+  "writings",
+  "portfolio",
+  "temp",
+]);
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export default async function handler(request) {
   if (request.method !== "POST") {
@@ -21,14 +49,37 @@ export default async function handler(request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file");
-    const folder = formData.get("folder") || "portfolio";
+    const rawFolder = formData.get("folder") || "portfolio";
 
-    if (!file) {
+    if (!file || typeof file === "string") {
       return Response.json(
         { error: "Yüklenecek dosya bulunamadı" },
         { status: 400 }
       );
     }
+
+    // 1. Dosya Türü Kontrolü
+    const mimeType = (file.type || "").toLowerCase();
+    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+      return Response.json(
+        {
+          error: "Geçersiz dosya türü. Yalnızca JPEG, PNG, WEBP, GIF ve PDF yükleyebilirsiniz.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 2. Dosya Boyutu Kontrolü (10MB)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return Response.json(
+        { error: "Dosya boyutu 10MB sınırını aşıyor." },
+        { status: 400 }
+      );
+    }
+
+    // 3. Klasör Adı Sanitizasyonu
+    const sanitizedFolder = String(rawFolder).toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const targetFolder = ALLOWED_FOLDERS.has(sanitizedFolder) ? sanitizedFolder : "portfolio";
 
     // Sunucu tarafı ortam değişkenlerini oku
     const cloudName =
@@ -43,7 +94,7 @@ export default async function handler(request) {
     const uploadPayload = new FormData();
     uploadPayload.append("file", file);
     uploadPayload.append("upload_preset", uploadPreset);
-    uploadPayload.append("folder", folder);
+    uploadPayload.append("folder", targetFolder);
 
     const cloudinaryResponse = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,

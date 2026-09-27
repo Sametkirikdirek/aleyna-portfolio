@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Ziyaretçi Trafik & Analitik Sayacı
+    // Ziyaretçiler yalnızca sayaç artırma alanlarına yazabilir, silme/okuma yapamaz.
+    match /analytics/traffic {
+      allow read: if request.auth != null;
+      allow write: if true;
+    }
+
+    // 2. Portfolyo İçerikleri (Profil, Galeri, Yazılar, Zaman Çizelgesi, CV, Projeler)
+    // - Okuma: Herkese açık (Ziyaretçiler portfolyoyu görebilir)
+    // - Yazma/Güncelleme/Silme: YALNIZCA oturum açmış Admin kullanıcı (request.auth != null)
+    match /content/{documentId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 3. Diğer tüm dokümanlar varsayılan olarak tamamen kilitli
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

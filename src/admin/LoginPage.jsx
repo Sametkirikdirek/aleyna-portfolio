@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Loader2, ShieldAlert } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_SECONDS = 60;
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -13,17 +16,71 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [lockoutTimer, setLockoutTimer] = useState(0);
+
+  // Sayfa yüklendiğinde mevcut kilit durumunu kontrol et
+  useEffect(() => {
+    try {
+      const lockUntil = parseInt(localStorage.getItem("admin_lockout_until") || "0", 10);
+      const now = Date.now();
+      if (lockUntil > now) {
+        setLockoutTimer(Math.ceil((lockUntil - now) / 1000));
+      }
+    } catch {}
+  }, []);
+
+  // Geri sayım sayacı
+  useEffect(() => {
+    if (lockoutTimer <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutTimer((prev) => {
+        if (prev <= 1) {
+          try {
+            localStorage.removeItem("admin_lockout_until");
+            localStorage.removeItem("admin_failed_attempts");
+          } catch {}
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTimer]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (lockoutTimer > 0) return;
+
     setError("");
     setLoading(true);
-    const result = await login(email, password);
+
+    const cleanEmail = email.trim();
+    const result = await login(cleanEmail, password);
     setLoading(false);
+
     if (result.success) {
+      try {
+        localStorage.removeItem("admin_failed_attempts");
+        localStorage.removeItem("admin_lockout_until");
+      } catch {}
       navigate("/admin/dashboard");
     } else {
-      setError(result.error);
+      let attempts = 1;
+      try {
+        attempts = parseInt(localStorage.getItem("admin_failed_attempts") || "0", 10) + 1;
+        localStorage.setItem("admin_failed_attempts", String(attempts));
+      } catch {}
+
+      if (attempts >= MAX_FAILED_ATTEMPTS) {
+        const lockUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+        try {
+          localStorage.setItem("admin_lockout_until", String(lockUntil));
+        } catch {}
+        setLockoutTimer(LOCKOUT_SECONDS);
+        setError(`Güvenlik uyarısı: Çok fazla hatalı deneme! Lütfen ${LOCKOUT_SECONDS} saniye bekleyin.`);
+      } else {
+        setError(`${result.error} (Kalan deneme hakkı: ${MAX_FAILED_ATTEMPTS - attempts})`);
+      }
     }
   };
 
@@ -76,10 +133,11 @@ export default function LoginPage() {
                   type="email"
                   required
                   autoComplete="email"
+                  disabled={loading || lockoutTimer > 0}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ornek@mail.com"
-                  className="w-full bg-white/[0.06] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm placeholder:text-white/20 outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/30 transition-all duration-200"
+                  className="w-full bg-white/[0.06] border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm placeholder:text-white/20 outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
                 />
               </div>
             </div>
@@ -99,15 +157,17 @@ export default function LoginPage() {
                   type={showPw ? "text" : "password"}
                   required
                   autoComplete="current-password"
+                  disabled={loading || lockoutTimer > 0}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-white/[0.06] border border-white/10 rounded-lg pl-10 pr-10 py-2.5 text-white text-sm placeholder:text-white/20 outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/30 transition-all duration-200"
+                  className="w-full bg-white/[0.06] border border-white/10 rounded-lg pl-10 pr-10 py-2.5 text-white text-sm placeholder:text-white/20 outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  disabled={lockoutTimer > 0}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors disabled:opacity-30"
                   aria-label="Şifreyi göster/gizle"
                 >
                   {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -115,12 +175,24 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Kilit Uyarısı */}
+            {lockoutTimer > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono font-medium"
+              >
+                <ShieldAlert size={16} className="shrink-0 text-amber-400" />
+                <span>Kaba kuvvet (brute-force) koruması devrede. Lütfen {lockoutTimer} saniye bekleyin.</span>
+              </motion.div>
+            )}
+
             {/* Hata mesajı */}
-            {error && (
+            {error && lockoutTimer <= 0 && (
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2"
+                className="text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 font-medium"
               >
                 {error}
               </motion.p>
@@ -130,14 +202,16 @@ export default function LoginPage() {
             <button
               id="admin-login-btn"
               type="submit"
-              disabled={loading}
-              className="w-full mt-2 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-900 text-white font-medium text-sm py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-rose-900/30"
+              disabled={loading || lockoutTimer > 0}
+              className="w-full mt-2 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-950 disabled:text-white/40 disabled:cursor-not-allowed text-white font-medium text-sm py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-rose-900/30"
             >
               {loading ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
                   Giriş yapılıyor…
                 </>
+              ) : lockoutTimer > 0 ? (
+                `Kilitli (${lockoutTimer}s)`
               ) : (
                 "Giriş Yap"
               )}
