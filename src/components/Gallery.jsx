@@ -10,6 +10,7 @@ import { paintings as defaultPaintings } from "../data/content";
 import { setContent } from "../lib/firestore";
 import InfiniteGallery from "./ui/infinite-gallery";
 import DragScrollStrip from "./ui/DragScrollStrip";
+import { getOptimizedImageUrl } from "../lib/imageOptimizer";
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -136,8 +137,10 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
         >
           {current.image ? (
             <img
-              src={current.image}
+              src={getOptimizedImageUrl(current.image, { width: 1200 })}
               alt={current.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
@@ -176,7 +179,13 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
             >
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
                 {item.image ? (
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <img
+                    src={getOptimizedImageUrl(item.image, { width: 140, height: 140, crop: "fill" })}
+                    alt={item.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
                 )}
@@ -523,7 +532,7 @@ export default function Gallery() {
       return timelineImagesList
         .filter((img) => img.url)
         .map((img, idx) => ({
-          src: img.url,
+          src: getOptimizedImageUrl(img.url, { width: 1000 }),
           alt: img.caption || `Zaman Yolculuğu ${idx + 1}`,
         }));
     }
@@ -693,8 +702,10 @@ export default function Gallery() {
                   <div className="aspect-[3/4] w-full overflow-hidden relative">
                     {item.image ? (
                       <img
-                        src={item.image}
+                        src={getOptimizedImageUrl(item.image, { width: 800 })}
                         alt={item.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
@@ -927,7 +938,7 @@ export default function Gallery() {
                       {/* Fotoğraf — Doğal boyutunda (Pinterest intrinsic ratio, temiz ve engelsiz) */}
                       {p.image ? (
                         <img
-                          src={p.image}
+                          src={getOptimizedImageUrl(p.image, { width: 800 })}
                           alt={p.title || "Eser"}
                           loading="lazy"
                           decoding="async"
@@ -1163,8 +1174,9 @@ export default function Gallery() {
               <div className="relative w-full bg-ink flex items-center justify-center">
                 {active.image ? (
                   <img
-                    src={active.image}
+                    src={getOptimizedImageUrl(active.image, { width: 1800 })}
                     alt={active.title}
+                    decoding="async"
                     className="w-full h-auto max-h-[65vh] object-contain"
                   />
                 ) : (

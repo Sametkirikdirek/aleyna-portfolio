@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { mediumWritingsFallback } from "../data/content";
 import { useWritings, useProfile } from "../hooks/useContent";
+import { getOptimizedImageUrl } from "../lib/imageOptimizer";
 
 const FEED_SOURCES = ["/api/medium", "/medium-posts.json"];
 
@@ -497,8 +498,10 @@ export default function Writings() {
                       <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-ink/5 border border-amber-900/10 relative">
                         {w.image ? (
                           <img
-                            src={w.image}
+                            src={getOptimizedImageUrl(w.image, { width: 600 })}
                             alt={w.title}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (

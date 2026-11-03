@@ -8,6 +8,7 @@ import SocialCards from "./ui/card-fan-carousel";
 import { useColorMode } from "../context/ColorModeContext";
 import { useProfile } from "../hooks/useContent";
 import DefaultPersonAvatar from "./ui/DefaultPersonAvatar";
+import { getOptimizedImageUrl } from "../lib/imageOptimizer";
 
 /* Inline SVG social icons */
 const GithubIcon = (props) => (
@@ -142,8 +143,10 @@ export default function Hero() {
               <div className="w-[115px] h-[180px] sm:w-[140px] sm:h-[225px] lg:w-[165px] lg:h-[265px] rounded-full overflow-hidden border-2 border-white/30 shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-rose-400 group-hover:shadow-[0_0_35px_rgba(244,63,94,0.45)] bg-ink flex items-center justify-center">
                 {profile.avatar ? (
                   <img
-                    src={profile.avatar}
+                    src={getOptimizedImageUrl(profile.avatar, { width: 350, height: 500, crop: "fill" })}
                     alt={profile.name}
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 ) : (
