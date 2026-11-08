@@ -48,3 +48,4 @@ export function getOptimizedSrcSet(url, widths = [480, 768, 1200, 1600]) {
     .map((w) => `${getOptimizedImageUrl(url, { width: w })} ${w}w`)
     .join(", ");
 }
+
