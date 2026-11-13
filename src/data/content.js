@@ -6,10 +6,10 @@
 
 export const profile = {
   name: "Aleyna Altunsu",
-  avatar: "/artworks/aleyna_avatar.png",
+  avatar: "https://res.cloudinary.com/mxepbe4r/image/upload/v1789248893/profile/eevp4i8g1vakomgw803t.jpg",
   roles: ["Yapay Zeka Mühendisi", "Ressam", "Yazar"],
   tagline: "Fırçayla başlayan çizgi, kodda devam ediyor.",
-  bio: `Tuvalle düşünen, kelimelerle şekillendiren, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı sanatsal üretim sürecinin iki tamamlayıcı yüzü olarak görüyorum — biri duyguyu ve kavramı yakalar, diğeri onu yaşayan sistemlere dönüştürür.`,
+  bio: `Tuvalde yaşayan, bazen hikayelerle düşünen, algoritmalarla inşa eden bir mühendis ve sanatçıyım. Sanatın sezgisel ve estetik derinliğiyle yapay zekâ mühendisliğinin matematiksel titizliğini aynı üretim sürecinin iki tamamlayıcı yüzü olarak görüyorum — biri duyguyu, insanı ve kavramı yakalar, diğeri onu yaşayan sistemlere dönüştürür. `,
   extendedBio: [
     {
       title: "Mühendislik & Yapay Zekâ",
@@ -24,9 +24,9 @@ export const profile = {
       content: `Medium ve kişisel blogumda yapay zekâ teknolojilerinin teknik anatomisini (ViT, Swin, RAG, LLM servisleri) ve atölye günlüklerimi kaleme alıyorum. Karmaşık mühendislik kavramlarını ve sanatsal süreçleri berrak bir dille aktarmanın gelişimin en güçlü parçası olduğuna inanıyorum.`,
     },
   ],
-  philosophy: "Tuvaldeki kompozisyon ile ekrandaki kod mimarisi arasında kopmaz bir akrabalık var. Sanat sorular sorar ve ifade arar, mühendislik ise o sorulara sistemlerle cevap verir.",
+  philosophy: "Sanat iç dünyamı mühendislik ise dış dünyamı şekillendirirken ben sadece hayattaki sanatı arayan ve takdir etmeye çalışan bir tapay zeka mühendisiyim.",
   location: "İstanbul, Türkiye",
-  email: "hello@aleynaaltunsu.com",
+  email: "aleynaaltunsu@gmail.com",
   cv: {
     tr: "/docs/Aleyna_Altunsu_CV_TR.pdf",
     en: "/docs/Aleyna_Altunsu_CV_EN.pdf",
@@ -38,7 +38,6 @@ export const profile = {
     instagram: "https://instagram.com/aleynaaltunsu.art",
   },
   heroCards: [
-    { imgUrl: "/artworks/hero_card_1.png", title: "Atölye Günlüğü", linkUrl: "/writings" },
     { imgUrl: "/artworks/hero_card_2.png", title: "Rengin Matematiği", linkUrl: "/gallery" },
     { imgUrl: "/artworks/hero_card_3.png", title: "Yapay Zeka & Görüntü", linkUrl: "/ai-work" },
     { imgUrl: "/artworks/hero_card_4.png", title: "Gece Vardiyası", linkUrl: "/gallery" },

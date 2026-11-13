@@ -22,7 +22,7 @@ import {
  * @returns {{ data: any, loading: boolean, refresh: Function }}
  */
 export function useContent(docId, fallback) {
-  const cacheKey = `portfolio_cache_${docId}`;
+  const cacheKey = `portfolio_cache_v3_${docId}`;
 
   const [data, setData] = useState(() => {
     try {
