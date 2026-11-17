@@ -8,7 +8,7 @@ import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
 import { paintings as defaultPaintings } from "../data/content";
 import { setContent } from "../lib/firestore";
-import InfiniteGallery from "./ui/infinite-gallery";
+import InfiniteGallery, { preloadInfiniteGallery } from "./ui/infinite-gallery";
 import DragScrollStrip from "./ui/DragScrollStrip";
 import { getOptimizedImageUrl } from "../lib/imageOptimizer";
 import { getArtworkPriceInfo } from "../lib/priceBadge";
@@ -635,6 +635,28 @@ export default function Gallery() {
     ];
   }, [timelineImagesList]);
 
+  // Zaman Yolculuğu dokularını ve görsellerini arka planda önceden yükle (anlık donmayı ve lazy load beklemesini yok eder)
+  useEffect(() => {
+    preloadInfiniteGallery(infiniteGalleryImages);
+  }, [infiniteGalleryImages]);
+
+  // Zaman Yolculuğu tam ekran açıkken sayfanın aşağı/yukarı kaymasını kilitle ve ESC ile çıkış desteği ver
+  useEffect(() => {
+    if (activeTab !== "zaman-yolculugu") return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setActiveTab("galeri");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow || "auto";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeTab]);
+
   return (
     <section className="min-h-screen px-2.5 sm:px-6 md:px-10 pt-24 sm:pt-28 pb-20 md:pt-32 md:pb-32 bg-ink text-paper">
       <div className="max-w-7xl mx-auto">
@@ -732,7 +754,7 @@ export default function Gallery() {
         </header>
 
         {/* ─── OPTION 1: "ENLER & ÖNE ÇIKAN ESERLER" SPOTLIGHT CAROUSEL ─── */}
-        {activeTab === "galeri" && topEnlerArtworks.length > 0 && (
+        {topEnlerArtworks.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -746,31 +768,29 @@ export default function Gallery() {
         )}
 
         {/* ─── ÖZEL TUVAL SİPARİŞİ / COMMISSION DAVET KARTI ─── */}
-        {activeTab === "galeri" && (
-          <div className="mb-12 p-6 sm:p-7 rounded-3xl dark:bg-ink-soft/95 bg-[#fdfbf7] border border-amber-900/15 dark:border-paper/15 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5 transition-colors">
-            <div className="space-y-1">
-              <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-amber-600 dark:text-amber-400">
-                Kişiye Özel Sipariş
-              </span>
-              <h4 className="font-display text-lg sm:text-xl font-bold text-ink dark:text-paper">
-                Senin Fotoğrafın, Aleyna'nın Tuvali
-              </h4>
-              <p className="font-sans text-xs sm:text-sm text-ink/75 dark:text-paper/70">
-                Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına uygunluğu değerlendirilsin.
-              </p>
-            </div>
-            <button
-              onClick={() => setCommissionOpen(true)}
-              className="shrink-0 w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-sans text-xs sm:text-sm font-bold shadow-lg shadow-amber-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>Özel Eser Talebi Oluştur</span>
-              <span className="text-base leading-none">→</span>
-            </button>
+        <div className="mb-12 p-6 sm:p-7 rounded-3xl dark:bg-ink-soft/95 bg-[#fdfbf7] border border-amber-900/15 dark:border-paper/15 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5 transition-colors">
+          <div className="space-y-1">
+            <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-amber-600 dark:text-amber-400">
+              Kişiye Özel Sipariş
+            </span>
+            <h4 className="font-display text-lg sm:text-xl font-bold text-ink dark:text-paper">
+              Senin Fotoğrafın, Aleyna'nın Tuvali
+            </h4>
+            <p className="font-sans text-xs sm:text-sm text-ink/75 dark:text-paper/70">
+              Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına uygunluğu değerlendirilsin.
+            </p>
           </div>
-        )}
+          <button
+            onClick={() => setCommissionOpen(true)}
+            className="shrink-0 w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-sans text-xs sm:text-sm font-bold shadow-lg shadow-amber-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <span>Özel Eser Talebi Oluştur</span>
+            <span className="text-base leading-none">→</span>
+          </button>
+        </div>
 
         {/* ─── AYIN TUVALLERİ – Yatay Kaydırılabilir Şerit ─── */}
-        {activeTab === "galeri" && monthlyArtworks.length > 0 && (
+        {monthlyArtworks.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -866,8 +886,7 @@ export default function Gallery() {
         )}
 
         {/* ─── FİLTRELEME & ARAMA ALANI (Nested Çift Accordion Modeli) ─── */}
-        {activeTab === "galeri" && (
-          <div className="mb-8 space-y-3">
+        <div className="mb-8 space-y-3">
             {/* Üst Çubuk: Eser Sayısı & Filtre Aç/Kapat Butonu */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2.5 font-mono text-xs text-paper/75 font-semibold">
@@ -1039,7 +1058,6 @@ export default function Gallery() {
               )}
             </AnimatePresence>
           </div>
-        )}
 
         {/* ─── PINTEREST MASONRY GRID (Fast & Smooth 60/120fps) ─── */}
         <div className="flex gap-2.5 sm:gap-4 md:gap-5 items-start">

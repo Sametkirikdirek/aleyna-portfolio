@@ -16,6 +16,9 @@ import * as THREE from "three";
 
 type ImageItem = string | { src: string; alt?: string };
 
+// Shared plane geometry across all tunnel planes (prevents allocating 18 duplicate geometries & GPU buffers)
+const sharedPlaneGeo = new THREE.PlaneGeometry(1, 1, 24, 24);
+
 export interface InfiniteGalleryProps {
   images: ImageItem[];
   speed?: number;
@@ -24,6 +27,49 @@ export interface InfiniteGalleryProps {
   visibleCount?: number;
   className?: string;
   style?: React.CSSProperties;
+}
+
+// ─── Preload Helper: Tarayıcı ve Drei Doku Önbelleğini Isıtır ───────────────────
+export function preloadInfiniteGallery(images: ImageItem[]) {
+  if (!images || images.length === 0) return;
+  const urls = images
+    .map((img) => (typeof img === "string" ? img : img.src))
+    .filter(Boolean);
+  if (urls.length === 0) return;
+
+  // 1. Tarayıcı HTTP ve Image önbelleğini ısıt
+  if (typeof window !== "undefined") {
+    urls.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }
+
+  // 2. Drei / Three.js doku önbelleğine preload et (Zaman Yolculuğu açıldığında 0ms bekleme)
+  try {
+    useTexture.preload(urls);
+  } catch {
+    // ignore
+  }
+}
+
+// Varsayılan zaman görsellerini modül yüklenir yüklenmez arka planda hazırla
+const DEFAULT_TIMELINE_URLS = [
+  "/gallery/zaman_1.png",
+  "/gallery/zaman_2.png",
+  "/gallery/zaman_3.png",
+  "/gallery/zaman_4.png",
+  "/gallery/zaman_5.png",
+  "/gallery/zaman_6.png",
+  "/gallery/zaman_7.png",
+  "/gallery/zaman_8.png",
+  "/gallery/zaman_9.png",
+  "/gallery/zaman_10.png",
+];
+try {
+  useTexture.preload(DEFAULT_TIMELINE_URLS);
+} catch {
+  // ignore
 }
 
 const Z_NEAR = -2.5; // Near camera (wraps here)
@@ -184,6 +230,7 @@ function TunnelPlane({
       ref={meshRef}
       position={[offset.x, offset.y, zRef.current]}
       scale={initialScale}
+      geometry={sharedPlaneGeo}
       material={material}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -193,7 +240,6 @@ function TunnelPlane({
         isHoveredRef.current = false;
       }}
     >
-      <planeGeometry args={[1, 1, 24, 24]} />
       <primitive object={material} ref={matRef} attach="material" />
     </mesh>
   );
