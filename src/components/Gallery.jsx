@@ -76,12 +76,59 @@ function CanvasIcon({ className = "w-5 h-5", ...props }) {
 }
 
 // ─── 3D Spotlight Showcase Carousel (Atölyenin Enleri) ─────────
+function getPodiumRank(idx, isCustomCurated = false) {
+  if (idx === 0) {
+    return {
+      rankNum: "#1",
+      icon: "🥇",
+      title: isCustomCurated ? "Sanatçının Başyapıtı" : "En Çok Beğenilen Eser",
+      heroBadge:
+        "bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.5)] border border-yellow-300/50",
+      thumbBadge:
+        "bg-gradient-to-br from-amber-400 to-yellow-500 text-black font-black shadow-[0_0_8px_rgba(245,158,11,0.6)] border border-amber-200",
+    };
+  }
+  if (idx === 1) {
+    return {
+      rankNum: "#2",
+      icon: "🥈",
+      title: isCustomCurated ? "Öne Çıkan Seçki" : "Zirvedeki Eserler",
+      heroBadge:
+        "bg-gradient-to-r from-slate-600 via-slate-500 to-gray-400 text-white shadow-[0_0_15px_rgba(148,163,184,0.4)] border border-white/50",
+      thumbBadge:
+        "bg-gradient-to-br from-slate-300 to-gray-400 text-slate-950 font-black shadow-[0_0_8px_rgba(148,163,184,0.6)] border border-white",
+    };
+  }
+  if (idx === 2) {
+    return {
+      rankNum: "#3",
+      icon: "🥉",
+      title: isCustomCurated ? "Öne Çıkan Seçki" : "Zirvedeki Eserler",
+      heroBadge:
+        "bg-gradient-to-r from-amber-900 via-amber-800 to-orange-800 text-amber-100 shadow-[0_0_15px_rgba(180,83,9,0.4)] border border-amber-500/40",
+      thumbBadge:
+        "bg-gradient-to-br from-amber-700 to-amber-900 text-amber-100 font-black shadow-[0_0_8px_rgba(180,83,9,0.6)] border border-amber-500/50",
+    };
+  }
+  return {
+    rankNum: `#${idx + 1}`,
+    icon: "⭐",
+    title: isCustomCurated ? "Atölye Seçkisi" : "Top 5 Seçki",
+    heroBadge:
+      "backdrop-blur-md bg-ink/80 dark:bg-black/75 text-paper/95 border border-white/20 shadow-lg",
+    thumbBadge:
+      "backdrop-blur-md bg-black/75 text-white/90 font-bold border border-white/20",
+  };
+}
+
 function SpotlightCarousel({ artworks = [], onSelect }) {
   const [activeIdx, setActiveIdx] = useState(0);
 
   if (!artworks || artworks.length === 0) return null;
 
   const current = artworks[activeIdx] || artworks[0];
+  const isCustomCurated = artworks.some((a) => a.featuredInSpotlight);
+  const currentRank = getPodiumRank(activeIdx, isCustomCurated);
 
   return (
     <div className="relative rounded-3xl overflow-hidden border border-amber-900/15 dark:border-paper/15 dark:bg-gradient-to-br dark:from-ink-soft/95 dark:via-ink-soft/75 dark:to-ink-soft/95 bg-[#fdfbf7]/80 p-6 md:p-8 backdrop-blur-xl shadow-2xl mb-12">
@@ -148,11 +195,20 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
             <PaintingCanvas seed={current.seed} palette={current.palette} className="w-full h-full" />
           )}
 
-          {/* Badge */}
-          <div className="absolute top-4 left-4 z-10">
-            <span className="font-mono text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md bg-brush text-white shadow-lg flex items-center gap-1.5">
-              <Trophy size={12} /> En Çok Beğenilen Eser
-            </span>
+          {/* Podium Ranking Badge (Model A) */}
+          <div className="absolute top-4 left-4 z-10 pointer-events-none">
+            <motion.span
+              key={activeIdx}
+              initial={{ opacity: 0, y: -6, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.25 }}
+              className={`font-mono text-[10.5px] uppercase font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 backdrop-blur-md ${currentRank.heroBadge}`}
+            >
+              <span className="text-sm leading-none">{currentRank.icon}</span>
+              <span>{currentRank.rankNum}</span>
+              <span className="opacity-40">·</span>
+              <span>{currentRank.title}</span>
+            </motion.span>
           </div>
 
           {/* Overlay info */}
@@ -191,7 +247,7 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
                   : "dark:bg-paper/5 bg-[#fdfbf7]/90 dark:border-paper/10 border-amber-900/15 hover:bg-white hover:border-amber-900/30 opacity-90 hover:opacity-100 shadow-xs"
               }`}
             >
-              <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink">
+              <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-ink relative">
                 {item.image ? (
                   <img
                     src={getOptimizedImageUrl(item.image, { width: 140, height: 140, crop: "fill" })}
@@ -203,6 +259,14 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
                 ) : (
                   <PaintingCanvas seed={item.seed} palette={item.palette} className="w-full h-full" />
                 )}
+                {/* Mini Rank Badge */}
+                <span
+                  className={`absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-[9px] font-mono leading-none ${
+                    getPodiumRank(idx, isCustomCurated).thumbBadge
+                  }`}
+                >
+                  #{idx + 1}
+                </span>
               </div>
               <div className="min-w-0 flex-1">
                 <h5 className={`font-display text-xs font-bold truncate ${activeIdx === idx ? "text-white" : "text-paper"}`}>
