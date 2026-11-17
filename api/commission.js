@@ -27,22 +27,59 @@ function generateSecureToken(id) {
   return Math.abs(hash).toString(36);
 }
 
-// WhatsApp Bildirim Gönderici (CallMeBot / Webhook Desteği)
-async function sendWhatsAppAlert({ title, details, imageUrl, approveLink, rejectLink }) {
-  const phone = process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
-  const apiKey = process.env.WHATSAPP_API_KEY || process.env.VITE_WHATSAPP_API_KEY;
+function formatCallMeBotPhone(phone) {
+  if (!phone) return "";
+  let clean = phone.replace(/[^\d]/g, "");
+  if (clean.startsWith("0")) {
+    clean = "90" + clean.slice(1);
+  } else if (!clean.startsWith("90") && clean.length === 10) {
+    clean = "90" + clean;
+  }
+  return clean;
+}
 
-  let message = `🎨 *${title}*\n\n${details}`;
-  if (imageUrl) message += `\n📸 *Görsel:* ${imageUrl}`;
-  if (approveLink && rejectLink) {
-    message += `\n\n👇 *Karar Ver (Tek Dokunuş):*\n🟢 *Onayla:* ${approveLink}\n🔴 *Reddet:* ${rejectLink}`;
+// WhatsApp Bildirim Gönderici (Firestore Dinamik Ayarları + CallMeBot API)
+async function sendWhatsAppAlert({ title, details, imageUrl, approveLink, rejectLink }) {
+  let phone = process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
+  let apiKey = process.env.WHATSAPP_API_KEY || process.env.VITE_WHATSAPP_API_KEY;
+
+  // 1. Önce Firestore'daki dinamik admin ayarından oku
+  try {
+    const settingsRes = await fetch(
+      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/whatsapp"
+    );
+    if (settingsRes.ok) {
+      const data = await settingsRes.json();
+      const dbPhone = data.fields?.phone?.stringValue;
+      const dbKey = data.fields?.apiKey?.stringValue;
+      const dbEnabled = data.fields?.enabled?.booleanValue;
+
+      if (dbEnabled === false) {
+        // Kullanıcı admin panelinden bildirimleri kapattıysa gönderme
+        return;
+      }
+      if (dbPhone) phone = dbPhone;
+      if (dbKey) apiKey = dbKey;
+    }
+  } catch (e) {
+    // Firestore okuma hatası olursa env değişkenleriyle devam et
   }
 
-  if (phone && apiKey) {
+  // Varsayılan telefon fallback
+  phone = phone || "05050983970";
+  const targetPhone = formatCallMeBotPhone(phone);
+
+  if (targetPhone && apiKey) {
+    let message = `🎨 *${title}*\n\n${details}`;
+    if (imageUrl) message += `\n📸 *Görsel:* ${imageUrl}`;
+    if (approveLink && rejectLink) {
+      message += `\n\n👇 *Karar Ver (Tek Dokunuş):*\n🟢 *Onayla:* ${approveLink}\n🔴 *Reddet:* ${rejectLink}`;
+    }
+
     try {
       const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(
-        phone
-      )}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey)}`;
+        targetPhone
+      )}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey.trim())}`;
       await fetch(url);
     } catch (err) {
       console.warn("WhatsApp API bildirim hatası:", err.message);

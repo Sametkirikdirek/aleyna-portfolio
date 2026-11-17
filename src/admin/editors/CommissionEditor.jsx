@@ -15,6 +15,11 @@ import {
   FileText,
   Search,
   Filter,
+  Send,
+  Smartphone,
+  Key,
+  Settings,
+  Loader2,
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import {
@@ -26,14 +31,23 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 
 export default function CommissionEditor() {
-  const [activeTab, setActiveTab] = useState("artist"); // "artist" | "mod" | "incidents"
+  const [activeTab, setActiveTab] = useState("artist"); // "artist" | "mod" | "incidents" | "whatsapp"
   const [requests, setRequests] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
+
+  // WhatsApp Ayarları State'i
+  const [waPhone, setWaPhone] = useState("05050983970");
+  const [waApiKey, setWaApiKey] = useState("");
+  const [waEnabled, setWaEnabled] = useState(true);
+  const [waSaving, setWaSaving] = useState(false);
+  const [waTesting, setWaTesting] = useState(false);
+  const [waFeedback, setWaFeedback] = useState(null);
 
   // Firestore'dan canlı dinle
   useEffect(() => {
@@ -50,9 +64,19 @@ export default function CommissionEditor() {
       setIncidents(list);
     });
 
+    const unsubWa = onSnapshot(doc(db, "settings", "whatsapp"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.phone) setWaPhone(data.phone);
+        if (data.apiKey) setWaApiKey(data.apiKey);
+        if (typeof data.enabled === "boolean") setWaEnabled(data.enabled);
+      }
+    });
+
     return () => {
       unsubReq();
       unsubInc();
+      unsubWa();
     };
   }, []);
 
@@ -103,6 +127,87 @@ Engelleme Gerekçesi: ${inc.flagReason}
     navigator.clipboard.writeText(reportText);
     setCopiedId(inc.id);
     setTimeout(() => setCopiedId(null), 2500);
+  };
+
+  const handleSaveWaSettings = async (e) => {
+    e?.preventDefault();
+    setWaSaving(true);
+    setWaFeedback(null);
+    try {
+      await setDoc(
+        doc(db, "settings", "whatsapp"),
+        {
+          phone: waPhone.trim(),
+          apiKey: waApiKey.trim(),
+          enabled: waEnabled,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+      setWaFeedback({
+        type: "success",
+        message: "WhatsApp ayarları başarıyla kaydedildi!",
+      });
+    } catch (err) {
+      setWaFeedback({
+        type: "error",
+        message: "Ayarlar kaydedilemedi: " + err.message,
+      });
+    } finally {
+      setWaSaving(false);
+    }
+  };
+
+  const handleTestWa = async () => {
+    if (!waPhone.trim() || !waApiKey.trim()) {
+      setWaFeedback({
+        type: "error",
+        message: "Lütfen önce telefon numaranızı ve CallMeBot API anahtarınızı girin.",
+      });
+      return;
+    }
+    setWaTesting(true);
+    setWaFeedback(null);
+    try {
+      // Önce Firestore'a kaydet
+      await setDoc(
+        doc(db, "settings", "whatsapp"),
+        {
+          phone: waPhone.trim(),
+          apiKey: waApiKey.trim(),
+          enabled: waEnabled,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Sunucu üzerinden test gönder
+      const res = await fetch("/api/commission-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: waPhone.trim(),
+          apiKey: waApiKey.trim(),
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || "CallMeBot test mesajını iletemedi.");
+      }
+
+      setWaFeedback({
+        type: "success",
+        message: `🎉 Harika! Test bildirimi ${waPhone} numarasına başarıyla iletildi. WhatsApp kutunuzu kontrol edin!`,
+      });
+    } catch (err) {
+      setWaFeedback({
+        type: "error",
+        message: err.message,
+      });
+    } finally {
+      setWaTesting(false);
+    }
   };
 
   return (
@@ -166,6 +271,24 @@ Engelleme Gerekçesi: ${inc.flagReason}
                 {incidents.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("whatsapp")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "whatsapp"
+                ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            <MessageSquare size={14} className="text-emerald-400" />
+            <span>WhatsApp Hattı</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                waApiKey && waEnabled ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+              }`}
+              title={waApiKey && waEnabled ? "Bağlı" : "Kurulum Gerekli"}
+            />
           </button>
         </div>
       </div>
@@ -386,6 +509,202 @@ Engelleme Gerekçesi: ${inc.flagReason}
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── SEKME 4: WHATSAPP AYARLARI & BİLGİ HATTI ─── */}
+      {activeTab === "whatsapp" && (
+        <div className="space-y-6">
+          {/* Durum Kartı */}
+          <div
+            className={`p-5 rounded-2xl border flex items-center justify-between gap-4 flex-wrap ${
+              waApiKey && waEnabled
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-200"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{waApiKey && waEnabled ? "🟢" : "🟠"}</span>
+              <div>
+                <h3 className="font-semibold text-sm text-white">
+                  {waApiKey && waEnabled
+                    ? "WhatsApp Bilgi Hattı Aktif & Bağlı"
+                    : "WhatsApp Bilgi Hattı Kurulumu Bekleniyor"}
+                </h3>
+                <p className="text-xs opacity-80 mt-0.5 font-sans">
+                  {waApiKey && waEnabled
+                    ? `Ziyaretçi talepleri ve güvenlik alarmları anında ${waPhone} numarasına iletiliyor.`
+                    : "Telefonunuza anlık WhatsApp bildirimi ve tek tıkla onay linki gelmesi için API anahtarınızı girin."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold ${
+                  waApiKey && waEnabled
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                }`}
+              >
+                {waApiKey && waEnabled ? "CANLI BAĞLI" : "KEY GEREKLİ"}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback Uyarısı */}
+          {waFeedback && (
+            <div
+              className={`p-4 rounded-xl text-xs font-mono flex items-center justify-between gap-3 border ${
+                waFeedback.type === "success"
+                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-200"
+                  : "bg-rose-500/15 border-rose-500/30 text-rose-200"
+              }`}
+            >
+              <span>{waFeedback.message}</span>
+              <button
+                type="button"
+                onClick={() => setWaFeedback(null)}
+                className="text-white/40 hover:text-white cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Ayar Formu */}
+          <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-6">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Settings size={18} className="text-emerald-400" />
+              Bildirim Numarası & API Yapılandırması
+            </h2>
+
+            <form onSubmit={handleSaveWaSettings} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Telefon Numarası */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
+                    <Smartphone size={14} className="text-amber-400" />
+                    Hedef WhatsApp Numarası
+                  </label>
+                  <input
+                    type="text"
+                    value={waPhone}
+                    onChange={(e) => setWaPhone(e.target.value)}
+                    placeholder="Örn: 05050983970"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-sm focus:outline-hidden focus:border-amber-400 transition-colors"
+                  />
+                  <p className="text-[11px] text-white/40 font-mono">
+                    Bildirimlerin ve onay linklerinin gönderileceği cep telefonu numaranız.
+                  </p>
+                </div>
+
+                {/* API Key */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
+                    <Key size={14} className="text-emerald-400" />
+                    CallMeBot API Anahtarı (API Key)
+                  </label>
+                  <input
+                    type="text"
+                    value={waApiKey}
+                    onChange={(e) => setWaApiKey(e.target.value)}
+                    placeholder="Botun gönderdiği kod (Örn: 123456)"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-sm focus:outline-hidden focus:border-emerald-400 transition-colors"
+                  />
+                  <p className="text-[11px] text-white/40 font-mono">
+                    Aşağıdaki 30 saniyelik rehberden ücretsiz alabilirsiniz.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bildirim Aç/Kapat Toggle */}
+              <div className="pt-2 flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="waEnabledToggle"
+                  checked={waEnabled}
+                  onChange={(e) => setWaEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded-md accent-emerald-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="waEnabledToggle"
+                  className="text-xs text-white/80 cursor-pointer font-sans select-none"
+                >
+                  Yeni ziyaretçi tuval taleplerini ve şüpheli güvenlik ihlallerini anında WhatsApp'a bildir
+                </label>
+              </div>
+
+              {/* Butonlar */}
+              <div className="pt-3 flex items-center gap-3 flex-wrap">
+                <button
+                  type="submit"
+                  disabled={waSaving}
+                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-2"
+                >
+                  {waSaving ? <Loader2 size={14} className="animate-spin" /> : null}
+                  💾 Ayarları Kaydet
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestWa}
+                  disabled={waTesting || !waPhone.trim() || !waApiKey.trim()}
+                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all cursor-pointer shadow-md disabled:opacity-40 flex items-center gap-2"
+                >
+                  {waTesting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  🚀 Test Bildirimi Gönder
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Adım Adım Rehber Kartı */}
+          <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <MessageSquare size={16} className="text-emerald-400" />
+              API Anahtarını Almak İçin 3 Basit Adım (Tamamen Ücretsiz)
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Adım 1 */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="font-mono text-xs font-bold text-emerald-400">1. ADIM: SOHBETİ AÇ</div>
+                  <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
+                    Telefonunuzdan CallMeBot resmi WhatsApp botunu başlatın:
+                  </p>
+                </div>
+                <a
+                  href="https://wa.me/34644688494?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <MessageSquare size={14} /> WhatsApp'ta Aç →
+                </a>
+              </div>
+
+              {/* Adım 2 */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
+                <div className="font-mono text-xs font-bold text-emerald-400">2. ADIM: MESAJI GÖNDER</div>
+                <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  Sohbete şu mesajı gönderin (butona tıkladıysanız zaten yazılı gelecektir):
+                </p>
+                <div className="p-2.5 rounded-lg bg-black/50 border border-white/10 font-mono text-[11px] text-emerald-300 select-all font-bold">
+                  I allow callmebot to send me messages
+                </div>
+              </div>
+
+              {/* Adım 3 */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
+                <div className="font-mono text-xs font-bold text-emerald-400">3. ADIM: KODU YAPIŞTIR</div>
+                <p className="text-xs text-white/70 leading-relaxed font-sans">
+                  Bot 5 saniyede size <code className="text-amber-300 font-mono px-1 rounded bg-black/40">apikey: 123456</code> kodunu verecek. O sayıyı yukarıdaki kutuya yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
