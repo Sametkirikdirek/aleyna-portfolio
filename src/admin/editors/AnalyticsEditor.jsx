@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
@@ -44,6 +44,8 @@ export default function AnalyticsEditor() {
   const [timeRange, setTimeRange] = useState("7d"); // '7d' | '30d' | 'all'
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [direction, setDirection] = useState(1);
+  const touchStartY = useRef(null);
+  const touchStartX = useRef(null);
 
   // Fetch real analytics from Firestore
   useEffect(() => {
@@ -482,7 +484,7 @@ export default function AnalyticsEditor() {
           </div>
 
           <div
-            className="space-y-2.5 min-h-[220px]"
+            className="space-y-2.5 min-h-[220px] select-none touch-pan-y"
             onWheel={(e) => {
               if (rankedArtworks.length <= 3) return;
               if (e.deltaY > 0 && carouselIdx + 3 < rankedArtworks.length) {
@@ -492,6 +494,34 @@ export default function AnalyticsEditor() {
                 setDirection(-1);
                 setCarouselIdx((prev) => Math.max(0, prev - 1));
               }
+            }}
+            onTouchStart={(e) => {
+              touchStartY.current = e.touches[0].clientY;
+              touchStartX.current = e.touches[0].clientX;
+            }}
+            onTouchMove={(e) => {
+              if (touchStartY.current === null || rankedArtworks.length <= 3) return;
+              const diffY = touchStartY.current - e.touches[0].clientY;
+              const diffX = touchStartX.current - e.touches[0].clientX;
+
+              // Dikey kaydırma yataydan belirgin şekilde fazlaysa ve 30px eşiğini aştıysa
+              if (Math.abs(diffY) > 30 && Math.abs(diffY) > Math.abs(diffX)) {
+                if (diffY > 0 && carouselIdx + 3 < rankedArtworks.length) {
+                  // Parmağı yukarı itince aşağıdakileri getir
+                  setDirection(1);
+                  setCarouselIdx((prev) => Math.min(rankedArtworks.length - 3, prev + 1));
+                  touchStartY.current = e.touches[0].clientY;
+                } else if (diffY < 0 && carouselIdx > 0) {
+                  // Parmağı aşağı çekince yukarıdakileri getir
+                  setDirection(-1);
+                  setCarouselIdx((prev) => Math.max(0, prev - 1));
+                  touchStartY.current = e.touches[0].clientY;
+                }
+              }
+            }}
+            onTouchEnd={() => {
+              touchStartY.current = null;
+              touchStartX.current = null;
             }}
           >
             <AnimatePresence mode="popLayout" initial={false}>
