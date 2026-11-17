@@ -46,6 +46,8 @@ export default function AnalyticsEditor() {
   const [direction, setDirection] = useState(1);
   const touchStartY = useRef(null);
   const touchStartX = useRef(null);
+  const carouselContainerRef = useRef(null);
+  const lastWheelTimeRef = useRef(0);
 
   // Fetch real analytics from Firestore
   useEffect(() => {
@@ -86,6 +88,38 @@ export default function AnalyticsEditor() {
   const visibleArtworks = useMemo(() => {
     return rankedArtworks.slice(carouselIdx, carouselIdx + 3);
   }, [rankedArtworks, carouselIdx]);
+
+  // Desktop mouse wheel scroll isolation:
+  // Karusel üzerinde tekerlek döndürüldüğünde dış sayfanın kaymasını (scroll chaining) tamamen engeller
+  useEffect(() => {
+    const el = carouselContainerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      // Olayı durdurup sayfanın oynamasını izole et
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (rankedArtworks.length <= 3) return;
+
+      const now = performance.now();
+      if (now - lastWheelTimeRef.current < 70) return; // Yumuşak adım kontrolü / throttle
+      lastWheelTimeRef.current = now;
+
+      if (e.deltaY > 0) {
+        setDirection(1);
+        setCarouselIdx((prev) => Math.min(rankedArtworks.length - 3, prev + 1));
+      } else if (e.deltaY < 0) {
+        setDirection(-1);
+        setCarouselIdx((prev) => Math.max(0, prev - 1));
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [rankedArtworks.length]);
 
   // Realistic and dynamic weekly traffic calculation based on real views
   const trafficData = useMemo(() => {
@@ -484,17 +518,8 @@ export default function AnalyticsEditor() {
           </div>
 
           <div
-            className="space-y-2.5 min-h-[220px] select-none touch-pan-y"
-            onWheel={(e) => {
-              if (rankedArtworks.length <= 3) return;
-              if (e.deltaY > 0 && carouselIdx + 3 < rankedArtworks.length) {
-                setDirection(1);
-                setCarouselIdx((prev) => Math.min(rankedArtworks.length - 3, prev + 1));
-              } else if (e.deltaY < 0 && carouselIdx > 0) {
-                setDirection(-1);
-                setCarouselIdx((prev) => Math.max(0, prev - 1));
-              }
-            }}
+            ref={carouselContainerRef}
+            className="space-y-2.5 min-h-[220px] select-none touch-pan-y overscroll-contain"
             onTouchStart={(e) => {
               touchStartY.current = e.touches[0].clientY;
               touchStartX.current = e.touches[0].clientX;
