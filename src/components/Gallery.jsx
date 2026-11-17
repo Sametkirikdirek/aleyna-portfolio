@@ -742,23 +742,23 @@ export default function Gallery() {
 
         {/* ─── ÖZEL TUVAL SİPARİŞİ / COMMISSION DAVET KARTI ─── */}
         {activeTab === "galeri" && (
-          <div className="mb-12 p-5 sm:p-6 rounded-3xl dark:bg-gradient-to-r dark:from-amber-500/10 dark:via-rose-500/5 dark:to-amber-500/10 bg-[#fdfbf7]/90 border border-amber-900/15 dark:border-amber-500/20 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mb-12 p-5 sm:p-6 rounded-3xl dark:bg-ink-soft/95 bg-[#fdfbf7] border border-amber-900/15 dark:border-paper/15 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl dark:bg-amber-500/20 bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-300 shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-300 shrink-0">
                 <Sparkles size={22} />
               </div>
               <div>
-                <h4 className="font-display text-base sm:text-lg font-bold text-paper">
+                <h4 className="font-display text-base sm:text-lg font-bold text-ink dark:text-paper">
                   Senin Fotoğrafın, Aleyna'nın Tuvali
                 </h4>
-                <p className="font-sans text-xs dark:text-paper/60 text-paper/75 mt-0.5">
+                <p className="font-sans text-xs text-ink/75 dark:text-paper/70 mt-0.5">
                   Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına uygunluğu değerlendirilsin.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setCommissionOpen(true)}
-              className="shrink-0 w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-mono text-xs font-bold shadow-lg shadow-amber-950/40 hover:scale-[1.02] transition-transform cursor-pointer flex items-center justify-center gap-2"
+              className="shrink-0 w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-sans text-xs font-bold shadow-lg shadow-amber-950/40 hover:scale-[1.02] transition-transform cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles size={14} /> Özel Eser Talebi Oluştur →
             </button>

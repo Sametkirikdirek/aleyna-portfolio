@@ -184,7 +184,7 @@ export default function CommissionModal({ isOpen, onClose }) {
             <span className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300">
               <Sparkles size={18} />
             </span>
-            <span className="font-mono text-xs uppercase font-bold text-amber-300/90 tracking-wider">
+            <span className="font-sans text-xs uppercase font-bold text-amber-300/90 tracking-wider">
               Özel Tuval Siparişi
             </span>
           </div>
@@ -328,8 +328,8 @@ export default function CommissionModal({ isOpen, onClose }) {
               </div>
 
               {/* Not Alanı */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-mono text-white/60">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/80 font-sans">
                   Tablo Hakkında Notunuz (Opsiyonel)
                 </label>
                 <textarea
@@ -337,13 +337,13 @@ export default function CommissionModal({ isOpen, onClose }) {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Örn: 50x70 cm ebatlarında yağlı boya düşünüyoruz, altın varak detayları olabilir..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors font-sans"
                 />
               </div>
 
               {/* İletişim Alanı */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-mono text-white/60">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-white/80 font-sans">
                   Instagram Kullanıcı Adınız veya İletişim Bilginiz
                 </label>
                 <input
@@ -351,19 +351,19 @@ export default function CommissionModal({ isOpen, onClose }) {
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   placeholder="@kullanici_adi veya WhatsApp numaranız"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors font-sans"
                 />
               </div>
 
               {/* Yasal Onay & KVKK Kutusu */}
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/10 cursor-pointer">
+              <label className="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 cursor-pointer transition-colors">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 rounded text-amber-500 focus:ring-amber-500 bg-white/10 border-white/20 cursor-pointer"
+                  className="w-4 h-4 mt-0.5 rounded text-amber-500 focus:ring-amber-500 bg-white/10 border-white/20 cursor-pointer shrink-0"
                 />
-                <span className="text-[10px] text-white/60 leading-relaxed font-sans">
+                <span className="text-[11px] sm:text-xs text-white/70 leading-relaxed font-sans">
                   Yüklediğim görselin telif haklarının şahsıma ait olduğunu, TCK mevzuatına ve genel ahlaka aykırı içerik barındırmadığını kabul ediyorum. Güvenlik ve iletişim amacıyla IP adresim ile iletişim bilgilerimin işlenmesini onaylıyorum.
                 </span>
               </label>
@@ -385,15 +385,19 @@ export default function CommissionModal({ isOpen, onClose }) {
               <button
                 type="submit"
                 disabled={submitting || !file || !consent}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-950/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className={`w-full py-3.5 px-4 rounded-xl font-sans text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                  submitting || !file || !consent
+                    ? "bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
+                    : "bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-lg shadow-amber-950/40 hover:scale-[1.01] cursor-pointer"
+                }`}
               >
                 {submitting ? (
                   <>
-                    <Loader2 size={15} className="animate-spin" /> İletiliyor...
+                    <Loader2 size={16} className="animate-spin" /> İletiliyor...
                   </>
                 ) : (
                   <>
-                    <Send size={14} /> Değerlendirmeye Gönder
+                    <Send size={15} /> Değerlendirmeye Gönder
                   </>
                 )}
               </button>
