@@ -293,6 +293,7 @@ export default function GalleryEditor() {
       title: "",
       year: new Date().getFullYear().toString(),
       medium: "",
+      price: "",
       image: "",
       note: "",
       likes: 0,
@@ -801,14 +802,19 @@ export default function GalleryEditor() {
                     </div>
                   </div>
 
-                  {/* Title & Medium */}
+                  {/* Title & Medium & Price */}
                   <div
                     onClick={() => setEditingIdx(origIdx)}
                     className="p-2.5 pt-2 cursor-pointer"
                   >
-                    <h4 className="font-sans font-medium text-xs text-white/90 truncate group-hover:text-rose-300 transition-colors">
-                      {art.title || "İsimsiz Eser"}
-                    </h4>
+                    <div className="flex items-center justify-between gap-1">
+                      <h4 className="font-sans font-medium text-xs text-white/90 truncate group-hover:text-rose-300 transition-colors">
+                        {art.title || "İsimsiz Eser"}
+                      </h4>
+                      <span className="shrink-0 text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-amber-200/90 truncate max-w-[85px]">
+                        {art.price?.trim() ? art.price : "Özel Kol."}
+                      </span>
+                    </div>
                     <p className="font-mono text-[10px] text-white/50 truncate mt-0.5">
                       {art.year || "2026"} {art.medium ? `· ${art.medium}` : ""}
                     </p>
@@ -1049,6 +1055,45 @@ export default function GalleryEditor() {
                     placeholder="0"
                   />
                 </Field>
+              </div>
+
+              {/* Fiyatlandırma / Koleksiyon Durumu */}
+              <div className="p-3.5 rounded-2xl border border-white/10 bg-white/[0.02] space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-mono text-xs text-white/80 font-medium">
+                    Fiyat / Değerleme
+                  </label>
+                  <span className="font-sans text-[10px] text-amber-300/80">
+                    Boş bırakılırsa sitede &ldquo;Özel Koleksiyon&rdquo; yazar
+                  </span>
+                </div>
+                <TextInput
+                  value={currentEditingArt.price || ""}
+                  onChange={(v) => updateArtwork(editingIdx, "price", v)}
+                  placeholder="Örn: 24.000 ₺, $1,500 veya boş bırakın"
+                />
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="font-mono text-[10px] text-white/40 mr-1">Hızlı Seçim:</span>
+                  {["Özel Koleksiyon", "Teklif Üzerine", "Satıldı", "Koleksiyonda"].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => updateArtwork(editingIdx, "price", preset)}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-mono bg-white/5 hover:bg-white/15 border border-white/10 text-amber-200/90 hover:text-amber-100 transition-colors cursor-pointer"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                  {currentEditingArt.price && (
+                    <button
+                      type="button"
+                      onClick={() => updateArtwork(editingIdx, "price", "")}
+                      className="px-2 py-1 rounded-lg text-[10px] font-mono bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 transition-colors cursor-pointer"
+                    >
+                      Temizle
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Showcase Toggles (Ayın Tuvali & Spotlight) */}

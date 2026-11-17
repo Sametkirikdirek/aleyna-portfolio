@@ -155,13 +155,19 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
           </div>
 
           {/* Overlay info */}
-          <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-            <h4 className="font-display text-xl sm:text-2xl text-white font-bold group-hover:text-brush-soft transition-colors">
-              {current.title}
-            </h4>
-            <p className="font-mono text-xs text-white/75 mt-1">
-              {current.medium} · {current.year}
-            </p>
+          <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/90 via-black/60 to-transparent flex items-end justify-between gap-4">
+            <div>
+              <h4 className="font-display text-xl sm:text-2xl text-white font-bold group-hover:text-brush-soft transition-colors">
+                {current.title}
+              </h4>
+              <p className="font-mono text-xs text-white/75 mt-1">
+                {current.medium} · {current.year}
+              </p>
+            </div>
+            <span className="shrink-0 px-3 py-1 rounded-full backdrop-blur-md bg-ink/75 border border-white/20 text-amber-200 font-mono text-xs shadow-md inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+              <span>{current.price?.trim() ? current.price : "Özel Koleksiyon"}</span>
+            </span>
           </div>
         </motion.div>
 
@@ -719,6 +725,14 @@ export default function Gallery() {
                         <Maximize2 size={12} />
                       </span>
                     </div>
+
+                    {/* Price Badge */}
+                    <div className="absolute bottom-2.5 right-2.5 z-10 pointer-events-none">
+                      <span className="backdrop-blur-md bg-ink/80 text-amber-200/90 border border-white/10 px-2 py-0.5 rounded-full shadow-md text-[10px] font-mono tracking-wide inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+                        <span>{item.price?.trim() ? item.price : "Özel Koleksiyon"}</span>
+                      </span>
+                    </div>
                   </div>
 
                   {/* Details */}
@@ -964,6 +978,16 @@ export default function Gallery() {
                         </span>
                       </div>
 
+                      {/* Fiyat / Koleksiyon Rozeti (Sağ Alt Köşe — Zarif, Minimal ve Sanatsal) */}
+                      <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 pointer-events-none">
+                        <span className="backdrop-blur-md bg-ink/75 dark:bg-black/70 text-paper border border-amber-900/20 dark:border-white/15 px-2.5 py-1 rounded-full shadow-lg inline-flex items-center gap-1.5 transition-transform group-hover:scale-105">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
+                          <span className="font-mono text-[10px] sm:text-[11px] tracking-wide font-medium text-amber-100/95">
+                            {p.price?.trim() ? p.price : "Özel Koleksiyon"}
+                          </span>
+                        </span>
+                      </div>
+
                       {/* Animasyonlu Çerçeve Glow */}
                       <div
                         className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
@@ -1190,9 +1214,15 @@ export default function Gallery() {
               <div className="p-5 md:p-7">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft mb-2 flex items-center gap-2">
-                      <span>{active.year}</span> · <span>Seçki</span>
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft flex items-center gap-2">
+                        <span>{active.year}</span> · <span>Seçki</span>
+                      </p>
+                      <span className="backdrop-blur-md bg-amber-500/10 text-amber-300 dark:text-amber-200 border border-amber-500/25 px-2.5 py-0.5 rounded-full font-mono text-[11px] font-medium tracking-wide inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <span>{active.price?.trim() ? active.price : "Özel Koleksiyon"}</span>
+                      </span>
+                    </div>
                     <h3 className="font-display text-xl md:text-2xl text-paper font-bold leading-tight">
                       {active.title || "İsimsiz Eser"}
                     </h3>
@@ -1228,6 +1258,12 @@ export default function Gallery() {
 
                 {/* Meta Bilgiler */}
                 <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs text-paper/60 border-t border-paper/10 pt-4">
+                  <div className="flex gap-2">
+                    <dt className="text-paper/35">Değerleme</dt>
+                    <dd className="text-amber-300 dark:text-amber-200 font-medium font-mono">
+                      {active.price?.trim() ? active.price : "Özel Koleksiyon"}
+                    </dd>
+                  </div>
                   {active.medium && (
                     <div className="flex gap-2">
                       <dt className="text-paper/35">Teknik</dt>
