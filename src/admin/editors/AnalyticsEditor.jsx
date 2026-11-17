@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
   TrendingUp,
@@ -23,6 +23,8 @@ import {
   Layers,
   MapPin,
   History,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import {
   useWritings,
@@ -40,6 +42,8 @@ export default function AnalyticsEditor() {
 
   const [liveAnalytics, setLiveAnalytics] = useState(null);
   const [timeRange, setTimeRange] = useState("7d"); // '7d' | '30d' | 'all'
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const [direction, setDirection] = useState(1);
 
   // Fetch real analytics from Firestore
   useEffect(() => {
@@ -67,16 +71,19 @@ export default function AnalyticsEditor() {
     );
   }, [artworks]);
 
-  // Top liked artworks
-  const topArtworks = useMemo(() => {
-    return [...artworks]
-      .sort(
-        (a, b) =>
-          Number(b.likesCount || b.likes || 0) -
-          Number(a.likesCount || a.likes || 0)
-      )
-      .slice(0, 3);
+  // All ranked artworks sorted by likes (for vertical carousel)
+  const rankedArtworks = useMemo(() => {
+    return [...artworks].sort(
+      (a, b) =>
+        Number(b.likesCount || b.likes || 0) -
+        Number(a.likesCount || a.likes || 0)
+    );
   }, [artworks]);
+
+  // 3 items window for the vertical carousel
+  const visibleArtworks = useMemo(() => {
+    return rankedArtworks.slice(carouselIdx, carouselIdx + 3);
+  }, [rankedArtworks, carouselIdx]);
 
   // Realistic and dynamic weekly traffic calculation based on real views
   const trafficData = useMemo(() => {
@@ -428,57 +435,122 @@ export default function AnalyticsEditor() {
           </div>
         </div>
 
-        {/* En Çok Beğenilen Eserler */}
-        <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4">
-          <div className="flex items-center justify-between">
+        {/* En Çok Beğenilen Eserler (Dikey Karusel) */}
+        <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md space-y-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
               <Flame size={18} className="text-rose-400" />
               En Çok Beğenilen Eserler
             </h3>
-            <span className="text-xs text-rose-300 font-mono font-bold">
-              {totalLikes} Toplam Beğeni
-            </span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs text-rose-300 font-mono font-bold">
+                {totalLikes} Toplam Beğeni
+              </span>
+              {/* Dikey Karusel Navigasyon Kontrolleri */}
+              {rankedArtworks.length > 3 && (
+                <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-0.5 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDirection(-1);
+                      setCarouselIdx((prev) => Math.max(0, prev - 1));
+                    }}
+                    disabled={carouselIdx === 0}
+                    className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                    title="Yukarı Kaydır (Önceki Eser)"
+                  >
+                    <ChevronUp size={14} />
+                  </button>
+                  <span className="text-[10px] font-mono text-white/70 px-1 font-semibold select-none">
+                    {carouselIdx + 1}-{Math.min(carouselIdx + 3, rankedArtworks.length)} / {rankedArtworks.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDirection(1);
+                      setCarouselIdx((prev) => Math.min(rankedArtworks.length - 3, prev + 1));
+                    }}
+                    disabled={carouselIdx + 3 >= rankedArtworks.length}
+                    className="p-1 rounded-lg text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                    title="Aşağı Kaydır (Sonraki Eser)"
+                  >
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2.5">
-            {topArtworks.length > 0 ? (
-              topArtworks.map((art, idx) => (
-                <div
-                  key={art.id || idx}
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 transition-all"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono text-xs font-bold text-white/40 w-4">
-                      #{idx + 1}
-                    </span>
-                    {art.image && (
-                      <img
-                        src={art.image}
-                        alt={art.title}
-                        className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white/90 truncate">
-                        {art.title || "İsimsiz Eser"}
-                      </p>
-                      <p className="text-[11px] text-white/40 font-mono truncate">
-                        {art.category || "Sanat"} · {art.year || "2026"}
-                      </p>
-                    </div>
-                  </div>
+          <div
+            className="space-y-2.5 min-h-[220px]"
+            onWheel={(e) => {
+              if (rankedArtworks.length <= 3) return;
+              if (e.deltaY > 0 && carouselIdx + 3 < rankedArtworks.length) {
+                setDirection(1);
+                setCarouselIdx((prev) => Math.min(rankedArtworks.length - 3, prev + 1));
+              } else if (e.deltaY < 0 && carouselIdx > 0) {
+                setDirection(-1);
+                setCarouselIdx((prev) => Math.max(0, prev - 1));
+              }
+            }}
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              {visibleArtworks.length > 0 ? (
+                visibleArtworks.map((art) => {
+                  const actualRank = rankedArtworks.findIndex((a) => a.id === art.id) + 1;
+                  return (
+                    <motion.div
+                      key={art.id || actualRank}
+                      initial={{ opacity: 0, y: direction * 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: direction * -15 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 transition-all"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`font-mono text-xs font-bold w-6 shrink-0 ${
+                            actualRank === 1
+                              ? "text-amber-400"
+                              : actualRank === 2
+                              ? "text-slate-300"
+                              : actualRank === 3
+                              ? "text-amber-600"
+                              : "text-white/40"
+                          }`}
+                        >
+                          #{actualRank}
+                        </span>
+                        {art.image && (
+                          <img
+                            src={art.image}
+                            alt={art.title}
+                            className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white/90 truncate">
+                            {art.title || "İsimsiz Eser"}
+                          </p>
+                          <p className="text-[11px] text-white/40 font-mono truncate">
+                            {art.medium || art.category || "Sanat"} · {art.year || "2026"}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-1.5 text-pink-400 font-mono text-xs font-bold bg-pink-500/10 px-2.5 py-1 rounded-lg border border-pink-500/20 shrink-0">
-                    <Heart size={13} className="fill-pink-500" />
-                    {art.likesCount || art.likes || 0}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-white/40 py-6 text-center">
-                Henüz eser verisi yüklenmedi.
-              </p>
-            )}
+                      <div className="flex items-center gap-1.5 text-pink-400 font-mono text-xs font-bold bg-pink-500/10 px-2.5 py-1 rounded-lg border border-pink-500/20 shrink-0">
+                        <Heart size={13} className="fill-pink-500" />
+                        {art.likesCount || art.likes || 0}
+                      </div>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <p className="text-xs text-white/40 py-6 text-center">
+                  Henüz eser verisi yüklenmedi.
+                </p>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
