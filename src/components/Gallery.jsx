@@ -11,6 +11,7 @@ import { setContent } from "../lib/firestore";
 import InfiniteGallery from "./ui/infinite-gallery";
 import DragScrollStrip from "./ui/DragScrollStrip";
 import { getOptimizedImageUrl } from "../lib/imageOptimizer";
+import { getArtworkPriceInfo } from "../lib/priceBadge";
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -164,10 +165,17 @@ function SpotlightCarousel({ artworks = [], onSelect }) {
                 {current.medium} · {current.year}
               </p>
             </div>
-            <span className="shrink-0 px-3 py-1 rounded-full backdrop-blur-md bg-ink/75 border border-white/20 text-amber-200 font-mono text-xs shadow-md inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-              <span>{current.price?.trim() ? current.price : "Özel Koleksiyon"}</span>
-            </span>
+            {(() => {
+              const priceInfo = getArtworkPriceInfo(current.price);
+              return (
+                <span
+                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-mono inline-flex items-center gap-1.5 ${priceInfo.cardBadge}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priceInfo.dot}`} />
+                  <span>{priceInfo.text}</span>
+                </span>
+              );
+            })()}
           </div>
         </motion.div>
 
@@ -728,10 +736,17 @@ export default function Gallery() {
 
                     {/* Price Badge */}
                     <div className="absolute bottom-2.5 right-2.5 z-10 pointer-events-none">
-                      <span className="backdrop-blur-md bg-ink/80 text-amber-200/90 border border-white/10 px-2 py-0.5 rounded-full shadow-md text-[10px] font-mono tracking-wide inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-                        <span>{item.price?.trim() ? item.price : "Özel Koleksiyon"}</span>
-                      </span>
+                      {(() => {
+                        const priceInfo = getArtworkPriceInfo(item.price);
+                        return (
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono tracking-wide inline-flex items-center gap-1.5 ${priceInfo.cardBadge}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priceInfo.dot}`} />
+                            <span>{priceInfo.text}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -980,12 +995,19 @@ export default function Gallery() {
 
                       {/* Fiyat / Koleksiyon Rozeti (Sağ Alt Köşe — Zarif, Minimal ve Sanatsal) */}
                       <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-10 pointer-events-none">
-                        <span className="backdrop-blur-md bg-ink/75 dark:bg-black/70 text-paper border border-amber-900/20 dark:border-white/15 px-2.5 py-1 rounded-full shadow-lg inline-flex items-center gap-1.5 transition-transform group-hover:scale-105">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400/90 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
-                          <span className="font-mono text-[10px] sm:text-[11px] tracking-wide font-medium text-amber-100/95">
-                            {p.price?.trim() ? p.price : "Özel Koleksiyon"}
-                          </span>
-                        </span>
+                        {(() => {
+                          const priceInfo = getArtworkPriceInfo(p.price);
+                          return (
+                            <span
+                              className={`px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 transition-transform group-hover:scale-105 ${priceInfo.cardBadge}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priceInfo.dot}`} />
+                              <span className="font-mono text-[10px] sm:text-[11px] tracking-wide font-medium">
+                                {priceInfo.text}
+                              </span>
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {/* Animasyonlu Çerçeve Glow */}
@@ -1218,10 +1240,17 @@ export default function Gallery() {
                       <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-brush-soft flex items-center gap-2">
                         <span>{active.year}</span> · <span>Seçki</span>
                       </p>
-                      <span className="backdrop-blur-md bg-amber-500/10 text-amber-300 dark:text-amber-200 border border-amber-500/25 px-2.5 py-0.5 rounded-full font-mono text-[11px] font-medium tracking-wide inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        <span>{active.price?.trim() ? active.price : "Özel Koleksiyon"}</span>
-                      </span>
+                      {(() => {
+                        const priceInfo = getArtworkPriceInfo(active.price);
+                        return (
+                          <span
+                            className={`backdrop-blur-md px-2.5 py-0.5 rounded-full font-mono text-[11px] font-medium tracking-wide inline-flex items-center gap-1.5 ${priceInfo.lightboxBadge}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priceInfo.dot}`} />
+                            <span>{priceInfo.text}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                     <h3 className="font-display text-xl md:text-2xl text-paper font-bold leading-tight">
                       {active.title || "İsimsiz Eser"}
@@ -1258,12 +1287,20 @@ export default function Gallery() {
 
                 {/* Meta Bilgiler */}
                 <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs text-paper/60 border-t border-paper/10 pt-4">
-                  <div className="flex gap-2">
-                    <dt className="text-paper/35">Değerleme</dt>
-                    <dd className="text-amber-300 dark:text-amber-200 font-medium font-mono">
-                      {active.price?.trim() ? active.price : "Özel Koleksiyon"}
-                    </dd>
-                  </div>
+                  {(() => {
+                    const priceInfo = getArtworkPriceInfo(active.price);
+                    return (
+                      <div className="flex gap-2">
+                        <dt className="text-paper/40">Değerleme</dt>
+                        <dd
+                          className={`font-medium font-mono inline-flex items-center gap-1.5 ${priceInfo.lightboxText}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priceInfo.dot}`} />
+                          <span>{priceInfo.text}</span>
+                        </dd>
+                      </div>
+                    );
+                  })()}
                   {active.medium && (
                     <div className="flex gap-2">
                       <dt className="text-paper/35">Teknik</dt>

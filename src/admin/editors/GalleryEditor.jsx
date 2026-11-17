@@ -27,6 +27,7 @@ import {
 import { useGallery } from "../../hooks/useContent";
 import { setContent } from "../../lib/firestore";
 import { uploadToCloudinary } from "../../lib/cloudinary";
+import { PRICE_PRESETS, getArtworkPriceInfo } from "../../lib/priceBadge";
 import ImageAdjustModal from "../components/ImageAdjustModal";
 import {
   EditorHeader,
@@ -811,9 +812,17 @@ export default function GalleryEditor() {
                       <h4 className="font-sans font-medium text-xs text-white/90 truncate group-hover:text-rose-300 transition-colors">
                         {art.title || "İsimsiz Eser"}
                       </h4>
-                      <span className="shrink-0 text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-amber-200/90 truncate max-w-[85px]">
-                        {art.price?.trim() ? art.price : "Özel Kol."}
-                      </span>
+                      {(() => {
+                        const info = getArtworkPriceInfo(art.price);
+                        return (
+                          <span
+                            className={`shrink-0 text-[9px] font-mono px-1.5 py-0.5 rounded border inline-flex items-center gap-1 truncate max-w-[95px] ${info.adminBadge}`}
+                          >
+                            <span className={`w-1 h-1 rounded-full shrink-0 ${info.dot}`} />
+                            <span className="truncate">{info.text}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="font-mono text-[10px] text-white/50 truncate mt-0.5">
                       {art.year || "2026"} {art.medium ? `· ${art.medium}` : ""}
@@ -1072,25 +1081,36 @@ export default function GalleryEditor() {
                   onChange={(v) => updateArtwork(editingIdx, "price", v)}
                   placeholder="Örn: 24.000 ₺, $1,500 veya boş bırakın"
                 />
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="font-mono text-[10px] text-white/40 mr-1">Hızlı Seçim:</span>
-                  {["Özel Koleksiyon", "Teklif Üzerine", "Satıldı", "Koleksiyonda"].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => updateArtwork(editingIdx, "price", preset)}
-                      className="px-2.5 py-1 rounded-lg text-[10px] font-mono bg-white/5 hover:bg-white/15 border border-white/10 text-amber-200/90 hover:text-amber-100 transition-colors cursor-pointer"
-                    >
-                      {preset}
-                    </button>
-                  ))}
+                <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                  <span className="font-mono text-[10px] text-white/40 mr-0.5">
+                    Hızlı Seçim:
+                  </span>
+                  {PRICE_PRESETS.map((preset) => {
+                    const isActive = currentEditingArt.price === preset.label;
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => updateArtwork(editingIdx, "price", preset.label)}
+                        className={`px-3 py-1.5 rounded-xl text-[11px] font-mono border transition-all duration-200 cursor-pointer inline-flex items-center gap-1.5 active:scale-95 ${
+                          isActive ? preset.adminActive : preset.adminBtn
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${preset.dot}`} />
+                        <span>{preset.label}</span>
+                        {isActive && <Check size={11} strokeWidth={3} className="ml-0.5" />}
+                      </button>
+                    );
+                  })}
                   {currentEditingArt.price && (
                     <button
                       type="button"
                       onClick={() => updateArtwork(editingIdx, "price", "")}
-                      className="px-2 py-1 rounded-lg text-[10px] font-mono bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-xl text-[11px] font-mono bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/30 text-white/50 hover:text-rose-300 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
+                      title="Fiyat alanını sıfırla"
                     >
-                      Temizle
+                      <X size={12} />
+                      <span>Temizle</span>
                     </button>
                   )}
                 </div>
