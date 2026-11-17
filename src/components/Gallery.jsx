@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Maximize2, ChevronLeft, ChevronRight, Palette,
-  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar, Heart, Trophy
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, Layers, Calendar, Heart, Trophy, Sparkles
 } from "lucide-react";
 import PaintingCanvas from "./PaintingCanvas";
 import { useGallery, useTimeline } from "../hooks/useContent";
@@ -12,6 +12,7 @@ import InfiniteGallery from "./ui/infinite-gallery";
 import DragScrollStrip from "./ui/DragScrollStrip";
 import { getOptimizedImageUrl } from "../lib/imageOptimizer";
 import { getArtworkPriceInfo } from "../lib/priceBadge";
+import CommissionModal from "./CommissionModal";
 
 // ─── Custom Animated Portal Icon for Zaman Yolculuğu ───────────
 function PortalIcon({ className = "w-5 h-5", ...props }) {
@@ -377,6 +378,7 @@ export default function Gallery() {
   const [activeTab, setActiveTab] = useState("galeri"); // "galeri" | "zaman-yolculugu"
   const [activeIdx, setActiveIdx] = useState(null);
   const [lightboxCustomItem, setLightboxCustomItem] = useState(null);
+  const [commissionOpen, setCommissionOpen] = useState(false);
   const [items, setItems] = useState([]);
 
   // Use artworks directly to preserve Admin panel's exact custom ordering, filtering out hidden items for visitors
@@ -736,6 +738,31 @@ export default function Gallery() {
               onSelect={(item) => setLightboxCustomItem(item)}
             />
           </motion.div>
+        )}
+
+        {/* ─── ÖZEL TUVAL SİPARİŞİ / COMMISSION DAVET KARTI ─── */}
+        {activeTab === "galeri" && (
+          <div className="mb-12 p-5 sm:p-6 rounded-3xl dark:bg-gradient-to-r dark:from-amber-500/10 dark:via-rose-500/5 dark:to-amber-500/10 bg-[#fdfbf7]/90 border border-amber-900/15 dark:border-amber-500/20 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl dark:bg-amber-500/20 bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-300 shrink-0">
+                <Sparkles size={22} />
+              </div>
+              <div>
+                <h4 className="font-display text-base sm:text-lg font-bold text-paper">
+                  Senin Fotoğrafın, Aleyna'nın Tuvali
+                </h4>
+                <p className="font-sans text-xs dark:text-paper/60 text-paper/75 mt-0.5">
+                  Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına uygunluğu değerlendirilsin.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setCommissionOpen(true)}
+              className="shrink-0 w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-mono text-xs font-bold shadow-lg shadow-amber-950/40 hover:scale-[1.02] transition-transform cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Sparkles size={14} /> Özel Eser Talebi Oluştur →
+            </button>
+          </div>
         )}
 
         {/* ─── AYIN TUVALLERİ – Yatay Kaydırılabilir Şerit ─── */}
@@ -1406,6 +1433,12 @@ export default function Gallery() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Özel Tuval Talebi Modalı */}
+      <CommissionModal
+        isOpen={commissionOpen}
+        onClose={() => setCommissionOpen(false)}
+      />
     </section>
   );
 }

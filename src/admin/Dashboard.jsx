@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import {
-  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X, BarChart3,
+  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X, BarChart3, Sparkles,
 } from "lucide-react";
 import ProfileEditor from "./editors/ProfileEditor";
 import GalleryEditor from "./editors/GalleryEditor";
+import CommissionEditor from "./editors/CommissionEditor";
 import CVEditor from "./editors/CVEditor";
 import AIProjectEditor from "./editors/AIProjectEditor";
 import TimelineEditor from "./editors/TimelineEditor";
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { id: "analytics", label: "Analitik & İstatistikler", icon: BarChart3 },
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
+  { id: "commissions", label: "Tuval Talepleri & Güvenlik", icon: Sparkles },
   { id: "writings", label: "Yazılarım & Kütüphane", icon: BookOpen },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },
@@ -28,6 +30,7 @@ const EDITORS = {
   analytics: AnalyticsEditor,
   profile: ProfileEditor,
   gallery: GalleryEditor,
+  commissions: CommissionEditor,
   contact: ContactEditor,
   cv: CVEditor,
   ai: AIProjectEditor,
