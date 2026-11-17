@@ -128,14 +128,17 @@ function WritingModal({ article, onClose }) {
   const isLongText = fullText.length > 250;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+    <motion.div
+      key="writing-modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto"
+    >
       {/* Arka Plan Karartması */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-md"
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-md cursor-pointer"
         onClick={onClose}
       />
 
@@ -207,7 +210,7 @@ function WritingModal({ article, onClose }) {
           )}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 

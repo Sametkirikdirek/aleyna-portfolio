@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import {
-  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X, BarChart3, Sparkles,
+  Home, Image, FileText, Cpu, Clock, BookOpen, Mail, LogOut, Menu, X, BarChart3, Palette,
 } from "lucide-react";
 import ProfileEditor from "./editors/ProfileEditor";
 import GalleryEditor from "./editors/GalleryEditor";
@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { id: "analytics", label: "Analitik & İstatistikler", icon: BarChart3 },
   { id: "profile", label: "Anasayfa & Hakkımda", icon: Home },
   { id: "gallery", label: "Galeri", icon: Image },
-  { id: "commissions", label: "Tuval Talepleri & Güvenlik", icon: Sparkles },
+  { id: "commissions", label: "Tuval Talepleri & Güvenlik", icon: Palette },
   { id: "writings", label: "Yazılarım & Kütüphane", icon: BookOpen },
   { id: "ai", label: "Yapay Zeka Projeleri", icon: Cpu },
   { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },

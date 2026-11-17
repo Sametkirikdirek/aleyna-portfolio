@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
   X,
   Upload,
   ShieldCheck,
@@ -11,6 +10,7 @@ import {
   Loader2,
   AlertTriangle,
   Lock,
+  Palette,
 } from "lucide-react";
 import { InstagramIcon } from "./ui/SocialIcons";
 import {
@@ -38,6 +38,21 @@ export default function CommissionModal({ isOpen, onClose }) {
   const [quotaBlocked, setQuotaBlocked] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // ESC tuşu ve arka plan scroll kilitlenmesi
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow || "auto";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   // Modal açıldığında cihaz parmak izini ve kotayı sorgula
   useEffect(() => {
@@ -150,51 +165,52 @@ export default function CommissionModal({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-        {/* Backdrop */}
+      {isOpen && (
         <motion.div
+          key="commission-modal-container"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
-        />
-
-        {/* Modal Window */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-lg rounded-3xl bg-[#14151a] border border-amber-900/20 dark:border-white/15 p-6 sm:p-8 shadow-2xl z-10 text-paper"
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
         >
-          {/* Close button */}
-          <button
+          {/* Backdrop */}
+          <div
             onClick={onClose}
-            className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+          />
+
+          {/* Modal Window with spring physics */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 22 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+            transition={{ type: "spring", damping: 25, stiffness: 350 }}
+            className="relative w-full max-w-lg rounded-3xl bg-[#14151a] border border-amber-900/20 dark:border-white/15 p-6 sm:p-8 shadow-2xl z-10 text-paper my-auto"
           >
-            <X size={18} />
-          </button>
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
 
-          {/* Header */}
-          <div className="flex items-center gap-2.5 mb-2">
-            <span className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300">
-              <Sparkles size={18} />
-            </span>
-            <span className="font-sans text-xs uppercase font-bold text-amber-300/90 tracking-wider">
-              Özel Tuval Siparişi
-            </span>
-          </div>
+            {/* Header (No Sparkles Icon) */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-sans text-[11px] uppercase font-bold text-amber-400 tracking-widest px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                Özel Tuval Siparişi
+              </span>
+            </div>
 
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
-            Senin Fotoğrafın, Aleyna'nın Tuvali
-          </h2>
-          <p className="font-sans text-xs text-white/60 mb-6 leading-relaxed">
-            Sevdiklerini, özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tekniğine ve tuval uygunluğuna göre değerlendirelim.
-          </p>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
+              Senin Fotoğrafın, Aleyna'nın Tuvali
+            </h2>
+            <p className="font-sans text-xs text-white/60 mb-6 leading-relaxed">
+              Sevdiklerini, özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tekniğine ve tuval uygunluğuna göre değerlendirelim.
+            </p>
 
           {/* ─── DURUM KARTI (Eğer Ziyaretçi Bugün Talep Gönderdiyse) ─── */}
           {quotaBlocked && activeRequest ? (
@@ -224,7 +240,7 @@ export default function CommissionModal({ isOpen, onClose }) {
               {activeRequest.status === "artist_review" && (
                 <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 space-y-2">
                   <div className="flex items-center gap-2 text-cyan-300 text-sm font-semibold">
-                    <Sparkles size={16} />
+                    <Palette size={16} />
                     <span>Aleyna'nın Masasında Değerlendiriliyor!</span>
                   </div>
                   <p className="text-xs text-cyan-200/70 leading-relaxed font-sans">
@@ -404,7 +420,8 @@ export default function CommissionModal({ isOpen, onClose }) {
             </form>
           )}
         </motion.div>
-      </div>
-    </AnimatePresence>
-  );
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
 }

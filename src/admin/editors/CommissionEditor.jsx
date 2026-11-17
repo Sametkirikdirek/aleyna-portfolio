@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Sparkles,
+  Palette,
   ShieldAlert,
   Clock,
   CheckCircle2,
@@ -111,7 +111,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2.5">
-            <Sparkles className="text-amber-400" size={22} />
+            <Palette className="text-amber-400" size={22} />
             Tuval Talepleri & Güvenlik Yönetimi
           </h1>
           <p className="text-xs text-white/50 mt-1">
@@ -174,7 +174,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
       {activeTab === "artist" && (
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
-            <span className="text-xl">✨</span>
+            <Palette size={20} className="text-amber-400 shrink-0" />
             <p className="text-xs text-amber-200/90 leading-relaxed">
               Bu alanda yalnızca <strong>koordinatör onayından geçmiş, güvenli ve kaliteli</strong> tuval talepleri yer alır.
               Aleyna burada çizmek istediği eserleri tek tıkla kabul edebilir veya uygun değil olarak işaretleyebilir.
@@ -183,7 +183,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
 
           {artistRequests.length === 0 ? (
             <div className="text-center py-16 rounded-2xl bg-white/[0.02] border border-white/5">
-              <Sparkles size={28} className="text-white/20 mx-auto mb-2" />
+              <Palette size={28} className="text-white/20 mx-auto mb-2" />
               <p className="font-mono text-xs text-white/50">Şu anda incelenecek yeni onaylı talep yok.</p>
             </div>
           ) : (
