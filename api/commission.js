@@ -16,6 +16,17 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
+// Varsayılan Telegram Yapılandırması (Canlı Yedek)
+const DEFAULT_TELEGRAM_BOT_TOKEN = "9289109254:AAFOEGK0gpFFMsoNZTODU9g3HHYIFmRGQdA";
+const DEFAULT_TELEGRAM_CHAT_ID = "8965152099";
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // Basit token üretici (Sihirli onay linkleri için)
 function generateSecureToken(id) {
   const salt = process.env.MOD_SECRET_SALT || process.env.TELEGRAM_BOT_TOKEN || "AleynaArtCommission2026";
@@ -28,72 +39,106 @@ function generateSecureToken(id) {
   return Math.abs(hash).toString(36);
 }
 
-// Telegram Bildirim Gönderici (Firestore Dinamik Ayarları + Telegram Bot API)
-async function sendTelegramAlert({ title, details, imageUrl, approveLink, rejectLink }) {
-  let botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN;
-  let chatId = process.env.TELEGRAM_CHAT_ID || process.env.VITE_TELEGRAM_CHAT_ID;
+// Telegram Bildirim Gönderici (HTML Parse Mode - Kesintisiz & Güvenli)
+async function sendTelegramAlert({ title, city, country, clientIp, formattedDate, contact, note, imageUrl, approveLink, rejectLink, isAlert = false }) {
+  let botToken = process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN;
+  let chatId = process.env.TELEGRAM_CHAT_ID || DEFAULT_TELEGRAM_CHAT_ID;
 
-  // 1. Önce Firestore'daki dinamik admin ayarından oku (settings/telegram)
+  // 1. Önce Firestore'daki dinamik ayardan oku (content/telegram veya settings/telegram)
   try {
-    const settingsRes = await fetch(
-      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/telegram"
-    );
-    if (settingsRes.ok) {
-      const data = await settingsRes.json();
-      const dbToken = data.fields?.botToken?.stringValue;
-      const dbChatId = data.fields?.chatId?.stringValue;
-      const dbEnabled = data.fields?.enabled?.booleanValue;
+    const endpoints = [
+      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/content/telegram",
+      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/telegram",
+    ];
 
-      if (dbEnabled === false) {
-        // Kullanıcı admin panelinden bildirimleri kapattıysa gönderme
-        return;
-      }
-      if (dbToken) botToken = dbToken;
-      if (dbChatId) chatId = dbChatId;
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep);
+        if (res.ok) {
+          const data = await res.json();
+          const dbEnabled = data.fields?.enabled?.booleanValue;
+          if (dbEnabled === false) return; // Bildirimler kapalıysa çık
+
+          const dbToken = data.fields?.botToken?.stringValue;
+          const dbChatId = data.fields?.chatId?.stringValue;
+          if (dbToken) botToken = dbToken;
+          if (dbChatId) chatId = dbChatId;
+          break;
+        }
+      } catch {}
     }
   } catch (e) {
-    // Firestore okuma hatası olursa env değişkenleriyle devam et
+    // Fallback değerlerle devam et
   }
 
   if (!botToken || !chatId) {
     return;
   }
 
-  let messageText = `*${title}*\n\n${details}`;
+  const cleanTitle = escapeHtml(title);
+  const cleanCity = escapeHtml(city);
+  const cleanCountry = escapeHtml(country);
+  const cleanIp = escapeHtml(clientIp);
+  const cleanDate = escapeHtml(formattedDate);
+  const cleanContact = escapeHtml(contact || "Girilmedi");
+  const cleanNote = escapeHtml(note || "Not eklenmedi.");
+
+  let messageHtml = `<b>${cleanTitle}</b>\n\n` +
+    `📍 <b>Konum:</b> ${cleanCity}, ${cleanCountry} (<code>${cleanIp}</code>)\n` +
+    `⏰ <b>Tarih:</b> ${cleanDate}\n` +
+    `👤 <b>İletişim:</b> ${cleanContact}\n` +
+    `📝 <b>Not:</b> "${cleanNote}"`;
+
   if (approveLink && rejectLink) {
-    messageText += `\n\n👇 *Karar Ver (Tek Dokunuş):*\n🟢 [Aleyna'nın Masasına Onayla](${approveLink})\n🔴 [Talebi Reddet](${rejectLink})`;
+    messageHtml += `\n\n👇 <b>Karar Ver (Tek Dokunuş):</b>\n🟢 <a href="${approveLink}">Aleyna'nın Masasına Onayla</a>\n🔴 <a href="${rejectLink}">Talebi Reddet</a>`;
   }
 
+  // Telegram API'ye ilet
   try {
-    // Eğer görsel varsa doğrudan sendPhoto ile Telegram'a fotoğraf olarak gönder
+    let sent = false;
+
+    // 1. Eğer görsel varsa doğrudan sendPhoto ile fotoğraf olarak ilet
     if (imageUrl) {
       const photoPayload = {
         chat_id: chatId.trim(),
         photo: imageUrl,
-        caption: messageText.slice(0, 1024),
-        parse_mode: "Markdown",
+        caption: messageHtml.slice(0, 1024),
+        parse_mode: "HTML",
       };
       const photoRes = await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendPhoto`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(photoPayload),
       });
-      if (photoRes.ok) return;
+
+      if (photoRes.ok) {
+        sent = true;
+      } else {
+        const errDetail = await photoRes.text();
+        console.warn("Telegram sendPhoto uyarısı:", errDetail);
+      }
     }
 
-    // Fallback: sendPhoto olmazsa sendMessage ile gönder
-    await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId.trim(),
-        text: messageText,
-        parse_mode: "Markdown",
-        disable_web_page_preview: false,
-      }),
-    });
+    // 2. Fotoğraf gönderilemediyse veya yoksa düz metin mesajı ilet
+    if (!sent) {
+      const msgRes = await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId.trim(),
+          text: messageHtml,
+          parse_mode: "HTML",
+          disable_web_page_preview: false,
+        }),
+      });
+
+      if (!msgRes.ok) {
+        const msgErr = await msgRes.text();
+        console.warn("Telegram sendMessage hatası:", msgErr);
+      }
+    }
   } catch (err) {
-    console.warn("Telegram API bildirim hatası:", err.message);
+    console.warn("Telegram API bağlantı hatası:", err.message);
   }
 }
 
@@ -103,7 +148,7 @@ const rateLimitMap = new Map();
 function isRateLimited(ip) {
   const now = Date.now();
   const windowMs = 5 * 60 * 1000; // 5 dakika
-  const maxRequests = 5; // 5 dakikada en fazla 5 yükleme
+  const maxRequests = 10; // 5 dakikada en fazla 10 yükleme
 
   const record = rateLimitMap.get(ip);
   if (!record || now > record.resetTime) {
@@ -142,9 +187,7 @@ export default async function handler(request) {
     const contact = formData.get("contact") || "";
     const deviceHash = formData.get("deviceHash") || "unknown";
     const consent = formData.get("consent") === "true";
-      request.headers.get("cf-connecting-ip") ||
-      request.headers.get("x-real-ip") ||
-      "127.0.0.1";
+
     const country =
       request.headers.get("cf-ipcountry") ||
       request.headers.get("x-vercel-ip-country") ||
@@ -218,7 +261,7 @@ export default async function handler(request) {
     const requestId = `comm_${Date.now()}`;
     const token = generateSecureToken(requestId);
 
-    // 4. Şüpheli İçerik / AI Taraması Kontrolü (Simülasyon & Moderasyon kuralları)
+    // 4. Şüpheli İçerik / AI Taraması Kontrolü
     const noteLower = note.toLowerCase();
     const isSuspicious =
       cloudResult.moderation?.some((m) => m.status === "rejected") ||
@@ -226,11 +269,16 @@ export default async function handler(request) {
 
     // Eğer şüpheli veya kural ihlali varsa: ADLİ BİLİŞİM RAPORU OLUŞTUR VE BİLDİR
     if (isSuspicious) {
-      // Telegram'a acil güvenlik uyarısı gönder
       await sendTelegramAlert({
         title: "🚨 GÜVENLİK İHLALİ & ŞÜPHELİ İÇERİK ENGELLENDİ!",
-        details: `📍 *Konum:* ${city}, ${country}\n🌐 *IP Adresi:* \`${clientIp}\`\n⏰ *Zaman:* ${formattedDate}\n👤 *İletişim:* ${contact || "Belirtilmedi"}\n📝 *Not:* ${note || "Yok"}\n⚠️ *Neden:* AI filtresi içeriği zararlı olarak işaretledi.\n\n📋 *Adli şikayet için tüm kanıt ve loglar moderatör paneline kaydedildi.*`,
+        city,
+        country,
+        clientIp,
+        formattedDate,
+        contact,
+        note: `AI Filtresi Engelledi. Not: ${note}`,
         imageUrl,
+        isAlert: true,
       });
 
       return Response.json(
@@ -251,7 +299,12 @@ export default async function handler(request) {
 
     await sendTelegramAlert({
       title: "🎨 Yeni Özel Tuval Talebi Geldi!",
-      details: `📍 *Konum:* ${city}, ${country} (\`${clientIp}\`)\n⏰ *Tarih:* ${formattedDate}\n👤 *İletişim:* ${contact || "Girilmedi"}\n📝 *Not:* "${note || "Not eklenmedi."}"`,
+      city,
+      country,
+      clientIp,
+      formattedDate,
+      contact,
+      note,
       imageUrl,
       approveLink,
       rejectLink,

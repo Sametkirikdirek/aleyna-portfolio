@@ -166,16 +166,14 @@ Engelleme Gerekçesi: ${inc.flagReason}
     setTgSaving(true);
     setTgFeedback(null);
     try {
-      await setDoc(
-        doc(db, "settings", "telegram"),
-        {
-          botToken: tgBotToken.trim(),
-          chatId: tgChatId.trim(),
-          enabled: tgEnabled,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const tgData = {
+        botToken: tgBotToken.trim(),
+        chatId: tgChatId.trim(),
+        enabled: tgEnabled,
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
+      await setDoc(doc(db, "content", "telegram"), tgData, { merge: true });
       setTgFeedback({
         type: "success",
         message: "Telegram ayarları başarıyla kaydedildi!",
@@ -201,17 +199,14 @@ Engelleme Gerekçesi: ${inc.flagReason}
     setTgTesting(true);
     setTgFeedback(null);
     try {
-      // Önce Firestore'a kaydet
-      await setDoc(
-        doc(db, "settings", "telegram"),
-        {
-          botToken: tgBotToken.trim(),
-          chatId: tgChatId.trim(),
-          enabled: tgEnabled,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      const tgData = {
+        botToken: tgBotToken.trim(),
+        chatId: tgChatId.trim(),
+        enabled: tgEnabled,
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
+      await setDoc(doc(db, "content", "telegram"), tgData, { merge: true });
 
       // Sunucu üzerinden test gönder
       const res = await fetch("/api/commission-test", {
