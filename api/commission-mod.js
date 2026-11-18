@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function - WhatsApp Sihirli Onay / Red Linki İşleyicisi
+ * Vercel Serverless Function - Telegram Sihirli Onay / Red Linki İşleyicisi
  * /api/commission-mod
  */
 

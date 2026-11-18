@@ -366,7 +366,7 @@ export default function CommissionModal({ isOpen, onClose }) {
                   type="text"
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
-                  placeholder="@kullanici_adi veya WhatsApp numaranız"
+                  placeholder="@kullanici_adi veya telefon / Telegram numaranız"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors font-sans"
                 />
               </div>

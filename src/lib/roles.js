@@ -9,7 +9,7 @@
  * - MODERATOR (Koordinatör & Güvenlik Yöneticisi - Samet):
  *   Gelen tüm ham fotoğrafları inceler (Ön Eleme), onaylar/reddeder.
  *   Yapay zeka filtresine takılan adli kayıtları (IP, konum, delil tutanağı) yönetir.
- *   WhatsApp bilgi hattını ve telefon ayarlarını yönetir.
+ *   Telegram bildirim hattını ve sistem ayarlarını yönetir.
  * 
  * - SUPERADMIN:
  *   Her iki role de tam erişim sağlar.
