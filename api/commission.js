@@ -16,7 +16,7 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
-// Basit token üretici (Sihirli WhatsApp onay linkleri için)
+// Basit token üretici (Sihirli onay linkleri için)
 function generateSecureToken(id) {
   let hash = 0;
   const str = `${id}#AleynaArtCommission2026`;
@@ -27,63 +27,72 @@ function generateSecureToken(id) {
   return Math.abs(hash).toString(36);
 }
 
-function formatCallMeBotPhone(phone) {
-  if (!phone) return "";
-  let clean = phone.replace(/[^\d]/g, "");
-  if (clean.startsWith("0")) {
-    clean = "90" + clean.slice(1);
-  } else if (!clean.startsWith("90") && clean.length === 10) {
-    clean = "90" + clean;
-  }
-  return clean;
-}
+// Telegram Bildirim Gönderici (Firestore Dinamik Ayarları + Telegram Bot API)
+async function sendTelegramAlert({ title, details, imageUrl, approveLink, rejectLink }) {
+  let botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN;
+  let chatId = process.env.TELEGRAM_CHAT_ID || process.env.VITE_TELEGRAM_CHAT_ID;
 
-// WhatsApp Bildirim Gönderici (Firestore Dinamik Ayarları + CallMeBot API)
-async function sendWhatsAppAlert({ title, details, imageUrl, approveLink, rejectLink }) {
-  let phone = process.env.WHATSAPP_PHONE || process.env.VITE_WHATSAPP_PHONE;
-  let apiKey = process.env.WHATSAPP_API_KEY || process.env.VITE_WHATSAPP_API_KEY;
-
-  // 1. Önce Firestore'daki dinamik admin ayarından oku
+  // 1. Önce Firestore'daki dinamik admin ayarından oku (settings/telegram)
   try {
     const settingsRes = await fetch(
-      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/whatsapp"
+      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/telegram"
     );
     if (settingsRes.ok) {
       const data = await settingsRes.json();
-      const dbPhone = data.fields?.phone?.stringValue;
-      const dbKey = data.fields?.apiKey?.stringValue;
+      const dbToken = data.fields?.botToken?.stringValue;
+      const dbChatId = data.fields?.chatId?.stringValue;
       const dbEnabled = data.fields?.enabled?.booleanValue;
 
       if (dbEnabled === false) {
         // Kullanıcı admin panelinden bildirimleri kapattıysa gönderme
         return;
       }
-      if (dbPhone) phone = dbPhone;
-      if (dbKey) apiKey = dbKey;
+      if (dbToken) botToken = dbToken;
+      if (dbChatId) chatId = dbChatId;
     }
   } catch (e) {
     // Firestore okuma hatası olursa env değişkenleriyle devam et
   }
 
-  // Varsayılan telefon fallback
-  phone = phone || "05050983970";
-  const targetPhone = formatCallMeBotPhone(phone);
+  if (!botToken || !chatId) {
+    return;
+  }
 
-  if (targetPhone && apiKey) {
-    let message = `🎨 *${title}*\n\n${details}`;
-    if (imageUrl) message += `\n📸 *Görsel:* ${imageUrl}`;
-    if (approveLink && rejectLink) {
-      message += `\n\n👇 *Karar Ver (Tek Dokunuş):*\n🟢 *Onayla:* ${approveLink}\n🔴 *Reddet:* ${rejectLink}`;
+  let messageText = `*${title}*\n\n${details}`;
+  if (approveLink && rejectLink) {
+    messageText += `\n\n👇 *Karar Ver (Tek Dokunuş):*\n🟢 [Aleyna'nın Masasına Onayla](${approveLink})\n🔴 [Talebi Reddet](${rejectLink})`;
+  }
+
+  try {
+    // Eğer görsel varsa doğrudan sendPhoto ile Telegram'a fotoğraf olarak gönder
+    if (imageUrl) {
+      const photoPayload = {
+        chat_id: chatId.trim(),
+        photo: imageUrl,
+        caption: messageText.slice(0, 1024),
+        parse_mode: "Markdown",
+      };
+      const photoRes = await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendPhoto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(photoPayload),
+      });
+      if (photoRes.ok) return;
     }
 
-    try {
-      const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(
-        targetPhone
-      )}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apiKey.trim())}`;
-      await fetch(url);
-    } catch (err) {
-      console.warn("WhatsApp API bildirim hatası:", err.message);
-    }
+    // Fallback: sendPhoto olmazsa sendMessage ile gönder
+    await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId.trim(),
+        text: messageText,
+        parse_mode: "Markdown",
+        disable_web_page_preview: false,
+      }),
+    });
+  } catch (err) {
+    console.warn("Telegram API bildirim hatası:", err.message);
   }
 }
 
@@ -180,7 +189,6 @@ export default async function handler(request) {
     const token = generateSecureToken(requestId);
 
     // 4. Şüpheli İçerik / AI Taraması Kontrolü (Simülasyon & Moderasyon kuralları)
-    // Cloudinary moderasyon sonuçları veya tehlikeli anahtar kelimeler
     const noteLower = note.toLowerCase();
     const isSuspicious =
       cloudResult.moderation?.some((m) => m.status === "rejected") ||
@@ -188,26 +196,10 @@ export default async function handler(request) {
 
     // Eğer şüpheli veya kural ihlali varsa: ADLİ BİLİŞİM RAPORU OLUŞTUR VE BİLDİR
     if (isSuspicious) {
-      const incidentData = {
-        requestId,
-        type: "SECURITY_VIOLATION",
-        ip: clientIp,
-        country,
-        city,
-        userAgent,
-        timestamp,
-        formattedDate,
-        imageUrl,
-        submittedNote: note,
-        submittedContact: contact,
-        deviceHash,
-        flagReason: "AI Moderasyon Kuralı İhlali (Müstehcenlik veya Zararlı İçerik)",
-      };
-
-      // WhatsApp'a acil güvenlik uyarısı gönder
-      await sendWhatsAppAlert({
+      // Telegram'a acil güvenlik uyarısı gönder
+      await sendTelegramAlert({
         title: "🚨 GÜVENLİK İHLALİ & ŞÜPHELİ İÇERİK ENGELLENDİ!",
-        details: `📍 *Konum:* ${city}, ${country}\n🌐 *IP Adresi:* ${clientIp}\n⏰ *Zaman:* ${formattedDate}\n👤 *İletişim:* ${contact || "Belirtilmedi"}\n📝 *Not:* ${note || "Yok"}\n⚠️ *Neden:* AI filtresi içeriği zararlı olarak işaretledi.\n\n📋 *Adli şikayet için tüm kanıt ve loglar arşive kaydedildi.*`,
+        details: `📍 *Konum:* ${city}, ${country}\n🌐 *IP Adresi:* \`${clientIp}\`\n⏰ *Zaman:* ${formattedDate}\n👤 *İletişim:* ${contact || "Belirtilmedi"}\n📝 *Not:* ${note || "Yok"}\n⚠️ *Neden:* AI filtresi içeriği zararlı olarak işaretledi.\n\n📋 *Adli şikayet için tüm kanıt ve loglar moderatör paneline kaydedildi.*`,
         imageUrl,
       });
 
@@ -221,15 +213,15 @@ export default async function handler(request) {
       );
     }
 
-    // 5. Temiz Başvuru: Onay Linklerini Oluştur ve WhatsApp Bildirimi Gönder
+    // 5. Temiz Başvuru: Onay Linklerini Oluştur ve Telegram Bildirimi Gönder
     const host = request.headers.get("host") || "www.aleynaaltunsu.com";
     const proto = host.includes("localhost") ? "http" : "https";
     const approveLink = `${proto}://${host}/api/commission-mod?action=approve&id=${requestId}&token=${token}`;
     const rejectLink = `${proto}://${host}/api/commission-mod?action=reject&id=${requestId}&token=${token}`;
 
-    await sendWhatsAppAlert({
-      title: "✨ Yeni Özel Tuval Talebi Geldi!",
-      details: `📍 *Konum:* ${city}, ${country} (IP: ${clientIp})\n⏰ *Tarih:* ${formattedDate}\n👤 *İletişim:* ${contact || "Girilmedi"}\n📝 *Not:* ${note || "Not eklenmedi."}`,
+    await sendTelegramAlert({
+      title: "🎨 Yeni Özel Tuval Talebi Geldi!",
+      details: `📍 *Konum:* ${city}, ${country} (\`${clientIp}\`)\n⏰ *Tarih:* ${formattedDate}\n👤 *İletişim:* ${contact || "Girilmedi"}\n📝 *Not:* "${note || "Not eklenmedi."}"`,
       imageUrl,
       approveLink,
       rejectLink,

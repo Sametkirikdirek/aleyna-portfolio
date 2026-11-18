@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Plus,
   Trash2,
+  Bot,
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import {
@@ -52,13 +53,13 @@ export default function CommissionEditor() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
 
-  // WhatsApp Ayarları State'i
-  const [waPhone, setWaPhone] = useState("05050983970");
-  const [waApiKey, setWaApiKey] = useState("");
-  const [waEnabled, setWaEnabled] = useState(true);
-  const [waSaving, setWaSaving] = useState(false);
-  const [waTesting, setWaTesting] = useState(false);
-  const [waFeedback, setWaFeedback] = useState(null);
+  // Telegram Ayarları State'i
+  const [tgBotToken, setTgBotToken] = useState("");
+  const [tgChatId, setTgChatId] = useState("");
+  const [tgEnabled, setTgEnabled] = useState(true);
+  const [tgSaving, setTgSaving] = useState(false);
+  const [tgTesting, setTgTesting] = useState(false);
+  const [tgFeedback, setTgFeedback] = useState(null);
 
   // Rol Yönetimi State'i (Yalnızca Moderatör/Admin)
   const [roleSettings, setRoleSettings] = useState({});
@@ -88,12 +89,12 @@ export default function CommissionEditor() {
       setIncidents(list);
     });
 
-    const unsubWa = onSnapshot(doc(db, "settings", "whatsapp"), (docSnap) => {
+    const unsubTg = onSnapshot(doc(db, "settings", "telegram"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data.phone) setWaPhone(data.phone);
-        if (data.apiKey) setWaApiKey(data.apiKey);
-        if (typeof data.enabled === "boolean") setWaEnabled(data.enabled);
+        if (data.botToken) setTgBotToken(data.botToken);
+        if (data.chatId) setTgChatId(data.chatId);
+        if (typeof data.enabled === "boolean") setTgEnabled(data.enabled);
       }
     });
 
@@ -106,7 +107,7 @@ export default function CommissionEditor() {
     return () => {
       unsubReq();
       unsubInc();
-      unsubWa();
+      unsubTg();
       unsubRoles();
     };
   }, []);
@@ -160,53 +161,53 @@ Engelleme Gerekçesi: ${inc.flagReason}
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleSaveWaSettings = async (e) => {
+  const handleSaveTgSettings = async (e) => {
     e?.preventDefault();
-    setWaSaving(true);
-    setWaFeedback(null);
+    setTgSaving(true);
+    setTgFeedback(null);
     try {
       await setDoc(
-        doc(db, "settings", "whatsapp"),
+        doc(db, "settings", "telegram"),
         {
-          phone: waPhone.trim(),
-          apiKey: waApiKey.trim(),
-          enabled: waEnabled,
+          botToken: tgBotToken.trim(),
+          chatId: tgChatId.trim(),
+          enabled: tgEnabled,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
-      setWaFeedback({
+      setTgFeedback({
         type: "success",
-        message: "WhatsApp ayarları başarıyla kaydedildi!",
+        message: "Telegram ayarları başarıyla kaydedildi!",
       });
     } catch (err) {
-      setWaFeedback({
+      setTgFeedback({
         type: "error",
         message: "Ayarlar kaydedilemedi: " + err.message,
       });
     } finally {
-      setWaSaving(false);
+      setTgSaving(false);
     }
   };
 
-  const handleTestWa = async () => {
-    if (!waPhone.trim() || !waApiKey.trim()) {
-      setWaFeedback({
+  const handleTestTg = async () => {
+    if (!tgBotToken.trim() || !tgChatId.trim()) {
+      setTgFeedback({
         type: "error",
-        message: "Lütfen önce telefon numaranızı ve CallMeBot API anahtarınızı girin.",
+        message: "Lütfen önce Telegram Bot Token ve Chat ID bilgilerinizi girin.",
       });
       return;
     }
-    setWaTesting(true);
-    setWaFeedback(null);
+    setTgTesting(true);
+    setTgFeedback(null);
     try {
       // Önce Firestore'a kaydet
       await setDoc(
-        doc(db, "settings", "whatsapp"),
+        doc(db, "settings", "telegram"),
         {
-          phone: waPhone.trim(),
-          apiKey: waApiKey.trim(),
-          enabled: waEnabled,
+          botToken: tgBotToken.trim(),
+          chatId: tgChatId.trim(),
+          enabled: tgEnabled,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -217,27 +218,27 @@ Engelleme Gerekçesi: ${inc.flagReason}
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: waPhone.trim(),
-          apiKey: waApiKey.trim(),
+          botToken: tgBotToken.trim(),
+          chatId: tgChatId.trim(),
         }),
       });
 
       const resData = await res.json();
       if (!res.ok || !resData.success) {
-        throw new Error(resData.error || "CallMeBot test mesajını iletemedi.");
+        throw new Error(resData.error || "Telegram test mesajı iletilemedi.");
       }
 
-      setWaFeedback({
+      setTgFeedback({
         type: "success",
-        message: `🎉 Harika! Test bildirimi ${waPhone} numarasına başarıyla iletildi. WhatsApp kutunuzu kontrol edin!`,
+        message: "🚀 Harika! Test bildirimi Telegram hesabınıza anında iletildi. Telegram sohbetinizi kontrol edin!",
       });
     } catch (err) {
-      setWaFeedback({
+      setTgFeedback({
         type: "error",
         message: err.message,
       });
     } finally {
-      setWaTesting(false);
+      setTgTesting(false);
     }
   };
 
@@ -349,20 +350,20 @@ Engelleme Gerekçesi: ${inc.flagReason}
             </button>
 
             <button
-              onClick={() => setActiveTab("whatsapp")}
+              onClick={() => setActiveTab("telegram")}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "whatsapp"
-                  ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
+                activeTab === "telegram"
+                  ? "bg-sky-500/20 text-sky-200 border border-sky-500/30 shadow-sm"
                   : "text-white/60 hover:text-white"
               }`}
             >
-              <MessageSquare size={14} className="text-emerald-400" />
-              <span>WhatsApp & Roller</span>
+              <Send size={14} className="text-sky-400" />
+              <span>Telegram & Roller</span>
               <span
                 className={`w-2 h-2 rounded-full ${
-                  waApiKey && waEnabled ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+                  tgBotToken && tgChatId && tgEnabled ? "bg-sky-400" : "bg-amber-400 animate-pulse"
                 }`}
-                title={waApiKey && waEnabled ? "Bağlı" : "Kurulum Gerekli"}
+                title={tgBotToken && tgChatId && tgEnabled ? "Bağlı" : "Kurulum Gerekli"}
               />
             </button>
           </div>
@@ -477,7 +478,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
       {activeTab === "mod" && isModerator && (
         <div className="space-y-4">
           <p className="text-xs text-white/50">
-            Ziyaretçilerin doğrudan yüklediği, WhatsApp bildirimine ek olarak buradan da inceleyip onaylayabileceğiniz ham talepler.
+            Ziyaretçilerin doğrudan yüklediği, Telegram bildirimine ek olarak buradan da inceleyip onaylayabileceğiniz ham talepler.
           </p>
 
           {pendingModRequests.length === 0 ? (
@@ -607,29 +608,30 @@ Engelleme Gerekçesi: ${inc.flagReason}
         </div>
       )}
 
-      {/* ─── SEKME 4: WHATSAPP AYARLARI & ROL YÖNETİMİ (YALNIZCA MODERATÖR) ─── */}
-      {activeTab === "whatsapp" && isModerator && (
+      {/* ─── SEKME 4: TELEGRAM AYARLARI & ROL YÖNETİMİ (YALNIZCA MODERATÖR) ─── */}
+      {activeTab === "telegram" && isModerator && (
         <div className="space-y-6">
-          {/* WhatsApp Durum Kartı */}
+          {/* Telegram Durum Kartı */}
           <div
             className={`p-5 rounded-2xl border flex items-center justify-between gap-4 flex-wrap ${
-              waApiKey && waEnabled
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
+              tgBotToken && tgChatId && tgEnabled
+                ? "bg-sky-500/10 border-sky-500/30 text-sky-200"
                 : "bg-amber-500/10 border-amber-500/30 text-amber-200"
             }`}
           >
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{waApiKey && waEnabled ? "🟢" : "🟠"}</span>
+              <span className="text-2xl">{tgBotToken && tgChatId && tgEnabled ? "🟢" : "🟠"}</span>
               <div>
-                <h3 className="font-semibold text-sm text-white">
-                  {waApiKey && waEnabled
-                    ? "WhatsApp Bilgi Hattı Aktif & Bağlı"
-                    : "WhatsApp Bilgi Hattı Kurulumu Bekleniyor"}
+                <h3 className="font-semibold text-sm text-white flex items-center gap-2">
+                  <Send size={16} className="text-sky-400" />
+                  {tgBotToken && tgChatId && tgEnabled
+                    ? "Telegram Bildirim Hattı Canlı & Bağlı"
+                    : "Telegram Bildirim Hattı Kurulumu Bekleniyor"}
                 </h3>
                 <p className="text-xs opacity-80 mt-0.5 font-sans">
-                  {waApiKey && waEnabled
-                    ? `Ziyaretçi talepleri ve güvenlik alarmları anında ${waPhone} numarasına iletiliyor.`
-                    : "Telefonunuza anlık WhatsApp bildirimi ve tek tıkla onay linki gelmesi için API anahtarınızı girin."}
+                  {tgBotToken && tgChatId && tgEnabled
+                    ? `Ziyaretçi talepleri ve güvenlik alarmları anında Telegram sohbetinize (${tgChatId}) iletiliyor.`
+                    : "Telefonunuza anlık sesli bildirim ve fotoğraflı sipariş özeti gelmesi için Telegram Bot bilgilerinizi girin."}
                 </p>
               </div>
             </div>
@@ -637,29 +639,29 @@ Engelleme Gerekçesi: ${inc.flagReason}
             <div className="flex items-center gap-2">
               <span
                 className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold ${
-                  waApiKey && waEnabled
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                  tgBotToken && tgChatId && tgEnabled
+                    ? "bg-sky-500/20 text-sky-300 border border-sky-500/40"
                     : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                 }`}
               >
-                {waApiKey && waEnabled ? "CANLI BAĞLI" : "KEY GEREKLİ"}
+                {tgBotToken && tgChatId && tgEnabled ? "CANLI BAĞLI" : "TOKEN & ID GEREKLİ"}
               </span>
             </div>
           </div>
 
           {/* Feedback Uyarısı */}
-          {waFeedback && (
+          {tgFeedback && (
             <div
               className={`p-4 rounded-xl text-xs font-mono flex items-center justify-between gap-3 border ${
-                waFeedback.type === "success"
+                tgFeedback.type === "success"
                   ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-200"
                   : "bg-rose-500/15 border-rose-500/30 text-rose-200"
               }`}
             >
-              <span>{waFeedback.message}</span>
+              <span>{tgFeedback.message}</span>
               <button
                 type="button"
-                onClick={() => setWaFeedback(null)}
+                onClick={() => setTgFeedback(null)}
                 className="text-white/40 hover:text-white cursor-pointer"
               >
                 ✕
@@ -667,48 +669,48 @@ Engelleme Gerekçesi: ${inc.flagReason}
             </div>
           )}
 
-          {/* WhatsApp Ayar Formu */}
+          {/* Telegram Ayar Formu */}
           <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-6">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Settings size={18} className="text-emerald-400" />
-              Bildirim Numarası & CallMeBot API Yapılandırması
+              <Settings size={18} className="text-sky-400" />
+              Telegram Bot API Yapılandırması
             </h2>
 
-            <form onSubmit={handleSaveWaSettings} className="space-y-4">
+            <form onSubmit={handleSaveTgSettings} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Telefon Numarası */}
+                {/* Bot Token */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
-                    <Smartphone size={14} className="text-amber-400" />
-                    Hedef WhatsApp Numarası
+                    <Key size={14} className="text-sky-400" />
+                    Telegram Bot Token (BotFather'dan Alınan)
                   </label>
                   <input
                     type="text"
-                    value={waPhone}
-                    onChange={(e) => setWaPhone(e.target.value)}
-                    placeholder="Örn: 05050983970"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-sm focus:outline-hidden focus:border-amber-400 transition-colors"
+                    value={tgBotToken}
+                    onChange={(e) => setTgBotToken(e.target.value)}
+                    placeholder="Örn: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-xs focus:outline-hidden focus:border-sky-400 transition-colors"
                   />
                   <p className="text-[11px] text-white/40 font-mono">
-                    Bildirimlerin ve onay linklerinin gönderileceği cep telefonu numaranız.
+                    @BotFather tarafından botunuz oluşturulduğunda verilen gizli API anahtarı.
                   </p>
                 </div>
 
-                {/* API Key */}
+                {/* Chat ID */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
-                    <Key size={14} className="text-emerald-400" />
-                    CallMeBot API Anahtarı (API Key)
+                    <User size={14} className="text-amber-400" />
+                    Telegram Chat ID (Kişisel Sohbet Numaranız)
                   </label>
                   <input
                     type="text"
-                    value={waApiKey}
-                    onChange={(e) => setWaApiKey(e.target.value)}
-                    placeholder="Botun gönderdiği kod (Örn: 123456)"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-sm focus:outline-hidden focus:border-emerald-400 transition-colors"
+                    value={tgChatId}
+                    onChange={(e) => setTgChatId(e.target.value)}
+                    placeholder="Örn: 987654321"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-xs focus:outline-hidden focus:border-amber-400 transition-colors"
                   />
                   <p className="text-[11px] text-white/40 font-mono">
-                    Aşağıdaki 30 saniyelik rehberden ücretsiz alabilirsiniz.
+                    Bildirimlerin iletileceği kişisel sayısal Telegram kimlik numaranız.
                   </p>
                 </div>
               </div>
@@ -717,16 +719,16 @@ Engelleme Gerekçesi: ${inc.flagReason}
               <div className="pt-2 flex items-center gap-3">
                 <input
                   type="checkbox"
-                  id="waEnabledToggle"
-                  checked={waEnabled}
-                  onChange={(e) => setWaEnabled(e.target.checked)}
-                  className="w-4 h-4 rounded-md accent-emerald-500 cursor-pointer"
+                  id="tgEnabledToggle"
+                  checked={tgEnabled}
+                  onChange={(e) => setTgEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded-md accent-sky-500 cursor-pointer"
                 />
                 <label
-                  htmlFor="waEnabledToggle"
+                  htmlFor="tgEnabledToggle"
                   className="text-xs text-white/80 cursor-pointer font-sans select-none"
                 >
-                  Yeni ziyaretçi tuval taleplerini ve şüpheli güvenlik ihlallerini anında WhatsApp'a bildir
+                  Yeni ziyaretçi tuval siparişlerini ve şüpheli güvenlik alarmlarını anında Telegram'a bildir
                 </label>
               </div>
 
@@ -734,20 +736,20 @@ Engelleme Gerekçesi: ${inc.flagReason}
               <div className="pt-3 flex items-center gap-3 flex-wrap">
                 <button
                   type="submit"
-                  disabled={waSaving}
-                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-2"
+                  disabled={tgSaving}
+                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-2"
                 >
-                  {waSaving ? <Loader2 size={14} className="animate-spin" /> : null}
+                  {tgSaving ? <Loader2 size={14} className="animate-spin" /> : null}
                   💾 Ayarları Kaydet
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleTestWa}
-                  disabled={waTesting || !waPhone.trim() || !waApiKey.trim()}
-                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all cursor-pointer shadow-md disabled:opacity-40 flex items-center gap-2"
+                  onClick={handleTestTg}
+                  disabled={tgTesting || !tgBotToken.trim() || !tgChatId.trim()}
+                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border border-sky-500/40 transition-all cursor-pointer shadow-md disabled:opacity-40 flex items-center gap-2"
                 >
-                  {waTesting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  {tgTesting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                   🚀 Test Bildirimi Gönder
                 </button>
               </div>
@@ -755,44 +757,54 @@ Engelleme Gerekçesi: ${inc.flagReason}
           </div>
 
           {/* Adım Adım Rehber Kartı */}
-          <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+          <div className="p-6 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-4">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <MessageSquare size={16} className="text-emerald-400" />
-              API Anahtarını Almak İçin 3 Basit Adım (Tamamen Ücretsiz)
+              <Bot size={16} className="text-sky-400" />
+              Telegram Botunuzu 30 Saniyede Kurun (Tamamen Ücretsiz & Resmi)
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Adım 1 */}
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
                 <div>
-                  <div className="font-mono text-xs font-bold text-emerald-400">1. ADIM: SOHBETİ AÇ</div>
+                  <div className="font-mono text-xs font-bold text-sky-400">1. ADIM: BOT OLUŞTURUN</div>
                   <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
-                    Telefonunuzdan CallMeBot resmi WhatsApp botunu başlatın:
+                    Telegram'ın resmi <code className="text-amber-300 font-mono">@BotFather</code> botuna gidin ve <code className="text-emerald-300 font-mono">/newbot</code> yazın.
                   </p>
                 </div>
                 <a
-                  href="https://wa.me/34644688494?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                  href="https://t.me/BotFather"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer"
                 >
-                  <MessageSquare size={14} /> WhatsApp'ta Aç →
+                  <Send size={14} /> @BotFather'ı Aç →
                 </a>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
-                <div className="font-mono text-xs font-bold text-emerald-400">2. ADIM: MESAJI GÖNDER</div>
-                <p className="text-xs text-white/70 leading-relaxed font-sans">
-                  Sohbete şu mesajı gönderin (butona tıkladıysanız zaten hazır gelir):
-                </p>
-                <div className="p-2.5 rounded-lg bg-black/50 border border-white/10 font-mono text-[11px] text-emerald-300 select-all font-bold">
-                  I allow callmebot to send me messages
+              {/* Adım 2 */}
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="font-mono text-xs font-bold text-sky-400">2. ADIM: CHAT ID ÖĞRENİN</div>
+                  <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
+                    Oluşturduğunuz bota Telegram'da <strong>BAŞLAT (Start)</strong> dedikten sonra, kendi Chat ID'nizi görmek için <code className="text-amber-300 font-mono">@userinfobot</code> botuna bir mesaj atın.
+                  </p>
                 </div>
+                <a
+                  href="https://t.me/userinfobot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer border border-white/10"
+                >
+                  <User size={14} /> @userinfobot'u Aç →
+                </a>
               </div>
 
+              {/* Adım 3 */}
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
-                <div className="font-mono text-xs font-bold text-emerald-400">3. ADIM: KODU YAPIŞTIR</div>
-                <p className="text-xs text-white/70 leading-relaxed font-sans">
-                  Bot saniyeler içinde size <code className="text-amber-300 font-mono px-1 rounded bg-black/40">apikey: 123456</code> kodunu verecektir. O sayıyı yukarıdaki kutuya yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
+                <div className="font-mono text-xs font-bold text-sky-400">3. ADIM: TEST EDİN</div>
+                <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
+                  BotFather'ın verdiği <strong>HTTP API Token</strong>'ı ve userinfobot'un verdiği <strong>Id numarasını</strong> yukarı yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
                 </p>
               </div>
             </div>
