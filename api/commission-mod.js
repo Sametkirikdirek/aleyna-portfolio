@@ -8,8 +8,9 @@ export const config = {
 };
 
 function generateSecureToken(id) {
+  const salt = process.env.MOD_SECRET_SALT || process.env.TELEGRAM_BOT_TOKEN || "AleynaArtCommission2026";
   let hash = 0;
-  const str = `${id}#AleynaArtCommission2026`;
+  const str = `${id}#${salt}`;
   for (let i = 0; i < str.length; i++) {
     hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;

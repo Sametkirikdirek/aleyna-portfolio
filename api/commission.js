@@ -18,8 +18,9 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 // Basit token üretici (Sihirli onay linkleri için)
 function generateSecureToken(id) {
+  const salt = process.env.MOD_SECRET_SALT || process.env.TELEGRAM_BOT_TOKEN || "AleynaArtCommission2026";
   let hash = 0;
-  const str = `${id}#AleynaArtCommission2026`;
+  const str = `${id}#${salt}`;
   for (let i = 0; i < str.length; i++) {
     hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
@@ -96,22 +97,51 @@ async function sendTelegramAlert({ title, details, imageUrl, approveLink, reject
   }
 }
 
+// Bellek içi IP hız sınırlayıcı (Rate Limiter: Bot & DoS saldırı engeli)
+const rateLimitMap = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const windowMs = 5 * 60 * 1000; // 5 dakika
+  const maxRequests = 5; // 5 dakikada en fazla 5 yükleme
+
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+
+  record.count += 1;
+  return record.count > maxRequests;
+}
+
 export default async function handler(request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Yalnızca POST istekleri kabul edilir" }, { status: 405 });
   }
 
   try {
+    // 1. Ziyaretçinin Adli Ağ & Konum Bilgilerini Yakala
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("cf-connecting-ip") ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    // Hız Sınırı Kontrolü (DDoS / Flood Koruması)
+    if (isRateLimited(clientIp)) {
+      return Response.json(
+        { error: "Güvenlik uyarısı: Çok fazla istek gönderildi. Lütfen 5 dakika sonra tekrar deneyin." },
+        { status: 429 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
     const note = formData.get("note") || "";
     const contact = formData.get("contact") || "";
     const deviceHash = formData.get("deviceHash") || "unknown";
     const consent = formData.get("consent") === "true";
-
-    // 1. Ziyaretçinin Adli Ağ & Konum Bilgilerini Yakala
-    const clientIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("cf-connecting-ip") ||
       request.headers.get("x-real-ip") ||
       "127.0.0.1";
