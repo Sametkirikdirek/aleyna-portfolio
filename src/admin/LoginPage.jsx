@@ -111,8 +111,8 @@ export default function LoginPage() {
               />
             </div>
             <div className="text-center">
-              <h1 className="text-white font-semibold text-lg tracking-tight">Admin Girişi</h1>
-              <p className="text-white/40 text-sm mt-0.5">Aleyna Altunsu · Kontrol Paneli</p>
+              <h1 className="text-white font-semibold text-lg tracking-tight">Yönetim Paneli Girişi</h1>
+              <p className="text-white/40 text-xs mt-1">Sanatçı (Aleyna) & Moderatör (Samet) Portalı</p>
             </div>
           </div>
 

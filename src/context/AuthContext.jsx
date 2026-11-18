@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { auth } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { determineUserRole, ROLES } from "../lib/roles";
 
 const AuthContext = createContext({
   user: null,
@@ -18,8 +20,28 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        let customRoles = {};
+        try {
+          const roleSnap = await getDoc(doc(db, "settings", "roles"));
+          if (roleSnap.exists()) {
+            customRoles = roleSnap.data() || {};
+          }
+        } catch {
+          // ignore
+        }
+        const role = determineUserRole(firebaseUser.email, customRoles);
+        setUser({
+          ...firebaseUser,
+          role,
+          isArtist: role === ROLES.ARTIST,
+          isModerator: role === ROLES.MODERATOR || role === ROLES.SUPERADMIN,
+          isSuperAdmin: role === ROLES.SUPERADMIN,
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();

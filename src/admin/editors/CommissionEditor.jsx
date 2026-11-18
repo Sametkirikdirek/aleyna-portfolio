@@ -20,6 +20,10 @@ import {
   Key,
   Settings,
   Loader2,
+  Users,
+  ShieldCheck,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { db } from "../../lib/firebase";
 import {
@@ -33,9 +37,16 @@ import {
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
+import { useAuth } from "../../context/AuthContext";
+import { ROLES, KNOWN_EMAILS } from "../../lib/roles";
 
 export default function CommissionEditor() {
-  const [activeTab, setActiveTab] = useState("artist"); // "artist" | "mod" | "incidents" | "whatsapp"
+  const { user } = useAuth();
+  const isArtist = user?.isArtist;
+  const isModerator = user?.isModerator;
+
+  // Başlangıç sekmesi: Sanatçı için doğrudan 'artist' (Aleyna'nın Masası), Moderatör için 'mod' (Ön Eleme)
+  const [activeTab, setActiveTab] = useState(() => (isArtist ? "artist" : "mod"));
   const [requests, setRequests] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +59,19 @@ export default function CommissionEditor() {
   const [waSaving, setWaSaving] = useState(false);
   const [waTesting, setWaTesting] = useState(false);
   const [waFeedback, setWaFeedback] = useState(null);
+
+  // Rol Yönetimi State'i (Yalnızca Moderatör/Admin)
+  const [roleSettings, setRoleSettings] = useState({});
+  const [newRoleEmail, setNewRoleEmail] = useState("");
+  const [newRoleType, setNewRoleType] = useState(ROLES.MODERATOR);
+  const [roleSaving, setRoleSaving] = useState(false);
+
+  // Sanatçı rolü başka sekmeye geçmeye çalışırsa 'artist' sekmesinde tut
+  useEffect(() => {
+    if (isArtist && activeTab !== "artist") {
+      setActiveTab("artist");
+    }
+  }, [isArtist, activeTab]);
 
   // Firestore'dan canlı dinle
   useEffect(() => {
@@ -73,10 +97,17 @@ export default function CommissionEditor() {
       }
     });
 
+    const unsubRoles = onSnapshot(doc(db, "settings", "roles"), (docSnap) => {
+      if (docSnap.exists()) {
+        setRoleSettings(docSnap.data() || {});
+      }
+    });
+
     return () => {
       unsubReq();
       unsubInc();
       unsubWa();
+      unsubRoles();
     };
   }, []);
 
@@ -210,87 +241,139 @@ Engelleme Gerekçesi: ${inc.flagReason}
     }
   };
 
+  const handleAddRole = async (e) => {
+    e.preventDefault();
+    if (!newRoleEmail.trim()) return;
+    setRoleSaving(true);
+    try {
+      const cleanEmail = newRoleEmail.toLowerCase().trim();
+      const updatedRoles = {
+        ...roleSettings,
+        [cleanEmail]: newRoleType,
+      };
+      await setDoc(doc(db, "settings", "roles"), updatedRoles);
+      setNewRoleEmail("");
+    } catch (err) {
+      alert("Rol kaydedilemedi: " + err.message);
+    } finally {
+      setRoleSaving(false);
+    }
+  };
+
+  const handleRemoveRole = async (emailToRemove) => {
+    if (!confirm(`${emailToRemove} için özel yetkiyi kaldırmak istediğinize emin misiniz?`)) return;
+    try {
+      const updatedRoles = { ...roleSettings };
+      delete updatedRoles[emailToRemove];
+      await setDoc(doc(db, "settings", "roles"), updatedRoles);
+    } catch (err) {
+      alert("Rol silinemedi: " + err.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Üst Başlık ve Sekmeler */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2.5">
-            <Palette className="text-amber-400" size={22} />
-            Tuval Talepleri & Güvenlik Yönetimi
+            {isArtist ? (
+              <>
+                <Palette className="text-amber-400" size={22} />
+                Özel Tuval Siparişleri (Aleyna'nın Masası)
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="text-emerald-400" size={22} />
+                Tuval Talepleri & Güvenlik Koordinasyonu
+              </>
+            )}
           </h1>
           <p className="text-xs text-white/50 mt-1">
-            Ziyaretçi özel siparişleri, sanatçı onay havuzu ve adli güvenlik kayıtları
+            {isArtist
+              ? "Koordinatör ön incelemesinden geçen, atölyenizde tuvale aktarılmaya hazır onaylı siparişler."
+              : "Ham ziyaretçi fotoğraflarını inceleyin, onaylayarak sanatçının masasına aktarın veya adli tutanak tutun."}
           </p>
         </div>
 
-        {/* Sekmeler */}
-        <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 p-1 rounded-xl shrink-0">
-          <button
-            onClick={() => setActiveTab("artist")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "artist"
-                ? "bg-amber-500/20 text-amber-200 border border-amber-500/30 shadow-sm"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            <span>👩‍🎨 Aleyna'nın Masası</span>
-            {artistRequests.filter((r) => r.status === "artist_review").length > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("mod")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "mod"
-                ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            <span>🛡️ Ön Eleme</span>
-            {pendingModRequests.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/30 text-emerald-200 font-bold">
-                {pendingModRequests.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("incidents")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "incidents"
-                ? "bg-rose-500/20 text-rose-200 border border-rose-500/30 shadow-sm"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            <ShieldAlert size={14} className="text-rose-400" />
-            <span>Adli Kayıtlar</span>
-            {incidents.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/30 text-rose-200 font-bold">
-                {incidents.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("whatsapp")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "whatsapp"
-                ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            <MessageSquare size={14} className="text-emerald-400" />
-            <span>WhatsApp Hattı</span>
-            <span
-              className={`w-2 h-2 rounded-full ${
-                waApiKey && waEnabled ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+        {/* Sekmeler - Yalnızca Moderatör / Koordinatör Görür! */}
+        {isModerator ? (
+          <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 p-1 rounded-xl shrink-0 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("mod")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "mod"
+                  ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
+                  : "text-white/60 hover:text-white"
               }`}
-              title={waApiKey && waEnabled ? "Bağlı" : "Kurulum Gerekli"}
-            />
-          </button>
-        </div>
+            >
+              <span>🛡️ Ön Eleme</span>
+              {pendingModRequests.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/30 text-emerald-200 font-bold">
+                  {pendingModRequests.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab("artist")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "artist"
+                  ? "bg-amber-500/20 text-amber-200 border border-amber-500/30 shadow-sm"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              <span>👩‍🎨 Aleyna'nın Masası</span>
+              {artistRequests.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-200 font-bold">
+                  {artistRequests.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab("incidents")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "incidents"
+                  ? "bg-rose-500/20 text-rose-200 border border-rose-500/30 shadow-sm"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              <ShieldAlert size={14} className="text-rose-400" />
+              <span>Adli Kayıtlar</span>
+              {incidents.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/30 text-rose-200 font-bold">
+                  {incidents.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab("whatsapp")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === "whatsapp"
+                  ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 shadow-sm"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              <MessageSquare size={14} className="text-emerald-400" />
+              <span>WhatsApp & Roller</span>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  waApiKey && waEnabled ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+                }`}
+                title={waApiKey && waEnabled ? "Bağlı" : "Kurulum Gerekli"}
+              />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-xl">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="text-xs font-mono text-amber-200 font-medium">
+              Steril Sanatçı Masası ({artistRequests.length} Sipariş)
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ─── SEKME 1: ALEYNA'NIN MASASI (Sanatçının Steril Havuzu) ─── */}
@@ -298,7 +381,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
             <Palette size={20} className="text-amber-400 shrink-0" />
-            <p className="text-xs text-amber-200/90 leading-relaxed">
+            <p className="text-xs text-amber-200/90 leading-relaxed font-sans">
               Bu alanda yalnızca <strong>koordinatör onayından geçmiş, güvenli ve kaliteli</strong> tuval talepleri yer alır.
               Aleyna burada çizmek istediği eserleri tek tıkla kabul edebilir veya uygun değil olarak işaretleyebilir.
             </p>
@@ -334,7 +417,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-mono text-white/40">
-                          {req.ipInfo?.formattedDate || req.submissionDate}
+                          {req.submissionDate || req.ipInfo?.formattedDate || "Tarih kaydı mevcut"}
                         </span>
                         <span
                           className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
@@ -350,7 +433,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
                       </div>
 
                       <p className="text-xs text-white/90 line-clamp-3 bg-white/5 p-2 rounded-lg font-sans">
-                        &ldquo;{req.note || "Ziyaretçi not bırakmadı."}&rdquo;
+                        &ldquo;{req.note || "Ziyaretçi özel bir not bırakmadı."}&rdquo;
                       </p>
 
                       <p className="text-[11px] font-mono text-amber-200/80 flex items-center gap-1.5 pt-1">
@@ -390,11 +473,11 @@ Engelleme Gerekçesi: ${inc.flagReason}
         </div>
       )}
 
-      {/* ─── SEKME 2: KOORDİNATÖR ÖN ELEME HAVUZU ─── */}
-      {activeTab === "mod" && (
+      {/* ─── SEKME 2: KOORDİNATÖR ÖN ELEME HAVUZU (YALNIZCA MODERATÖR) ─── */}
+      {activeTab === "mod" && isModerator && (
         <div className="space-y-4">
           <p className="text-xs text-white/50">
-            Ziyaretçilerin doğrudan yüklediği, WhatsApp bildirimine ek olarak buradan da onaylayabileceğiniz ham talepler.
+            Ziyaretçilerin doğrudan yüklediği, WhatsApp bildirimine ek olarak buradan da inceleyip onaylayabileceğiniz ham talepler.
           </p>
 
           {pendingModRequests.length === 0 ? (
@@ -407,13 +490,25 @@ Engelleme Gerekçesi: ${inc.flagReason}
               {pendingModRequests.map((req) => (
                 <div key={req.id} className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4">
                   <div className="flex gap-4">
-                    <img src={req.imageUrl} alt="Önizleme" className="w-24 h-24 rounded-xl object-cover border border-white/10" />
+                    <a
+                      href={req.imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-black/40 group relative"
+                    >
+                      <img src={req.imageUrl} alt="Önizleme" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <ExternalLink size={16} className="text-white" />
+                      </div>
+                    </a>
+
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="text-[11px] font-mono text-white/40 flex items-center justify-between">
                         <span>{req.ipInfo?.city || "TR"} · {req.ipInfo?.ip}</span>
+                        <span>{req.ipInfo?.formattedDate || req.submissionDate}</span>
                       </div>
-                      <p className="text-xs text-white/80 line-clamp-2">&ldquo;{req.note}&rdquo;</p>
-                      <p className="text-[11px] font-mono text-emerald-300">{req.contact}</p>
+                      <p className="text-xs text-white/80 line-clamp-2">&ldquo;{req.note || "Not yok"}&rdquo;</p>
+                      <p className="text-[11px] font-mono text-emerald-300">{req.contact || "İletişim yok"}</p>
                     </div>
                   </div>
 
@@ -438,8 +533,8 @@ Engelleme Gerekçesi: ${inc.flagReason}
         </div>
       )}
 
-      {/* ─── SEKME 3: ADLİ GÜVENLİK KAYITLARI (İHLAL VE ŞİKAYET KANITLARI) ─── */}
-      {activeTab === "incidents" && (
+      {/* ─── SEKME 3: ADLİ GÜVENLİK KAYITLARI (YALNIZCA MODERATÖR) ─── */}
+      {activeTab === "incidents" && isModerator && (
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3">
             <ShieldAlert size={20} className="text-rose-400 shrink-0 mt-0.5" />
@@ -512,10 +607,10 @@ Engelleme Gerekçesi: ${inc.flagReason}
         </div>
       )}
 
-      {/* ─── SEKME 4: WHATSAPP AYARLARI & BİLGİ HATTI ─── */}
-      {activeTab === "whatsapp" && (
+      {/* ─── SEKME 4: WHATSAPP AYARLARI & ROL YÖNETİMİ (YALNIZCA MODERATÖR) ─── */}
+      {activeTab === "whatsapp" && isModerator && (
         <div className="space-y-6">
-          {/* Durum Kartı */}
+          {/* WhatsApp Durum Kartı */}
           <div
             className={`p-5 rounded-2xl border flex items-center justify-between gap-4 flex-wrap ${
               waApiKey && waEnabled
@@ -572,11 +667,11 @@ Engelleme Gerekçesi: ${inc.flagReason}
             </div>
           )}
 
-          {/* Ayar Formu */}
+          {/* WhatsApp Ayar Formu */}
           <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-6">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Settings size={18} className="text-emerald-400" />
-              Bildirim Numarası & API Yapılandırması
+              Bildirim Numarası & CallMeBot API Yapılandırması
             </h2>
 
             <form onSubmit={handleSaveWaSettings} className="space-y-4">
@@ -667,7 +762,6 @@ Engelleme Gerekçesi: ${inc.flagReason}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Adım 1 */}
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
                 <div>
                   <div className="font-mono text-xs font-bold text-emerald-400">1. ADIM: SOHBETİ AÇ</div>
@@ -685,25 +779,124 @@ Engelleme Gerekçesi: ${inc.flagReason}
                 </a>
               </div>
 
-              {/* Adım 2 */}
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
                 <div className="font-mono text-xs font-bold text-emerald-400">2. ADIM: MESAJI GÖNDER</div>
                 <p className="text-xs text-white/70 leading-relaxed font-sans">
-                  Sohbete şu mesajı gönderin (butona tıkladıysanız zaten yazılı gelecektir):
+                  Sohbete şu mesajı gönderin (butona tıkladıysanız zaten hazır gelir):
                 </p>
                 <div className="p-2.5 rounded-lg bg-black/50 border border-white/10 font-mono text-[11px] text-emerald-300 select-all font-bold">
                   I allow callmebot to send me messages
                 </div>
               </div>
 
-              {/* Adım 3 */}
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
                 <div className="font-mono text-xs font-bold text-emerald-400">3. ADIM: KODU YAPIŞTIR</div>
                 <p className="text-xs text-white/70 leading-relaxed font-sans">
-                  Bot 5 saniyede size <code className="text-amber-300 font-mono px-1 rounded bg-black/40">apikey: 123456</code> kodunu verecek. O sayıyı yukarıdaki kutuya yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
+                  Bot saniyeler içinde size <code className="text-amber-300 font-mono px-1 rounded bg-black/40">apikey: 123456</code> kodunu verecektir. O sayıyı yukarıdaki kutuya yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* ─── YETKİLİ E-POSTA VE ROL YÖNETİMİ (RBAC) ─── */}
+          <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <Users size={18} className="text-purple-400" />
+                  Giriş Yapan E-Posta Rolleri (Sanatçı & Moderatör Ayrımı)
+                </h2>
+                <p className="text-xs text-white/50 mt-1">
+                  Hangi e-postanın Sanatçı (Aleyna), hangi e-postanın Moderatör (Samet) paneline yönlendirileceğini buradan anında yönetebilirsiniz.
+                </p>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 font-mono text-xs">
+                Firestore Canlı Senkronize
+              </div>
+            </div>
+
+            {/* Mevcut roller listesi */}
+            <div className="space-y-2">
+              {/* Sabit / Varsayılan Tanımlar */}
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-base">👩‍🎨</span>
+                  <div>
+                    <p className="text-xs font-mono text-white/90">aleynaaltunsu@gmail.com</p>
+                    <p className="text-[10px] text-white/40">Sistem Varsayılanı · Sanatçı Masası</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  SANATÇI
+                </span>
+              </div>
+
+              {/* Kullanıcının Firestore'a eklediği roller */}
+              {Object.entries(roleSettings).map(([email, role]) => (
+                <div
+                  key={email}
+                  className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-base">
+                      {role === ROLES.MODERATOR ? "🛡️" : "🎨"}
+                    </span>
+                    <div>
+                      <p className="text-xs font-mono text-white/90">{email}</p>
+                      <p className="text-[10px] text-white/40">Özel Yetkilendirilmiş Hesap</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                        role === ROLES.MODERATOR
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                          : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                      }`}
+                    >
+                      {role === ROLES.MODERATOR ? "MODERATÖR" : "SANATÇI"}
+                    </span>
+                    <button
+                      onClick={() => handleRemoveRole(email)}
+                      className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                      title="Yetkiyi Kaldır"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Yeni E-Posta Yetkilendirme Formu */}
+            <form onSubmit={handleAddRole} className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+              <input
+                type="email"
+                required
+                value={newRoleEmail}
+                onChange={(e) => setNewRoleEmail(e.target.value)}
+                placeholder="yeni_hesap@gmail.com"
+                className="flex-1 w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-xs focus:outline-hidden focus:border-purple-400 transition-colors"
+              />
+
+              <select
+                value={newRoleType}
+                onChange={(e) => setNewRoleType(e.target.value)}
+                className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-[#161622] border border-white/15 text-white font-mono text-xs focus:outline-hidden cursor-pointer"
+              >
+                <option value={ROLES.MODERATOR}>🛡️ Moderatör (Samet)</option>
+                <option value={ROLES.ARTIST}>👩‍🎨 Sanatçı (Aleyna)</option>
+              </select>
+
+              <button
+                type="submit"
+                disabled={roleSaving || !newRoleEmail.trim()}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-mono font-bold bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+              >
+                <Plus size={14} /> Yetki Ata
+              </button>
+            </form>
           </div>
         </div>
       )}
