@@ -137,7 +137,7 @@ export default function CommissionModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
-      setErrorMessage("Lütfen tuvale aktarılmasını istediğiniz bir referans görseli seçin.");
+      setErrorMessage("Lütfen çizilmesini istediğiniz bir referans görseli seçin.");
       return;
     }
     if (!consent) {
@@ -151,7 +151,7 @@ export default function CommissionModal({ isOpen, onClose }) {
       return;
     }
     if (quotaInfo.remaining <= 0) {
-      setErrorMessage(`Bugün için ${MAX_DAILY_QUOTA} tuval değerlendirme hakkınızı kullandınız.`);
+      setErrorMessage(`Bugün için ${MAX_DAILY_QUOTA} çizim değerlendirme hakkınızı kullandınız.`);
       return;
     }
 
@@ -257,7 +257,7 @@ export default function CommissionModal({ isOpen, onClose }) {
             <div className="flex items-center justify-between mb-3">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold tracking-wider uppercase">
                 <Palette size={13} />
-                <span>Özel Tuval Siparişi</span>
+                <span>Özel Çizim Talebi</span>
               </div>
 
               {/* Günlük Kalan Hak Rozeti */}
@@ -267,10 +267,10 @@ export default function CommissionModal({ isOpen, onClose }) {
             </div>
 
             <h2 className="font-serif text-xl sm:text-2xl font-bold text-white tracking-tight mb-2">
-              Senin Fotoğrafın, Aleyna'nın Tuvali
+              Senin Fotoğrafın, Aleyna'nın Çizimi
             </h2>
             <p className="font-sans text-xs text-white/60 mb-6 leading-relaxed">
-              Sevdiklerini, özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tekniğine ve tuval uygunluğuna göre değerlendirelim.
+              Sevdiklerini, özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tekniğine ve sanatsal yorumuna göre değerlendirelim.
             </p>
 
             {/* ─── DURUM KARTI (Eğer Ziyaretçinin Mevcut Talebi Varsa) ─── */}
@@ -308,7 +308,7 @@ export default function CommissionModal({ isOpen, onClose }) {
                       <span>Aleyna'nın Masasında Değerlendiriliyor!</span>
                     </div>
                     <p className="text-xs text-cyan-200/70 leading-relaxed font-sans">
-                      Ön eleme tamamlandı! Sanatçı görseli tuval kompozisyonu ve çizim programına göre inceliyor.
+                      Ön eleme tamamlandı! Sanatçı görseli çizim kompozisyonu ve atölye takvimine göre inceliyor.
                     </p>
                   </div>
                 )}
@@ -320,11 +320,11 @@ export default function CommissionModal({ isOpen, onClose }) {
                       <span>Müjde! Sanatçı Bu Eseri Çizmek İçin Sabırsızlanıyor!</span>
                     </div>
                     <p className="text-xs text-emerald-200/80 leading-relaxed font-sans">
-                      Talebiniz kabul edildi! Boyut, teknik ve sipariş detaylarını konuşmak için Instagram DM üzerinden yazışalım:
+                      Talebiniz kabul edildi! Teknik ve çizim detaylarını konuşmak için Instagram DM üzerinden yazışalım:
                     </p>
                     <a
                       href={`https://ig.me/m/aleynaaltunsuart?text=${encodeURIComponent(
-                        "Merhaba Aleyna! Siteden onaylanan tuval talebim için yazıyorum."
+                        "Merhaba Aleyna! Siteden onaylanan özel çizim talebim için yazıyorum."
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -339,7 +339,7 @@ export default function CommissionModal({ isOpen, onClose }) {
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
                     <span className="text-xs font-bold text-white/80">🕊️ Bilgilendirme</span>
                     <p className="text-xs text-white/50 leading-relaxed font-sans">
-                      Bu görsel sanatçının mevcut tuval ve renk paleti serisi için şu anda uygun bulunamadı. İlginiz için çok teşekkür ederiz!
+                      Bu görsel sanatçının mevcut çizim tarzı ve renk paleti için şu anda uygun bulunamadı. İlginiz için çok teşekkür ederiz!
                     </p>
                   </div>
                 )}
@@ -465,13 +465,13 @@ export default function CommissionModal({ isOpen, onClose }) {
                 {/* Not Alanı */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-white/80 font-sans">
-                    Tablo Hakkında Notunuz (Opsiyonel)
+                    Çizim Hakkında Notunuz (Opsiyonel)
                   </label>
                   <textarea
                     rows={2}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Örn: 50x70 cm ebatlarında yağlı boya düşünüyoruz, altın varak detayları olabilir..."
+                    placeholder="Örn: Portre ağırlıklı bir kompozisyon düşünüyoruz, sıcak renk tonları hakim olabilir..."
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-amber-400/50 transition-colors font-sans"
                   />
                 </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Maximize2, ChevronLeft, ChevronRight, Palette,
@@ -531,6 +532,40 @@ export default function Gallery() {
       list.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
     } else if (sortBy === "likes") {
       list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    } else if (sortBy === "price_asc") {
+      const getNum = (p) => {
+        if (typeof p === "number") return p;
+        if (!p || typeof p !== "string") return null;
+        const cleaned = p.replace(/[^\d]/g, "");
+        if (!cleaned) return null;
+        const val = parseInt(cleaned, 10);
+        return isNaN(val) ? null : val;
+      };
+      list.sort((a, b) => {
+        const pa = getNum(a.price);
+        const pb = getNum(b.price);
+        if (pa !== null && pb !== null) return pa - pb;
+        if (pa !== null) return -1;
+        if (pb !== null) return 1;
+        return 0;
+      });
+    } else if (sortBy === "price_desc") {
+      const getNum = (p) => {
+        if (typeof p === "number") return p;
+        if (!p || typeof p !== "string") return null;
+        const cleaned = p.replace(/[^\d]/g, "");
+        if (!cleaned) return null;
+        const val = parseInt(cleaned, 10);
+        return isNaN(val) ? null : val;
+      };
+      list.sort((a, b) => {
+        const pa = getNum(a.price);
+        const pb = getNum(b.price);
+        if (pa !== null && pb !== null) return pb - pa;
+        if (pa !== null) return -1;
+        if (pb !== null) return 1;
+        return 0;
+      });
     }
 
     return list;
@@ -717,7 +752,7 @@ export default function Gallery() {
                 <div className="relative group">
                   <button
                     onClick={() => setActiveTab("galeri")}
-                    aria-label="Galeri (Tuval Seçkileri)"
+                    aria-label="Galeri (Eser Seçkileri)"
                     className={`p-2.5 rounded-full border transition-all cursor-pointer flex items-center justify-center ${
                       activeTab === "galeri"
                         ? "dark:bg-brush/20 bg-brush text-white dark:text-brush-soft dark:border-brush/50 border-brush shadow-md scale-105"
@@ -727,7 +762,7 @@ export default function Gallery() {
                     <CanvasIcon className="w-5 h-5 group-hover:rotate-6 transition-transform duration-300" />
                   </button>
                   <div className="pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap bg-ink-soft/95 text-paper text-[11px] font-mono px-2.5 py-1 rounded-md border border-paper/15 shadow-lg z-30">
-                    Galeri (Tuval Seçkileri)
+                    Galeri (Eser Seçkileri)
                   </div>
                 </div>
 
@@ -767,17 +802,17 @@ export default function Gallery() {
           </motion.div>
         )}
 
-        {/* ─── ÖZEL TUVAL SİPARİŞİ / COMMISSION DAVET KARTI ─── */}
+        {/* ─── ÖZEL ÇİZİM TALEBİ / COMMISSION DAVET KARTI ─── */}
         <div className="mb-12 p-6 sm:p-7 rounded-3xl dark:bg-ink-soft/95 bg-[#fdfbf7] border border-amber-900/15 dark:border-paper/15 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-5 transition-colors">
           <div className="space-y-1">
             <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-amber-600 dark:text-amber-400">
-              Kişiye Özel Sipariş
+              Kişiye Özel Çizim
             </span>
             <h4 className="font-display text-lg sm:text-xl font-bold text-ink dark:text-paper">
-              Senin Fotoğrafın, Aleyna'nın Tuvali
+              Senin Fotoğrafın, Aleyna'nın Çizimi
             </h4>
             <p className="font-sans text-xs sm:text-sm text-ink/75 dark:text-paper/70">
-              Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına uygunluğu değerlendirilsin.
+              Özel bir anını veya beğendiğin bir görseli yükle; sanatçının fırça tarzına ve sanatsal yorumuna göre değerlendirilsin.
             </p>
           </div>
           <button
@@ -872,7 +907,7 @@ export default function Gallery() {
                     </h4>
                     <div className="flex items-center justify-between mt-0.5">
                       <p className="font-mono text-[10px] text-white/70 truncate">
-                        {item.medium || "Tuval Çalışması"}
+                        {item.medium || "Özel Çalışma"}
                       </p>
                       <span className="font-mono text-[10px] text-amber-400 font-bold shrink-0">
                         {item.year}
@@ -889,8 +924,19 @@ export default function Gallery() {
         <div className="mb-8 space-y-3">
             {/* Üst Çubuk: Eser Sayısı & Filtre Aç/Kapat Butonu */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-2.5 font-mono text-xs text-paper/75 font-semibold">
-                <span className="dark:text-paper/60 text-paper/80 font-bold">{processedItems.length} Eser</span>
+              <div className="flex items-center flex-wrap gap-2 text-xs">
+                <span className="font-mono dark:text-paper/60 text-paper/80 font-bold">{processedItems.length} Eser</span>
+                <span className="text-paper/30 font-mono hidden sm:inline">•</span>
+                <span className="dark:text-paper/60 text-paper/75 text-[11px] sm:text-xs font-sans">
+                  Beğendiğiniz eser için lütfen{" "}
+                  <Link
+                    to="/contact"
+                    className="font-semibold text-amber-500 dark:text-amber-300 underline underline-offset-2 hover:text-amber-400 transition-colors"
+                  >
+                    "İletişim"
+                  </Link>{" "}
+                  kısmından bana ulaşınız.
+                </span>
                 {(activeFilter !== "Tümü" || searchQuery.trim() !== "" || sortBy !== "default") && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full dark:bg-brush/20 bg-brush text-white dark:text-brush-soft text-[11px] font-bold shadow-xs">
                     {activeFilter !== "Tümü"
@@ -970,6 +1016,8 @@ export default function Gallery() {
                             { id: "likes", label: "❤️ Beğeniye Göre" },
                             { id: "newest", label: "Yeniye Göre" },
                             { id: "oldest", label: "Eskiye Göre" },
+                            { id: "price_asc", label: "Fiyat: Azdan Çoğa" },
+                            { id: "price_desc", label: "Fiyat: Çoktan Aza" },
                           ].map((s) => (
                             <button
                               key={s.id}
@@ -1418,12 +1466,6 @@ export default function Gallery() {
                     <div className="flex gap-2">
                       <dt className="text-paper/35">Teknik</dt>
                       <dd className="text-paper/80 font-medium">{active.medium}</dd>
-                    </div>
-                  )}
-                  {active.size && (
-                    <div className="flex gap-2">
-                      <dt className="text-paper/35">Boyut</dt>
-                      <dd className="text-paper/80 font-medium">{active.size}</dd>
                     </div>
                   )}
                 </dl>

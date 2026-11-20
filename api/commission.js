@@ -298,7 +298,7 @@ export default async function handler(request) {
     const rejectLink = `${proto}://${host}/api/commission-mod?action=reject&id=${requestId}&token=${token}`;
 
     await sendTelegramAlert({
-      title: "🎨 Yeni Özel Tuval Talebi Geldi!",
+      title: "🎨 Yeni Özel Çizim Talebi Geldi!",
       city,
       country,
       clientIp,

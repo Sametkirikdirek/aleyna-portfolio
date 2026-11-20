@@ -276,18 +276,18 @@ Engelleme Gerekçesi: ${inc.flagReason}
             {isArtist ? (
               <>
                 <Palette className="text-amber-400" size={22} />
-                Özel Tuval Siparişleri (Aleyna'nın Masası)
+                Özel Çizim Talepleri (Aleyna'nın Masası)
               </>
             ) : (
               <>
                 <ShieldAlert className="text-emerald-400" size={22} />
-                Tuval Talepleri & Güvenlik Koordinasyonu
+                Çizim Talepleri & Güvenlik Koordinasyonu
               </>
             )}
           </h1>
           <p className="text-xs text-white/50 mt-1">
             {isArtist
-              ? "Koordinatör ön incelemesinden geçen, atölyenizde tuvale aktarılmaya hazır onaylı siparişler."
+              ? "Koordinatör ön incelemesinden geçen, atölyenizde çizilmeye hazır onaylı talepler."
               : "Ham ziyaretçi fotoğraflarını inceleyin, onaylayarak sanatçının masasına aktarın veya adli tutanak tutun."}
           </p>
         </div>
@@ -378,7 +378,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
           <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
             <Palette size={20} className="text-amber-400 shrink-0" />
             <p className="text-xs text-amber-200/90 leading-relaxed font-sans">
-              Bu alanda yalnızca <strong>koordinatör onayından geçmiş, güvenli ve kaliteli</strong> tuval talepleri yer alır.
+              Bu alanda yalnızca <strong>koordinatör onayından geçmiş, güvenli ve kaliteli</strong> çizim talepleri yer alır.
               Aleyna burada çizmek istediği eserleri tek tıkla kabul edebilir veya uygun değil olarak işaretleyebilir.
             </p>
           </div>
@@ -723,7 +723,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
                   htmlFor="tgEnabledToggle"
                   className="text-xs text-white/80 cursor-pointer font-sans select-none"
                 >
-                  Yeni ziyaretçi tuval siparişlerini ve şüpheli güvenlik alarmlarını anında Telegram'a bildir
+                  Yeni ziyaretçi çizim taleplerini ve şüpheli güvenlik alarmlarını anında Telegram'a bildir
                 </label>
               </div>
 

@@ -83,7 +83,7 @@ export default function Dashboard() {
       {
         title: "SANAT ATÖLYESİ",
         items: [
-          { id: "commissions", label: "Özel Tuval Siparişleri", icon: Palette, badge: "Masam" },
+          { id: "commissions", label: "Özel Çizim Talepleri", icon: Palette, badge: "Masam" },
           { id: "gallery", label: "Galeri & Koleksiyonlar", icon: Image },
           { id: "writings", label: "Yazılarım & Kütüphane", icon: BookOpen },
           { id: "timeline", label: "Zaman Yolculuğu", icon: Clock },

@@ -176,7 +176,7 @@ export async function checkDailyQuota(fingerprint) {
       isCooldown: false,
       count,
       remaining: 0,
-      reason: `Bugün için ${MAX_DAILY_QUOTA} tuval değerlendirme hakkınızı kullandınız. İlginiz için teşekkürler, yarın yeni bir görsel yükleyebilirsiniz!`,
+      reason: `Bugün için ${MAX_DAILY_QUOTA} çizim değerlendirme hakkınızı kullandınız. İlginiz için teşekkürler, yarın yeni bir görsel yükleyebilirsiniz!`,
       lastRequestId: record?.ids?.[record.ids.length - 1],
     };
   }
