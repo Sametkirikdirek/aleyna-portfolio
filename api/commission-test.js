@@ -3,6 +3,8 @@
  * /api/commission-test
  */
 
+import { requirePortfolioAdmin } from "./_auth.js";
+
 export const config = {
   runtime: "edge",
 };
@@ -10,6 +12,11 @@ export const config = {
 export default async function handler(request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Yalnızca POST istekleri kabul edilir." }, { status: 405 });
+  }
+
+  const authorization = await requirePortfolioAdmin(request);
+  if (authorization.error) {
+    return Response.json({ error: authorization.error }, { status: authorization.status });
   }
 
   try {
