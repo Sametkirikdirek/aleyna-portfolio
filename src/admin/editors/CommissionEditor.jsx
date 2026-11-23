@@ -282,6 +282,14 @@ Engelleme Gerekçesi: ${inc.flagReason}
               <Send size={14} className="text-sky-400" />
               <span>Telegram & Roller</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full border border-sky-500/30 text-sky-300">VERCEL</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-xl">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="text-xs font-mono text-amber-200 font-medium">
+              Steril Sanatçı Masası ({artistRequests.length} Sipariş)
+            </span>
           </div>
         )}
       </div>
