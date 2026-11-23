@@ -1,61 +1,48 @@
 /**
- * Vercel Serverless Function - Telegram Bildirim Hattı Test Endpoint'i
- * /api/commission-test
+ * Telegram notification smoke test.
+ * Only authenticated moderators can invoke this endpoint.
+ * Secrets are read exclusively from Vercel server-side environment variables.
  */
-
 import { requirePortfolioAdmin } from "./_auth.js";
 
-export const config = {
-  runtime: "edge",
-};
+export const config = { runtime: "edge" };
 
 export default async function handler(request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Yalnızca POST istekleri kabul edilir." }, { status: 405 });
   }
 
-  const authorization = await requirePortfolioAdmin(request);
+  const authorization = await requirePortfolioAdmin(request, { moderatorOnly: true });
   if (authorization.error) {
     return Response.json({ error: authorization.error }, { status: authorization.status });
   }
 
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) {
+    return Response.json(
+      { error: "Vercel ortam değişkenlerinde TELEGRAM_BOT_TOKEN ve TELEGRAM_CHAT_ID tanımlanmalıdır." },
+      { status: 503 }
+    );
+  }
+
   try {
-    const { botToken, chatId } = await request.json();
-
-    if (!botToken || !chatId) {
-      return Response.json(
-        { error: "Lütfen hem Telegram Bot Token'ını hem de Chat ID'nizi girin." },
-        { status: 400 }
-      );
-    }
-
-    const testMessage =
-      "🎨 *Aleyna Altunsu Sanat Portfolyosu*\n\n" +
-      "🚀 *Tebrikler Samet! Telegram bildirim hattınız başarıyla bağlandı.*\n\n" +
-      "Artık web sitesinden bir ziyaretçi özel tuval talebi gönderdiğinde veya bir güvenlik ihlali algılandığında, fotoğrafıyla birlikte anında bu Telegram sohbetine bildirim düşecektir!";
-
-    const res = await fetch(`https://api.telegram.org/bot${botToken.trim()}/sendMessage`, {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: chatId.trim(),
-        text: testMessage,
-        parse_mode: "Markdown",
+        chat_id: chatId,
+        text: "🎨 Aleyna Altunsu Portfolyo\n\n✅ Güvenli Telegram test bildirimi başarıyla gönderildi.",
+        disable_web_page_preview: true,
       }),
     });
 
-    const resData = await res.json();
-    if (!res.ok || !resData.ok) {
-      throw new Error(
-        resData.description || "Telegram mesajı gönderilemedi. Lütfen Bot Token ve Chat ID'nizi kontrol edin."
-      );
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      return Response.json({ error: "Telegram gönderimi başarısız. Vercel ayarlarını kontrol edin." }, { status: 502 });
     }
-
-    return Response.json({
-      success: true,
-      message: "🎉 Test mesajı Telegram hesabınıza başarıyla iletildi!",
-    });
-  } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 400 });
+    return Response.json({ success: true, message: "Test bildirimi Telegram'a iletildi." });
+  } catch {
+    return Response.json({ error: "Telegram servisine bağlanılamıyor." }, { status: 502 });
   }
 }
