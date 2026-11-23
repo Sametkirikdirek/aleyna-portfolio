@@ -54,11 +54,6 @@ export default function CommissionEditor() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Telegram Ayarları State'i
-  const [tgBotToken, setTgBotToken] = useState("");
-  const [tgChatId, setTgChatId] = useState("");
-  const [tgEnabled, setTgEnabled] = useState(true);
-  const [tgSaving, setTgSaving] = useState(false);
   const [tgTesting, setTgTesting] = useState(false);
   const [tgFeedback, setTgFeedback] = useState(null);
 
@@ -90,15 +85,6 @@ export default function CommissionEditor() {
       setIncidents(list);
     });
 
-    const unsubTg = onSnapshot(doc(db, "settings", "telegram"), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.botToken) setTgBotToken(data.botToken);
-        if (data.chatId) setTgChatId(data.chatId);
-        if (typeof data.enabled === "boolean") setTgEnabled(data.enabled);
-      }
-    });
-
     const unsubRoles = onSnapshot(doc(db, "settings", "roles"), (docSnap) => {
       if (docSnap.exists()) {
         setRoleSettings(docSnap.data() || {});
@@ -108,7 +94,6 @@ export default function CommissionEditor() {
     return () => {
       unsubReq();
       unsubInc();
-      unsubTg();
       unsubRoles();
     };
   }, []);
@@ -162,78 +147,21 @@ Engelleme Gerekçesi: ${inc.flagReason}
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleSaveTgSettings = async (e) => {
-    e?.preventDefault();
-    setTgSaving(true);
-    setTgFeedback(null);
-    try {
-      const tgData = {
-        botToken: tgBotToken.trim(),
-        chatId: tgChatId.trim(),
-        enabled: tgEnabled,
-        updatedAt: serverTimestamp(),
-      };
-      await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
-
-      setTgFeedback({
-        type: "success",
-        message: "Telegram ayarları başarıyla kaydedildi!",
-      });
-    } catch (err) {
-      setTgFeedback({
-        type: "error",
-        message: "Ayarlar kaydedilemedi: " + err.message,
-      });
-    } finally {
-      setTgSaving(false);
-    }
-  };
-
   const handleTestTg = async () => {
-    if (!tgBotToken.trim() || !tgChatId.trim()) {
-      setTgFeedback({
-        type: "error",
-        message: "Lütfen önce Telegram Bot Token ve Chat ID bilgilerinizi girin.",
-      });
-      return;
-    }
     setTgTesting(true);
     setTgFeedback(null);
     try {
-      const tgData = {
-        botToken: tgBotToken.trim(),
-        chatId: tgChatId.trim(),
-        enabled: tgEnabled,
-        updatedAt: serverTimestamp(),
-      };
-      await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
-
-
-      // Sunucu üzerinden test gönder
+      if (!auth.currentUser) throw new Error("Yönetici oturumu gerekli.");
       const sessionToken = await getIdToken(auth.currentUser);
       const res = await fetch("/api/commission-test", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
-        body: JSON.stringify({
-          botToken: tgBotToken.trim(),
-          chatId: tgChatId.trim(),
-        }),
+        headers: { Authorization: `Bearer ${sessionToken}` },
       });
-
-      const resData = await res.json();
-      if (!res.ok || !resData.success) {
-        throw new Error(resData.error || "Telegram test mesajı iletilemedi.");
-      }
-
-      setTgFeedback({
-        type: "success",
-        message: "🚀 Harika! Test bildirimi Telegram hesabınıza anında iletildi. Telegram sohbetinizi kontrol edin!",
-      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Telegram testi başarısız.");
+      setTgFeedback({ type: "success", message: data.message });
     } catch (err) {
-      setTgFeedback({
-        type: "error",
-        message: err.message,
-      });
+      setTgFeedback({ type: "error", message: err.message });
     } finally {
       setTgTesting(false);
     }
@@ -356,20 +284,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
             >
               <Send size={14} className="text-sky-400" />
               <span>Telegram & Roller</span>
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  tgBotToken && tgChatId && tgEnabled ? "bg-sky-400" : "bg-amber-400 animate-pulse"
-                }`}
-                title={tgBotToken && tgChatId && tgEnabled ? "Bağlı" : "Kurulum Gerekli"}
-              />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-xl">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="text-xs font-mono text-amber-200 font-medium">
-              Steril Sanatçı Masası ({artistRequests.length} Sipariş)
-            </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-sky-500/30 text-sky-300">VERCEL</span>
           </div>
         )}
       </div>
@@ -608,203 +523,12 @@ Engelleme Gerekçesi: ${inc.flagReason}
       {/* ─── SEKME 4: TELEGRAM AYARLARI & ROL YÖNETİMİ (YALNIZCA MODERATÖR) ─── */}
       {activeTab === "telegram" && isModerator && (
         <div className="space-y-6">
-          {/* Telegram Durum Kartı */}
-          <div
-            className={`p-5 rounded-2xl border flex items-center justify-between gap-4 flex-wrap ${
-              tgBotToken && tgChatId && tgEnabled
-                ? "bg-sky-500/10 border-sky-500/30 text-sky-200"
-                : "bg-amber-500/10 border-amber-500/30 text-amber-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{tgBotToken && tgChatId && tgEnabled ? "🟢" : "🟠"}</span>
-              <div>
-                <h3 className="font-semibold text-sm text-white flex items-center gap-2">
-                  <Send size={16} className="text-sky-400" />
-                  {tgBotToken && tgChatId && tgEnabled
-                    ? "Telegram Bildirim Hattı Canlı & Bağlı"
-                    : "Telegram Bildirim Hattı Kurulumu Bekleniyor"}
-                </h3>
-                <p className="text-xs opacity-80 mt-0.5 font-sans">
-                  {tgBotToken && tgChatId && tgEnabled
-                    ? `Ziyaretçi talepleri ve güvenlik alarmları anında Telegram sohbetinize (${tgChatId}) iletiliyor.`
-                    : "Telefonunuza anlık sesli bildirim ve fotoğraflı sipariş özeti gelmesi için Telegram Bot bilgilerinizi girin."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold ${
-                  tgBotToken && tgChatId && tgEnabled
-                    ? "bg-sky-500/20 text-sky-300 border border-sky-500/40"
-                    : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                }`}
-              >
-                {tgBotToken && tgChatId && tgEnabled ? "CANLI BAĞLI" : "TOKEN & ID GEREKLİ"}
-              </span>
-            </div>
-          </div>
-
-          {/* Feedback Uyarısı */}
-          {tgFeedback && (
-            <div
-              className={`p-4 rounded-xl text-xs font-mono flex items-center justify-between gap-3 border ${
-                tgFeedback.type === "success"
-                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-200"
-                  : "bg-rose-500/15 border-rose-500/30 text-rose-200"
-              }`}
-            >
-              <span>{tgFeedback.message}</span>
-              <button
-                type="button"
-                onClick={() => setTgFeedback(null)}
-                className="text-white/40 hover:text-white cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* Telegram Ayar Formu */}
-          <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-6">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Settings size={18} className="text-sky-400" />
-              Telegram Bot API Yapılandırması
-            </h2>
-
-            <form onSubmit={handleSaveTgSettings} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Bot Token */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
-                    <Key size={14} className="text-sky-400" />
-                    Telegram Bot Token (BotFather'dan Alınan)
-                  </label>
-                  <input
-                    type="text"
-                    value={tgBotToken}
-                    onChange={(e) => setTgBotToken(e.target.value)}
-                    placeholder="Örn: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-xs focus:outline-hidden focus:border-sky-400 transition-colors"
-                  />
-                  <p className="text-[11px] text-white/40 font-mono">
-                    @BotFather tarafından botunuz oluşturulduğunda verilen gizli API anahtarı.
-                  </p>
-                </div>
-
-                {/* Chat ID */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono text-white/70 flex items-center gap-1.5">
-                    <User size={14} className="text-amber-400" />
-                    Telegram Chat ID (Kişisel Sohbet Numaranız)
-                  </label>
-                  <input
-                    type="text"
-                    value={tgChatId}
-                    onChange={(e) => setTgChatId(e.target.value)}
-                    placeholder="Örn: 987654321"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-xs focus:outline-hidden focus:border-amber-400 transition-colors"
-                  />
-                  <p className="text-[11px] text-white/40 font-mono">
-                    Bildirimlerin iletileceği kişisel sayısal Telegram kimlik numaranız.
-                  </p>
-                </div>
-              </div>
-
-              {/* Bildirim Aç/Kapat Toggle */}
-              <div className="pt-2 flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="tgEnabledToggle"
-                  checked={tgEnabled}
-                  onChange={(e) => setTgEnabled(e.target.checked)}
-                  className="w-4 h-4 rounded-md accent-sky-500 cursor-pointer"
-                />
-                <label
-                  htmlFor="tgEnabledToggle"
-                  className="text-xs text-white/80 cursor-pointer font-sans select-none"
-                >
-                  Yeni ziyaretçi çizim taleplerini ve şüpheli güvenlik alarmlarını anında Telegram'a bildir
-                </label>
-              </div>
-
-              {/* Butonlar */}
-              <div className="pt-3 flex items-center gap-3 flex-wrap">
-                <button
-                  type="submit"
-                  disabled={tgSaving}
-                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-2"
-                >
-                  {tgSaving ? <Loader2 size={14} className="animate-spin" /> : null}
-                  💾 Ayarları Kaydet
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleTestTg}
-                  disabled={tgTesting || !tgBotToken.trim() || !tgChatId.trim()}
-                  className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-200 border border-sky-500/40 transition-all cursor-pointer shadow-md disabled:opacity-40 flex items-center gap-2"
-                >
-                  {tgTesting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                  🚀 Test Bildirimi Gönder
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Adım Adım Rehber Kartı */}
           <div className="p-6 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Bot size={16} className="text-sky-400" />
-              Telegram Botunuzu 30 Saniyede Kurun (Tamamen Ücretsiz & Resmi)
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Adım 1 */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
-                <div>
-                  <div className="font-mono text-xs font-bold text-sky-400">1. ADIM: BOT OLUŞTURUN</div>
-                  <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
-                    Telegram'ın resmi <code className="text-amber-300 font-mono">@BotFather</code> botuna gidin ve <code className="text-emerald-300 font-mono">/newbot</code> yazın.
-                  </p>
-                </div>
-                <a
-                  href="https://t.me/BotFather"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer"
-                >
-                  <Send size={14} /> @BotFather'ı Aç →
-                </a>
-              </div>
-
-              {/* Adım 2 */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5 flex flex-col justify-between">
-                <div>
-                  <div className="font-mono text-xs font-bold text-sky-400">2. ADIM: CHAT ID ÖĞRENİN</div>
-                  <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
-                    Oluşturduğunuz bota Telegram'da <strong>BAŞLAT (Start)</strong> dedikten sonra, kendi Chat ID'nizi görmek için <code className="text-amber-300 font-mono">@userinfobot</code> botuna bir mesaj atın.
-                  </p>
-                </div>
-                <a
-                  href="https://t.me/userinfobot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-sans text-xs font-bold transition-all shadow-sm cursor-pointer border border-white/10"
-                >
-                  <User size={14} /> @userinfobot'u Aç →
-                </a>
-              </div>
-
-              {/* Adım 3 */}
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
-                <div className="font-mono text-xs font-bold text-sky-400">3. ADIM: TEST EDİN</div>
-                <p className="text-xs text-white/70 leading-relaxed font-sans mt-1">
-                  BotFather'ın verdiği <strong>HTTP API Token</strong>'ı ve userinfobot'un verdiği <strong>Id numarasını</strong> yukarı yapıştırıp <strong>Test Bildirimi Gönder</strong>'e basın!
-                </p>
-              </div>
-            </div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2"><Send size={18} className="text-sky-400" /> Güvenli Telegram Bildirimleri</h2>
+            <p className="text-sm text-white/70">Token ve sohbet kimliği yalnızca Vercel ortam değişkenlerinde saklanır. Bu panelde görüntülenmez ve kaydedilmez.</p>
+            <p className="text-xs text-amber-200">Vercel ayarlarına TELEGRAM_BOT_TOKEN ve TELEGRAM_CHAT_ID ekleyin. Ardından yeniden deployment yapın.</p>
+            {tgFeedback && <p role="status" className={tgFeedback.type === "success" ? "text-emerald-300" : "text-rose-300"}>{tgFeedback.message}</p>}
+            <button type="button" onClick={handleTestTg} disabled={tgTesting} className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-sky-500/20 text-sky-200 border border-sky-500/40 disabled:opacity-40">{tgTesting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Test Bildirimi Gönder</button>
           </div>
 
           {/* ─── YETKİLİ E-POSTA VE ROL YÖNETİMİ (RBAC) ─── */}
