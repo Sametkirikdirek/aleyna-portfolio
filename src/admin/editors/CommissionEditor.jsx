@@ -17,14 +17,11 @@ import {
   Filter,
   Send,
   Smartphone,
-  Key,
-  Settings,
   Loader2,
   Users,
   ShieldCheck,
   Plus,
   Trash2,
-  Bot,
 } from "lucide-react";
 import { db, auth } from "../../lib/firebase";
 import { getIdToken } from "firebase/auth";
@@ -34,13 +31,11 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
-import { ROLES, KNOWN_EMAILS } from "../../lib/roles";
+import { ROLES } from "../../lib/roles";
 
 export default function CommissionEditor() {
   const { user } = useAuth();
