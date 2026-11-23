@@ -1,0 +1,3 @@
+[submodule ".agents/skills/practical-ui-physics"]
+	path = .agents/skills/practical-ui-physics
+	url = https://github.com/desandro/practical-ui-physics.git
