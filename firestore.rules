@@ -2,47 +2,114 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. Ziyaretçi Trafik & Analitik Sayacı
-    // Ziyaretçiler yalnızca sayaç artırma işlemi yapabilir; okuma ve silme adminlere özeldir.
+    // Important: Firestore rule matches are OR'ed. Never add a permissive
+    // recursive catch-all rule, as it bypasses collection-specific protections.
+    function signedIn() {
+      return request.auth != null && request.auth.token.email is string;
+    }
+    function email() {
+      return request.auth.token.email;
+    }
+    // Bootstrap accounts. Custom roles in settings/roles are only
+    // writable by existing moderators. Unknown identities are denied.
+    function customRole() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/settings/roles)
+        ? get(/databases/$(database)/documents/settings/roles).data.get(email(), "")
+        : "";
+    }
+    function isModerator() {
+      return signedIn() && (
+        email() in ["sametkirikdirek@gmail.com", "samet@gmail.com"] ||
+        customRole() in ["moderator", "superadmin"]
+      );
+    }
+    function isArtist() {
+      return signedIn() && (
+        email() in ["aleynaaltunsu@gmail.com", "aleyna@gmail.com"] ||
+        customRole() == "artist"
+      );
+    }
+    function isStaff() {
+      return isModerator() || isArtist();
+    }
+
+    // Public counters are untrusted analytics, not authorization evidence.
+    // Limit write shapes and prevent deletes; stronger server-side rate limits
+    // should follow in a separate change.
     match /analytics/traffic {
-      allow read: if request.auth != null;
-      allow write: if true;
+      allow read: if isStaff();
+      allow create: if request.resource.data.keys()
+          .hasOnly(["totalViews", "daily", "pages", "lastVisit"])
+        && request.resource.data.totalViews == 1
+        && request.resource.data.daily is map
+        && request.resource.data.pages is map
+        && request.resource.data.lastVisit == request.time;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["totalViews", "daily", "pages", "lastVisit"])
+        && request.resource.data.totalViews == resource.data.totalViews + 1
+        && request.resource.data.daily is map
+        && request.resource.data.pages is map
+        && request.resource.data.lastVisit == request.time;
+      allow delete: if isModerator();
     }
 
-    // 2. Portfolyo İçerikleri (Profil, Galeri, Yazılar, Zaman Yolculuğu, CV, Projeler)
-    // - Okuma: Herkese açık (Ziyaretçiler portfolyoyu görebilir)
-    // - Yazma/Güncelleme/Silme: YALNIZCA oturum açmış yetkili kullanıcı (request.auth != null)
+    // Historical content/telegram contained a bot token under public content.
+    // It is blocked, even for authenticated clients; delete the legacy record
+    // manually from Firebase Console after rotating the Telegram token.
     match /content/{documentId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read: if documentId != "telegram";
+      allow create, update, delete: if documentId != "telegram" && isStaff();
     }
 
-    // 3. Özel Tuval Talepleri
-    // - Ziyaretçi: Yalnızca yeni sipariş oluşturabilir (create), başkalarının siparişlerini okuyamaz, değiştiremez veya silemez.
-    // - Yetkili (Admin/Moderatör): Tam yetkili (read, update, delete).
+    // Anonymous visitors submit only pending, reasonably-sized new requests.
+    // TODO: move creation to a server-authenticated writer for strong quotas
+    // and tamper-proof metadata.
     match /commission_requests/{requestId} {
-      allow create: if request.resource.data.status == "mod_pending";
-      allow read, update, delete: if request.auth != null;
+      allow create: if request.resource.data.keys().hasOnly([
+          "id", "imageUrl", "note", "contact", "deviceHash",
+          "status", "submissionDate", "ipInfo", "createdAt"
+        ])
+        && request.resource.data.id == requestId
+        && request.resource.data.status == "mod_pending"
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 2048
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 5000
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() <= 320
+        && request.resource.data.deviceHash is string
+        && request.resource.data.deviceHash.size() <= 256
+        && request.resource.data.submissionDate is string
+        && request.resource.data.createdAt == request.time;
+      allow get, list: if isStaff();
+      allow update: if isModerator() || (
+        isArtist()
+        && resource.data.status in ["artist_review", "approved", "declined"]
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["status", "updatedAt"])
+        && request.resource.data.status in ["approved", "declined"]
+        && request.resource.data.updatedAt == request.time
+      );
+      allow delete: if isModerator();
     }
 
-    // 4. Adli Güvenlik Kayıtları & Siber İhbar Havuzu
-    // - Ziyaretçilere tamamen kapalıdır.
-    // - Yalnızca oturum açmış Moderatör / Admin inceleyebilir.
+    // Sensitive incidents and Telegram settings are moderator-only.
     match /incident_logs/{incidentId} {
-      allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, create, update, delete: if isModerator();
     }
-
-    // 5. Sistem & Bot Ayarları (Telegram Token, Chat ID, Rol Yetkileri)
-    // - Dış dünyaya ve ziyaretçilere TAMAMEN KAPALI.
-    // - Yalnızca oturum açmış yetkili kullanıcı okuyabilir ve güncelleyebilir.
+    match /settings/roles {
+      allow read: if isStaff();
+      allow write: if isModerator();
+    }
     match /settings/{settingId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isModerator();
     }
 
-    // 6. Geri Kalan Tüm Dokümanlar Varsayılan Olarak Tamamen Kilitli
+    // Deny by default. A broad signed-in allow rule here would negate the
+    // collection-specific authorization above.
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
