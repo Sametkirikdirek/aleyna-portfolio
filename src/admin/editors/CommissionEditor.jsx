@@ -79,11 +79,13 @@ export default function CommissionEditor() {
       setLoading(false);
     });
 
-    const unsubInc = onSnapshot(collection(db, "incident_logs"), (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      setIncidents(list);
-    });
+    const unsubInc = isModerator
+      ? onSnapshot(collection(db, "incident_logs"), (snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          setIncidents(list);
+        })
+      : () => {};
 
     const unsubRoles = onSnapshot(doc(db, "settings", "roles"), (docSnap) => {
       if (docSnap.exists()) {
@@ -96,7 +98,7 @@ export default function CommissionEditor() {
       unsubInc();
       unsubRoles();
     };
-  }, []);
+  }, [isModerator]);
 
   // Filtreler
   const artistRequests = useMemo(
