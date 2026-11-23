@@ -32,13 +32,8 @@ export const KNOWN_EMAILS = {
   ],
 };
 
-export const DEFAULT_ROLE_KEYWORDS = {
-  moderator: ["samet", "kirikdirek", "mod", "moderator", "guvenlik", "security", "admin@"],
-  artist: ["aleyna", "altunsu", "artist", "sanatci"],
-};
-
 export function determineUserRole(email, customRoles = {}) {
-  if (!email) return ROLES.ARTIST;
+  if (!email) return null;
   const cleanEmail = email.toLowerCase().trim();
 
   // 1. Firestore özel rol tanımı varsa öncelikli kullan (settings/roles koleksiyonu)
@@ -56,22 +51,8 @@ export function determineUserRole(email, customRoles = {}) {
     return ROLES.ARTIST;
   }
 
-  // 4. Moderatör anahtar kelimeleri
-  for (const kw of DEFAULT_ROLE_KEYWORDS.moderator) {
-    if (cleanEmail.includes(kw)) {
-      return ROLES.MODERATOR;
-    }
-  }
-
-  // 5. Sanatçı anahtar kelimeleri
-  for (const kw of DEFAULT_ROLE_KEYWORDS.artist) {
-    if (cleanEmail.includes(kw)) {
-      return ROLES.ARTIST;
-    }
-  }
-
-  // 6. Varsayılan olarak Sanatçı Paneli (en güvenli varsayılan: gizli adli/IP verileri açılmaz)
-  return ROLES.ARTIST;
+  // Unrecognized accounts never inherit admin access through email substrings.
+  return null;
 }
 
 export function getRoleBadgeInfo(role) {
