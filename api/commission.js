@@ -16,8 +16,6 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
-// Varsayılan Telegram Yapılandırması (Canlı Yedek)
-
 function escapeHtml(text) {
   return String(text || "")
     .replace(/&/g, "&amp;")
@@ -26,7 +24,7 @@ function escapeHtml(text) {
 }
 
 // Telegram Bildirim Gönderici (HTML Parse Mode - Kesintisiz & Güvenli)
-async function sendTelegramAlert({ title, city, country, clientIp, formattedDate, contact, note, imageUrl, reviewLink, isAlert = false }) {
+async function sendTelegramAlert({ title, city, country, clientIp, formattedDate, contact, note, imageUrl, reviewLink }) {
   // Bot credentials must ONLY be configured as server-side Vercel environment variables.
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -146,7 +144,6 @@ export default async function handler(request) {
     const file = formData.get("file");
     const note = formData.get("note") || "";
     const contact = formData.get("contact") || "";
-    const deviceHash = formData.get("deviceHash") || "unknown";
     const consent = formData.get("consent") === "true";
 
     const country =
@@ -157,8 +154,6 @@ export default async function handler(request) {
       request.headers.get("cf-ipcity") ||
       request.headers.get("x-vercel-ip-city") ||
       "Bilinmiyor";
-    const userAgent = request.headers.get("user-agent") || "Bilinmiyor";
-    const timestamp = new Date().toISOString();
     const formattedDate = new Date().toLocaleDateString("tr-TR", {
       timeZone: "Europe/Istanbul",
       year: "numeric",
@@ -167,6 +162,11 @@ export default async function handler(request) {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+    // The checkbox is not sufficient unless consent is also verified by the API.
+    if (!consent) {
+      return Response.json({ error: "Başvuru için kullanım ve gizlilik onayı gereklidir." }, { status: 400 });
+    }
 
     if (!file || typeof file === "string") {
       return Response.json({ error: "Lütfen bir referans görseli seçin." }, { status: 400 });
@@ -238,7 +238,6 @@ export default async function handler(request) {
         contact,
         note: `AI Filtresi Engelledi. Not: ${note}`,
         imageUrl,
-        isAlert: true,
       });
 
       return Response.json(
