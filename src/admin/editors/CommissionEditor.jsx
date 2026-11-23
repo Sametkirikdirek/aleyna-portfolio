@@ -26,7 +26,8 @@ import {
   Trash2,
   Bot,
 } from "lucide-react";
-import { db } from "../../lib/firebase";
+import { db, auth } from "../../lib/firebase";
+import { getIdToken } from "firebase/auth";
 import {
   collection,
   onSnapshot,
@@ -173,7 +174,7 @@ Engelleme Gerekçesi: ${inc.flagReason}
         updatedAt: serverTimestamp(),
       };
       await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
-      await setDoc(doc(db, "content", "telegram"), tgData, { merge: true });
+
       setTgFeedback({
         type: "success",
         message: "Telegram ayarları başarıyla kaydedildi!",
@@ -206,12 +207,13 @@ Engelleme Gerekçesi: ${inc.flagReason}
         updatedAt: serverTimestamp(),
       };
       await setDoc(doc(db, "settings", "telegram"), tgData, { merge: true });
-      await setDoc(doc(db, "content", "telegram"), tgData, { merge: true });
+
 
       // Sunucu üzerinden test gönder
+      const sessionToken = await getIdToken(auth.currentUser);
       const res = await fetch("/api/commission-test", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
         body: JSON.stringify({
           botToken: tgBotToken.trim(),
           chatId: tgChatId.trim(),
