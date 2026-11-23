@@ -1,74 +1,31 @@
+import { getIdToken } from "firebase/auth";
+import { auth } from "./firebase";
+
 /**
- * Güvenli Dosya Yükleme Servisi.
- *
- * İstemci tarafında hiçbir gizli upload_preset veya Cloudinary kimliği tutulmaz.
- * Tüm yüklemeler sunucu tarafındaki güvenli /api/upload uç noktası üzerinden gerçekleştirilir.
- *
- * @param {File} file - Yüklenecek dosya (resim veya PDF)
- * @param {string} folder - Hedef klasör (örn: "gallery", "cv", "timeline", "profile", "writings")
- * @returns {Promise<string>} - Yüklenen dosyanın güvenli URL'si
+ * Uploads admin-managed media only via the authenticated server endpoint.
+ * Never retries with an unsigned client-side Cloudinary upload preset.
  */
 export async function uploadToCloudinary(file, folder = "portfolio") {
-  // 1. Öncelikli Yöntem: Sunucu tarafı /api/upload uç noktası
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", folder);
+  const user = auth.currentUser;
+  if (!user) throw new Error("Dosya yüklemek için yönetim panelinde oturum açmalısınız.");
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+  const idToken = await getIdToken(user);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
 
-    if (response.ok) {
-      const data = await response.json();
-      const fileUrl = data.url || data.secure_url;
-      if (fileUrl) return fileUrl;
-    } else {
-      console.warn(
-        "/api/upload uç noktası hata verdi, doğrudan yedek yükleme deneniyor...",
-        response.status
-      );
-    }
-  } catch (serverErr) {
-    console.warn(
-      "/api/upload uç noktasına erişilemedi, doğrudan yedek yükleme deneniyor...",
-      serverErr
-    );
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Dosya yüklenemedi. Sunucu ayarlarını kontrol edin.");
   }
 
-  // 2. Güvenilir Yedek Yöntem: Doğrudan Cloudinary İmzasız Yükleme
-  // Sunucusuz fonksiyon çalışmazsa, Vercel ortam değişkeni eksikse veya soğuk başlangıç hatası olursa devreye girer
-  const directPayload = new FormData();
-  directPayload.append("file", file);
-  directPayload.append("upload_preset", "aleyna_prod_upload");
-  directPayload.append("folder", folder);
-
-  const directResponse = await fetch(
-    "https://api.cloudinary.com/v1_1/mxepbe4r/auto/upload",
-    {
-      method: "POST",
-      body: directPayload,
-    }
-  );
-
-  if (!directResponse.ok) {
-    let errorMessage = "Dosya yüklenemedi";
-    try {
-      const errData = await directResponse.json();
-      errorMessage = errData.error?.message || errData.message || errorMessage;
-    } catch {
-      // JSON parse edilemezse varsayılan mesajı kullan
-    }
-    throw new Error(errorMessage);
-  }
-
-  const result = await directResponse.json();
-  const fileUrl = result.secure_url || result.url;
-
-  if (!fileUrl) {
-    throw new Error("Yükleme tamamlandı ancak dosya bağlantısı alınamadı");
-  }
-
+  const fileUrl = data.url || data.secure_url;
+  if (!fileUrl) throw new Error("Yükleme tamamlandı ancak dosya bağlantısı alınamadı.");
   return fileUrl;
 }

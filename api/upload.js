@@ -11,6 +11,8 @@
  * - Klasör adı sanitizasyonu (Path traversal koruması)
  */
 
+import { requirePortfolioAdmin } from "./_auth.js";
+
 export const config = {
   // Edge runtime: Akış tabanlı FormData desteği ve sıfır cold-start süresi
   runtime: "edge",
@@ -44,6 +46,11 @@ export default async function handler(request) {
       { error: "Yalnızca POST istekleri kabul edilir" },
       { status: 405 }
     );
+  }
+
+  const authorization = await requirePortfolioAdmin(request);
+  if (authorization.error) {
+    return Response.json({ error: authorization.error }, { status: authorization.status });
   }
 
   try {

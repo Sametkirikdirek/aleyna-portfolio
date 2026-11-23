@@ -16,10 +16,6 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
-// Varsayılan Telegram Yapılandırması (Canlı Yedek)
-const DEFAULT_TELEGRAM_BOT_TOKEN = "9289109254:AAFOEGK0gpFFMsoNZTODU9g3HHYIFmRGQdA";
-const DEFAULT_TELEGRAM_CHAT_ID = "8965152099";
-
 function escapeHtml(text) {
   return String(text || "")
     .replace(/&/g, "&amp;")
@@ -27,49 +23,11 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
-// Basit token üretici (Sihirli onay linkleri için)
-function generateSecureToken(id) {
-  const salt = process.env.MOD_SECRET_SALT || process.env.TELEGRAM_BOT_TOKEN || "AleynaArtCommission2026";
-  let hash = 0;
-  const str = `${id}#${salt}`;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(36);
-}
-
 // Telegram Bildirim Gönderici (HTML Parse Mode - Kesintisiz & Güvenli)
-async function sendTelegramAlert({ title, city, country, clientIp, formattedDate, contact, note, imageUrl, approveLink, rejectLink, isAlert = false }) {
-  let botToken = process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TELEGRAM_BOT_TOKEN;
-  let chatId = process.env.TELEGRAM_CHAT_ID || DEFAULT_TELEGRAM_CHAT_ID;
-
-  // 1. Önce Firestore'daki dinamik ayardan oku (content/telegram veya settings/telegram)
-  try {
-    const endpoints = [
-      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/content/telegram",
-      "https://firestore.googleapis.com/v1/projects/aleyna-portfolio/databases/(default)/documents/settings/telegram",
-    ];
-
-    for (const ep of endpoints) {
-      try {
-        const res = await fetch(ep);
-        if (res.ok) {
-          const data = await res.json();
-          const dbEnabled = data.fields?.enabled?.booleanValue;
-          if (dbEnabled === false) return; // Bildirimler kapalıysa çık
-
-          const dbToken = data.fields?.botToken?.stringValue;
-          const dbChatId = data.fields?.chatId?.stringValue;
-          if (dbToken) botToken = dbToken;
-          if (dbChatId) chatId = dbChatId;
-          break;
-        }
-      } catch {}
-    }
-  } catch (e) {
-    // Fallback değerlerle devam et
-  }
+async function sendTelegramAlert({ title, city, country, clientIp, formattedDate, contact, note, imageUrl, reviewLink }) {
+  // Bot credentials must ONLY be configured as server-side Vercel environment variables.
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!botToken || !chatId) {
     return;
@@ -89,8 +47,9 @@ async function sendTelegramAlert({ title, city, country, clientIp, formattedDate
     `👤 <b>İletişim:</b> ${cleanContact}\n` +
     `📝 <b>Not:</b> "${cleanNote}"`;
 
-  if (approveLink && rejectLink) {
-    messageHtml += `\n\n👇 <b>Karar Ver (Tek Dokunuş):</b>\n🟢 <a href="${approveLink}">Aleyna'nın Masasına Onayla</a>\n🔴 <a href="${rejectLink}">Talebi Reddet</a>`;
+  // No unauthenticated one-click approve/reject links. Moderator signs into admin UI.
+  if (reviewLink) {
+    messageHtml += `\n\n🔐 <a href="${escapeHtml(reviewLink)}">Yönetim panelinde incele</a>`;
   }
 
   // Telegram API'ye ilet
@@ -185,7 +144,6 @@ export default async function handler(request) {
     const file = formData.get("file");
     const note = formData.get("note") || "";
     const contact = formData.get("contact") || "";
-    const deviceHash = formData.get("deviceHash") || "unknown";
     const consent = formData.get("consent") === "true";
 
     const country =
@@ -196,8 +154,6 @@ export default async function handler(request) {
       request.headers.get("cf-ipcity") ||
       request.headers.get("x-vercel-ip-city") ||
       "Bilinmiyor";
-    const userAgent = request.headers.get("user-agent") || "Bilinmiyor";
-    const timestamp = new Date().toISOString();
     const formattedDate = new Date().toLocaleDateString("tr-TR", {
       timeZone: "Europe/Istanbul",
       year: "numeric",
@@ -206,6 +162,11 @@ export default async function handler(request) {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+    // The checkbox is not sufficient unless consent is also verified by the API.
+    if (!consent) {
+      return Response.json({ error: "Başvuru için kullanım ve gizlilik onayı gereklidir." }, { status: 400 });
+    }
 
     if (!file || typeof file === "string") {
       return Response.json({ error: "Lütfen bir referans görseli seçin." }, { status: 400 });
@@ -258,8 +219,7 @@ export default async function handler(request) {
     }
 
     const imageUrl = cloudResult.secure_url || cloudResult.url;
-    const requestId = `comm_${Date.now()}`;
-    const token = generateSecureToken(requestId);
+    const requestId = `comm_${crypto.randomUUID()}`;
 
     // 4. Şüpheli İçerik / AI Taraması Kontrolü
     const noteLower = note.toLowerCase();
@@ -278,7 +238,6 @@ export default async function handler(request) {
         contact,
         note: `AI Filtresi Engelledi. Not: ${note}`,
         imageUrl,
-        isAlert: true,
       });
 
       return Response.json(
@@ -292,10 +251,8 @@ export default async function handler(request) {
     }
 
     // 5. Temiz Başvuru: Onay Linklerini Oluştur ve Telegram Bildirimi Gönder
-    const host = request.headers.get("host") || "www.aleynaaltunsu.com";
-    const proto = host.includes("localhost") ? "http" : "https";
-    const approveLink = `${proto}://${host}/api/commission-mod?action=approve&id=${requestId}&token=${token}`;
-    const rejectLink = `${proto}://${host}/api/commission-mod?action=reject&id=${requestId}&token=${token}`;
+    // Trusted origin; never build privileged links from untrusted Host headers.
+    const reviewLink = "https://www.aleynaaltunsu.com/admin/dashboard";
 
     await sendTelegramAlert({
       title: "🎨 Yeni Özel Çizim Talebi Geldi!",
@@ -306,14 +263,12 @@ export default async function handler(request) {
       contact,
       note,
       imageUrl,
-      approveLink,
-      rejectLink,
+      reviewLink,
     });
 
     return Response.json({
       success: true,
       requestId,
-      token,
       imageUrl,
       status: "mod_pending",
       submissionDate: new Date().toISOString().slice(0, 10),

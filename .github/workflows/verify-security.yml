@@ -1,0 +1,24 @@
+name: Verify security changes
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Static lint
+        run: npm run lint
+      - name: Vite production bundle (without network-dependent Medium sync)
+        run: npx vite build
